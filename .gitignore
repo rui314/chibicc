@@ -1,0 +1,5 @@
+*~
+*.o
+tmp*
+a.out
+chibicc
