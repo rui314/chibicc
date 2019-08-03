@@ -161,6 +161,7 @@ static Node *new_num(int val) {
 
 static Node *expr(Token **rest, Token *tok);
 static Node *mul(Token **rest, Token *tok);
+static Node *unary(Token **rest, Token *tok);
 static Node *primary(Token **rest, Token *tok);
 
 // expr = mul ("+" mul | "-" mul)*
@@ -185,19 +186,20 @@ static Node *expr(Token **rest, Token *tok) {
   }
 }
 
-// mul = primary ("*" primary | "/" primary)*
+
+// mul = unary ("*" unary | "/" unary)*
 static Node *mul(Token **rest, Token *tok) {
-  Node *node = primary(&tok, tok);
+  Node *node = unary(&tok, tok);
 
   for (;;) {
     if (equal(tok, "*")) {
-      Node *rhs = primary(&tok, tok->next);
+      Node *rhs = unary(&tok, tok->next);
       node = new_binary(ND_MUL, node, rhs);
       continue;
     }
 
     if (equal(tok, "/")) {
-      Node *rhs = primary(&tok, tok->next);
+      Node *rhs = unary(&tok, tok->next);
       node = new_binary(ND_DIV, node, rhs);
       continue;
     }
@@ -205,6 +207,18 @@ static Node *mul(Token **rest, Token *tok) {
     *rest = tok;
     return node;
   }
+}
+
+// unary = ("+" | "-") unary
+//       | primary
+static Node *unary(Token **rest, Token *tok) {
+  if (equal(tok, "+"))
+    return unary(rest, tok->next);
+
+  if (equal(tok, "-"))
+    return new_binary(ND_SUB, new_num(0), unary(rest, tok->next));
+
+  return primary(rest, tok);
 }
 
 // primary = "(" expr ")" | num
