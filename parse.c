@@ -2,13 +2,15 @@
 
 // All local variable instances created during parsing are
 // accumulated to this list.
-Var *locals;
+static VarList *locals;
 
 // Find a local variable by name.
 static Var *find_var(Token *tok) {
-  for (Var *var = locals; var; var = var->next)
+  for (VarList *vl = locals; vl; vl = vl->next) {
+    Var *var = vl->var;
     if (strlen(var->name) == tok->len && !strncmp(tok->str, var->name, tok->len))
       return var;
+  }
   return NULL;
 }
 
@@ -45,9 +47,12 @@ static Node *new_var_node(Var *var) {
 
 static Var *new_lvar(char *name) {
   Var *var = calloc(1, sizeof(Var));
-  var->next = locals;
   var->name = name;
-  locals = var;
+
+  VarList *vl = calloc(1, sizeof(VarList));
+  vl->var = var;
+  vl->next = locals;
+  locals = vl;
   return var;
 }
 
@@ -74,25 +79,42 @@ Function *program(void) {
   return head.next;
 }
 
-// function = ident "(" ")" "{" stmt* "}"
+static VarList *read_func_params(void) {
+  if (consume(")"))
+    return NULL;
+
+  VarList *head = calloc(1, sizeof(VarList));
+  head->var = new_lvar(expect_ident());
+  VarList *cur = head;
+
+  while (!consume(")")) {
+    expect(",");
+    cur->next = calloc(1, sizeof(VarList));
+    cur->next->var = new_lvar(expect_ident());
+    cur = cur->next;
+  }
+
+  return head;
+}
+
+// function = ident "(" params? ")" "{" stmt* "}"
+// params   = ident ("," ident)*
 static Function *function(void) {
   locals = NULL;
 
-  char *name = expect_ident();
+  Function *fn = calloc(1, sizeof(Function));
+  fn->name = expect_ident();
   expect("(");
-  expect(")");
+  fn->params = read_func_params();
   expect("{");
 
   Node head = {};
   Node *cur = &head;
-
   while (!consume("}")) {
     cur->next = stmt();
     cur = cur->next;
   }
 
-  Function *fn = calloc(1, sizeof( Function));
-  fn->name = name;
   fn->node = head.next;
   fn->locals = locals;
   return fn;
