@@ -112,7 +112,22 @@ void gen(Node *node) {
     for (int i = nargs - 1; i >= 0; i--)
       printf("  pop %s\n", argreg[i]);
 
+    // We need to align RSP to a 16 byte boundary before
+    // calling a function because it is an ABI requirement.
+    // RAX is set to 0 for variadic function.
+    int seq = labelseq++;
+    printf("  mov rax, rsp\n");
+    printf("  and rax, 15\n");
+    printf("  jnz .Lcall%d\n", seq);
+    printf("  mov rax, 0\n");
     printf("  call %s\n", node->funcname);
+    printf("  jmp .Lend%d\n", seq);
+    printf(".Lcall%d:\n", seq);
+    printf("  sub rsp, 8\n");
+    printf("  mov rax, 0\n");
+    printf("  call %s\n", node->funcname);
+    printf("  add rsp, 8\n");
+    printf(".Lend%d:\n", seq);
     printf("  push rax\n");
     return;
   }
