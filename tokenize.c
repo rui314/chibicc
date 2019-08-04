@@ -1,9 +1,5 @@
 #include "chibicc.h"
 
-//
-// Tokenizer
-//
-
 char *user_input;
 Token *token;
 
@@ -100,7 +96,7 @@ bool is_alnum(char c) {
 
 char *starts_with_reserved(char *p) {
   // Keyword
-  static char *kw[] = {"return", "if", "else", "while"};
+  static char *kw[] = {"return", "if", "else", "while", "for"};
 
   for (int i = 0; i < sizeof(kw) / sizeof(*kw); i++) {
     int len = strlen(kw[i]);
