@@ -2,9 +2,8 @@
 
 // Pushes the given node's address to the stack.
 void gen_addr(Node *node) {
-  if (node->kind == ND_LVAR) {
-    int offset = (node->name - 'a' + 1) * 8;
-    printf("  lea rax, [rbp-%d]\n", offset);
+  if (node->kind == ND_VAR) {
+    printf("  lea rax, [rbp-%d]\n", node->var->offset);
     printf("  push rax\n");
     return;
   }
@@ -35,7 +34,7 @@ void gen(Node *node) {
     gen(node->lhs);
     printf("  add rsp, 8\n");
     return;
-  case ND_LVAR:
+  case ND_VAR:
     gen_addr(node);
     load();
     return;
@@ -96,7 +95,7 @@ void gen(Node *node) {
   printf("  push rax\n");
 }
 
-void codegen(Node *node) {
+void codegen(Program *prog) {
   printf(".intel_syntax noprefix\n");
   printf(".global main\n");
   printf("main:\n");
@@ -104,10 +103,11 @@ void codegen(Node *node) {
   // Prologue
   printf("  push rbp\n");
   printf("  mov rbp, rsp\n");
-  printf("  sub rsp, 208\n");
+  printf("  sub rsp, %d\n", prog->stack_size);
 
-  for (Node *n = node; n; n = n->next)
-    gen(n);
+  // Emit code
+  for (Node *node = prog->node; node; node = node->next)
+    gen(node);
 
   // Epilogue
   printf(".Lreturn:\n");
