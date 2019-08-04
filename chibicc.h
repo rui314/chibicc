@@ -49,9 +49,14 @@ extern Token *token;
 // Local variable
 typedef struct Var Var;
 struct Var {
-  Var *next;
   char *name; // Variable name
   int offset; // Offset from RBP
+};
+
+typedef struct VarList VarList;
+struct VarList {
+  VarList *next;
+  Var *var;
 };
 
 // AST node
@@ -107,8 +112,10 @@ typedef struct Function Function;
 struct Function {
   Function *next;
   char *name;
+  VarList *params;
+
   Node *node;
-  Var *locals;
+  VarList *locals;
   int stack_size;
 };
 
