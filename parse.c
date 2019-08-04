@@ -237,7 +237,8 @@ Node *unary() {
   return primary();
 }
 
-// primary = "(" expr ")" | ident | num
+// primary = "(" expr ")" | ident args? | num
+// args = "(" ")"
 Node *primary() {
   if (consume("(")) {
     Node *node = expr();
@@ -247,6 +248,13 @@ Node *primary() {
 
   Token *tok = consume_ident();
   if (tok) {
+    if (consume("(")) {
+      expect(")");
+      Node *node = new_node(ND_FUNCALL);
+      node->funcname = strndup(tok->str, tok->len);
+      return node;
+    }
+
     Var *var = find_var(tok);
     if (!var)
       var = push_var(strndup(tok->str, tok->len));
