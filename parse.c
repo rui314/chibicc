@@ -44,9 +44,10 @@ Node *new_var(Var *var, Token *tok) {
   return node;
 }
 
-Var *push_var(char *name) {
+Var *push_var(char *name, Type *ty) {
   Var *var = calloc(1, sizeof(Var));
   var->name = name;
+  var->ty = ty;
 
   VarList *vl = calloc(1, sizeof(VarList));
   vl->var = var;
@@ -56,6 +57,7 @@ Var *push_var(char *name) {
 }
 
 Function *function();
+Node *declaration();
 Node *stmt();
 Node *expr();
 Node *assign();
@@ -79,30 +81,47 @@ Function *program() {
   return head.next;
 }
 
+
+// basetype = "int" "*"*
+Type *basetype() {
+  expect("int");
+  Type *ty = int_type();
+  while (consume("*"))
+    ty = pointer_to(ty);
+  return ty;
+}
+
+VarList *read_func_param() {
+  VarList *vl = calloc(1, sizeof(VarList));
+  Type *ty = basetype();
+  vl->var = push_var(expect_ident(), ty);
+  return vl;
+}
+
 VarList *read_func_params() {
   if (consume(")"))
     return NULL;
 
-  VarList *head = calloc(1, sizeof(VarList));
-  head->var = push_var(expect_ident());
+  VarList *head = read_func_param();
   VarList *cur = head;
 
   while (!consume(")")) {
     expect(",");
-    cur->next = calloc(1, sizeof(VarList));
-    cur->next->var = push_var(expect_ident());
+    cur->next = read_func_param();
     cur = cur->next;
   }
 
   return head;
 }
 
-// function = ident "(" params? ")" "{" stmt* "}"
-// params   = ident ("," ident)*
+// function = basetype ident "(" params? ")" "{" stmt* "}"
+// params   = param ("," param)*
+// param    = basetype ident
 Function *function() {
   locals = NULL;
 
   Function *fn = calloc(1, sizeof(Function));
+  basetype();
   fn->name = expect_ident();
   expect("(");
   fn->params = read_func_params();
@@ -121,6 +140,23 @@ Function *function() {
   return fn;
 }
 
+// declaration = basetype ident ("=" expr) ";"
+Node *declaration() {
+  Token *tok = token;
+  Type *ty = basetype();
+  Var *var = push_var(expect_ident(), ty);
+
+  if (consume(";"))
+    return new_node(ND_NULL, tok);
+
+  expect("=");
+  Node *lhs = new_var(var, tok);
+  Node *rhs = expr();
+  expect(";");
+  Node *node = new_binary(ND_ASSIGN, lhs, rhs, tok);
+  return new_unary(ND_EXPR_STMT, node, tok);
+}
+
 Node *read_expr_stmt() {
   Token *tok = token;
   return new_unary(ND_EXPR_STMT, expr(), tok);
@@ -131,6 +167,7 @@ Node *read_expr_stmt() {
 //      | "while" "(" expr ")" stmt
 //      | "for" "(" expr? ";" expr? ";" expr? ")" stmt
 //      | "{" stmt* "}"
+//      | declaration
 //      | expr ";"
 Node *stmt() {
   Token *tok;
@@ -193,6 +230,9 @@ Node *stmt() {
     node->body = head.next;
     return node;
   }
+
+  if (tok = peek("int"))
+    return declaration();
 
   Node *node = read_expr_stmt();
   expect(";");
@@ -326,7 +366,7 @@ Node *primary() {
 
     Var *var = find_var(tok);
     if (!var)
-      var = push_var(strndup(tok->str, tok->len));
+      error_tok(tok, "undefined variable");
     return new_var(var, tok);
   }
 

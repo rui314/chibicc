@@ -49,10 +49,17 @@ char *strndup(char *p, int len) {
   return buf;
 }
 
-// Consumes the current token if it matches `op`.
-Token *consume(char *op) {
-  if (token->kind != TK_RESERVED || strlen(op) != token->len ||
-      memcmp(token->str, op, token->len))
+// Returns true if the current token matches a given string.
+Token *peek(char *s) {
+  if (token->kind != TK_RESERVED || strlen(s) != token->len ||
+      memcmp(token->str, s, token->len))
+    return NULL;
+  return token;
+}
+
+// Consumes the current token if it matches a given string.
+Token *consume(char *s) {
+  if (!peek(s))
     return NULL;
   Token *t = token;
   token = token->next;
@@ -68,11 +75,10 @@ Token *consume_ident() {
   return t;
 }
 
-// Ensure that the current token is `op`.
-void expect(char *op) {
-  if (token->kind != TK_RESERVED || strlen(op) != token->len ||
-      memcmp(token->str, op, token->len))
-    error_tok(token, "expected \"%s\"", op);
+// Ensure that the current token is a given string
+void expect(char *s) {
+  if (!peek(s))
+    error_tok(token, "expected \"%s\"", s);
   token = token->next;
 }
 
@@ -122,7 +128,7 @@ bool is_alnum(char c) {
 
 char *starts_with_reserved(char *p) {
   // Keyword
-  static char *kw[] = {"return", "if", "else", "while", "for"};
+  static char *kw[] = {"return", "if", "else", "while", "for", "int"};
 
   for (int i = 0; i < sizeof(kw) / sizeof(*kw); i++) {
     int len = strlen(kw[i]);

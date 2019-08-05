@@ -38,6 +38,8 @@ void store() {
 // Generate code for a given node.
 void gen(Node *node) {
   switch (node->kind) {
+  case ND_NULL:
+    return;
   case ND_NUM:
     printf("  push %d\n", node->val);
     return;
