@@ -8,6 +8,7 @@ int main(int argc, char **argv) {
   user_input = argv[1];
   token = tokenize();
   Function *prog = program();
+  add_type(prog);
 
   // Assign offsets to local variables.
   for (Function *fn = prog; fn; fn = fn->next) {
