@@ -13,10 +13,7 @@ void error(char *fmt, ...) {
 }
 
 // Reports an error location and exit.
-void error_at(char *loc, char *fmt, ...) {
-  va_list ap;
-  va_start(ap, fmt);
-
+static void verror_at(char *loc, char *fmt, va_list ap) {
   int pos = loc - user_input;
   fprintf(stderr, "%s\n", user_input);
   fprintf(stderr, "%*s", pos, ""); // print pos spaces.
@@ -26,13 +23,28 @@ void error_at(char *loc, char *fmt, ...) {
   exit(1);
 }
 
+// Reports an error location and exit.
+void error_at(char *loc, char *fmt, ...) {
+  va_list ap;
+  va_start(ap, fmt);
+  verror_at(loc, fmt, ap);
+}
+
+// Reports an error location and exit.
+void error_tok(Token *tok, char *fmt, ...) {
+  va_list ap;
+  va_start(ap, fmt);
+  verror_at(tok->str, fmt, ap);
+}
+
 // Consumes the current token if it matches `op`.
-bool consume(char *op) {
+Token *consume(char *op) {
   if (token->kind != TK_RESERVED || strlen(op) != token->len ||
       strncmp(token->str, op, token->len))
-    return false;
+    return NULL;
+  Token *t = token;
   token = token->next;
-  return true;
+  return t;
 }
 
 // Consumes the current token if it is an identifier.
@@ -48,14 +60,14 @@ Token *consume_ident(void) {
 void expect(char *op) {
   if (token->kind != TK_RESERVED || strlen(op) != token->len ||
       strncmp(token->str, op, token->len))
-    error_at(token->str, "expected \"%s\"", op);
+    error_tok(token, "expected \"%s\"", op);
   token = token->next;
 }
 
 // Ensure that the current token is TK_NUM.
 long expect_number(void) {
   if (token->kind != TK_NUM)
-    error_at(token->str, "expected a number");
+    error_tok(token, "expected a number");
   long val = token->val;
   token = token->next;
   return val;
@@ -64,7 +76,7 @@ long expect_number(void) {
 // Ensure that the current token is TK_IDENT.
 char *expect_ident(void) {
   if (token->kind != TK_IDENT)
-    error_at(token->str, "expected an identifier");
+    error_tok(token, "expected an identifier");
   char *s = strndup(token->str, token->len);
   token = token->next;
   return s;
