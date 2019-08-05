@@ -1,3 +1,21 @@
+// This file contains a recursive descent parser for C.
+//
+// Most functions in this file are named after the symbols they are
+// supposed to read from an input token list. For example, stmt() is
+// responsible for reading a statement from a token list. The function
+// then construct an AST node representing a statement.
+//
+// Each function conceptually returns two values, an AST node and
+// remaining part of the input tokens. Since C doesn't support
+// multiple return values, the remaining tokens are returned to the
+// caller via a pointer argument.
+//
+// Input tokens are represented by a linked list. Unlike many recursive
+// descent parsers, we don't have the notion of the "input token stream".
+// Most parsing functions don't change the global state of the parser.
+// So it is very easy to lookahead arbitrary number of tokens in this
+// parser.
+
 #include "chibicc.h"
 
 // All local variable instances created during parsing are
@@ -263,7 +281,7 @@ static Node *mul(Token **rest, Token *tok) {
   }
 }
 
-// unary = ("+" | "-") unary
+// unary = ("+" | "-" | "*" | "&") unary
 //       | primary
 static Node *unary(Token **rest, Token *tok) {
   if (equal(tok, "+"))
@@ -271,6 +289,12 @@ static Node *unary(Token **rest, Token *tok) {
 
   if (equal(tok, "-"))
     return new_unary(ND_NEG, unary(rest, tok->next), tok);
+
+  if (equal(tok, "&"))
+    return new_unary(ND_ADDR, unary(rest, tok->next), tok);
+
+  if (equal(tok, "*"))
+    return new_unary(ND_DEREF, unary(rest, tok->next), tok);
 
   return primary(rest, tok);
 }
