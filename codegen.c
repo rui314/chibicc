@@ -22,6 +22,12 @@ static void gen_addr(Node *node) {
   error_tok(node->tok, "not an lvalue");
 }
 
+static void gen_lval(Node *node) {
+  if (node->ty->kind == TY_ARRAY)
+    error_tok(node->tok, "not an lvalue");
+  gen_addr(node);
+}
+
 static void load(void) {
   printf("  pop rax\n");
   printf("  mov rax, [rax]\n");
@@ -49,10 +55,11 @@ static void gen(Node *node) {
     return;
   case ND_VAR:
     gen_addr(node);
-    load();
+    if (node->ty->kind != TY_ARRAY)
+      load();
     return;
   case ND_ASSIGN:
-    gen_addr(node->lhs);
+    gen_lval(node->lhs);
     gen(node->rhs);
     store();
     return;
@@ -61,7 +68,8 @@ static void gen(Node *node) {
     return;
   case ND_DEREF:
     gen(node->lhs);
-    load();
+    if (node->ty->kind != TY_ARRAY)
+      load();
     return;
   case ND_IF: {
     int seq = labelseq++;
@@ -166,20 +174,20 @@ static void gen(Node *node) {
     printf("  add rax, rdi\n");
     break;
   case ND_PTR_ADD:
-    printf("  imul rdi, 8\n");
+    printf("  imul rdi, %d\n", node->ty->base->size);
     printf("  add rax, rdi\n");
     break;
   case ND_SUB:
     printf("  sub rax, rdi\n");
     break;
   case ND_PTR_SUB:
-    printf("  imul rdi, 8\n");
+    printf("  imul rdi, %d\n", node->ty->base->size);
     printf("  sub rax, rdi\n");
     break;
   case ND_PTR_DIFF:
     printf("  sub rax, rdi\n");
     printf("  cqo\n");
-    printf("  mov rdi, 8\n");
+    printf("  mov rdi, %d\n", node->lhs->ty->base->size);
     printf("  idiv rdi\n");
     break;
   case ND_MUL:
