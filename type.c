@@ -40,7 +40,6 @@ void add_type(Node *node) {
   case ND_NE:
   case ND_LT:
   case ND_LE:
-  case ND_VAR:
   case ND_FUNCALL:
   case ND_NUM:
     node->ty = int_type;
@@ -50,14 +49,16 @@ void add_type(Node *node) {
   case ND_ASSIGN:
     node->ty = node->lhs->ty;
     return;
+  case ND_VAR:
+    node->ty = node->var->ty;
+    return;
   case ND_ADDR:
     node->ty = pointer_to(node->lhs->ty);
     return;
   case ND_DEREF:
-    if (node->lhs->ty->kind == TY_PTR)
-      node->ty = node->lhs->ty->base;
-    else
-      node->ty = int_type;
+    if (node->lhs->ty->kind != TY_PTR)
+      error_tok(node->tok, "invalid pointer dereference");
+    node->ty = node->lhs->ty->base;
     return;
   }
 }
