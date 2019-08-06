@@ -407,15 +407,22 @@ static Node *func_args(void) {
   return head;
 }
 
-// primary = "(" expr ")" | ident func-args? | num
+// primary = "(" expr ")" | "sizeof" unary | ident func-args? | num
 static Node *primary(void) {
+  Token *tok;
+
   if (consume("(")) {
     Node *node = expr();
     expect(")");
     return node;
   }
 
-  Token *tok;
+  if (tok = consume("sizeof")) {
+    Node *node = unary();
+    add_type(node);
+    return new_num(node->ty->size, tok);
+  }
+
   if (tok = consume_ident()) {
     // Function call
     if (consume("(")) {
