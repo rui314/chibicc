@@ -82,6 +82,7 @@ typedef enum {
   ND_IF,        // "if"
   ND_WHILE,     // "while"
   ND_FOR,       // "for"
+  ND_SIZEOF,    // "sizeof"
   ND_BLOCK,     // { ... }
   ND_FUNCALL,   // Function call
   ND_EXPR_STMT, // Expression statement
