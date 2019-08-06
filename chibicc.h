@@ -18,6 +18,7 @@ typedef struct Node Node;
 typedef enum {
   TK_RESERVED, // Keywords or punctuators
   TK_IDENT,    // Identifiers
+  TK_STR,      // String literals
   TK_NUM,      // Numeric literals
   TK_EOF,      // End-of-file markers
 } TokenKind;
@@ -30,6 +31,8 @@ struct Token {
   int val;        // If kind is TK_NUM, its value
   char *loc;      // Token location
   int len;        // Token length
+  Type *ty;       // Used if TK_STR
+  char *str;      // String literal contents including terminating '\0'
 };
 
 void error(char *fmt, ...);
@@ -57,6 +60,9 @@ struct Var {
 
   // Global variable or function
   bool is_function;
+
+  // Global variable
+  char *init_data;
 
   // Function
   Var *params;
