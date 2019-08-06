@@ -71,6 +71,13 @@ Var *push_var(char *name, Type *ty, bool is_local) {
   return var;
 }
 
+char *new_label() {
+  static int cnt = 0;
+  char buf[20];
+  sprintf(buf, ".L.data.%d", cnt++);
+  return strndup(buf, 20);
+}
+
 Function *function();
 Type *basetype();
 void global_var();
@@ -413,6 +420,7 @@ Node *postfix() {
   return node;
 }
 
+
 // func-args = "(" (assign ("," assign)*)? ")"
 Node *func_args() {
   if (consume(")"))
@@ -428,7 +436,8 @@ Node *func_args() {
   return head;
 }
 
-// primary = "(" expr ")" | "sizeof" unary | ident func-args? | num
+// primary = "(" expr ")" | "sizeof" unary | ident func-args? | str | num
+// args = "(" ident ("," ident)* ")"
 Node *primary() {
   Token *tok;
 
@@ -456,6 +465,16 @@ Node *primary() {
   }
 
   tok = token;
+  if (tok->kind == TK_STR) {
+    token = token->next;
+
+    Type *ty = array_of(char_type(), tok->cont_len);
+    Var *var = push_var(new_label(), ty, false);
+    var->contents = tok->contents;
+    var->cont_len = tok->cont_len;
+    return new_var(var, tok);
+  }
+
   if (tok->kind != TK_NUM)
     error_tok(tok, "expected expression");
   return new_num(expect_number(), tok);
