@@ -183,4 +183,9 @@ assert 106 'int main() { return "\j"[0]; }'
 assert 107 'int main() { return "\k"[0]; }'
 assert 108 'int main() { return "\l"[0]; }'
 
+assert 0 'int main() { return ({ 0; }); }'
+assert 2 'int main() { return ({ 0; 1; 2; }); }'
+assert 1 'int main() { ({ 0; return 1; 2; }); return 3; }'
+assert 3 'int main() { return ({ int x=3; x; }); }'
+
 echo OK
