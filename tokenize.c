@@ -92,16 +92,50 @@ static bool is_keyword(Token *tok) {
   return false;
 }
 
-static Token *read_string_literal(Token *cur, char *start) {
-  char *p = start + 1;
-  while (*p && *p != '"')
-    p++;
-  if (!*p)
-    error_at(start, "unclosed string literal");
+static int read_escaped_char(char *p) {
+  switch (*p) {
+  case 'a': return '\a';
+  case 'b': return '\b';
+  case 't': return '\t';
+  case 'n': return '\n';
+  case 'v': return '\v';
+  case 'f': return '\f';
+  case 'r': return '\r';
+  // [GNU] \e for the ASCII escape character is a GNU C extension.
+  case 'e': return 27;
+  default: return *p;
+  }
+}
 
-  Token *tok = new_token(TK_STR, cur, start, p - start + 1);
-  tok->ty = array_of(ty_char, p - start);
-  tok->str = strndup(start + 1, p - start - 1);
+// Find a closing double-quote.
+static char *string_literal_end(char *p) {
+  char *start = p;
+  for (; *p != '"'; p++) {
+    if (*p == '\0')
+      error_at(start, "unclosed string literal");
+    if (*p == '\\')
+      p++;
+  }
+  return p;
+}
+
+static Token *read_string_literal(Token *cur, char *start) {
+  char *end = string_literal_end(start + 1);
+  char *buf = calloc(1, end - start);
+  int len = 0;
+
+  for (char *p = start + 1; p < end;) {
+    if (*p == '\\') {
+      buf[len++] = read_escaped_char(p + 1);
+      p += 2;
+    } else {
+      buf[len++] = *p++;
+    }
+  }
+
+  Token *tok = new_token(TK_STR, cur, start, end - start + 1);
+  tok->ty = array_of(ty_char, len + 1);
+  tok->str = buf;
   return tok;
 }
 
