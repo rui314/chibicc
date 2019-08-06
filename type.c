@@ -1,9 +1,10 @@
 #include "chibi.h"
 
-Type *int_type = &(Type){ TY_INT, 8 };
+Type *char_type = &(Type){ TY_CHAR, 1 };
+Type *int_type  = &(Type){ TY_INT, 8 };
 
 bool is_integer(Type *ty) {
-  return ty->kind == TY_INT;
+  return ty->kind == TY_CHAR || ty->kind == TY_INT;
 }
 
 Type *pointer_to(Type *base) {

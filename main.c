@@ -1,5 +1,9 @@
 #include "chibi.h"
 
+int align_to(int n, int align) {
+  return (n + align - 1) & ~(align - 1);
+}
+
 int main(int argc, char **argv) {
   if (argc != 2)
     error("%s: invalid number of arguments", argv[0]);
@@ -17,7 +21,7 @@ int main(int argc, char **argv) {
       offset += var->ty->size;
       var->offset = offset;
     }
-    fn->stack_size = offset;
+    fn->stack_size = align_to(offset, 8);
   }
 
   // Traverse the AST to emit assembly.

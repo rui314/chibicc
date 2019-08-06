@@ -1,6 +1,7 @@
 #include "chibi.h"
 
-static char *argreg[] = {"rdi", "rsi", "rdx", "rcx", "r8", "r9"};
+static char *argreg1[] = {"dil", "sil", "dl", "cl", "r8b", "r9b"};
+static char *argreg8[] = {"rdi", "rsi", "rdx", "rcx", "r8", "r9"};
 
 static int labelseq = 1;
 static char *funcname;
@@ -34,16 +35,24 @@ static void gen_lval(Node *node) {
   gen_addr(node);
 }
 
-static void load(void) {
+static void load(Type *ty) {
   printf("  pop rax\n");
-  printf("  mov rax, [rax]\n");
+  if (ty->size == 1)
+    printf("  movsx rax, byte ptr [rax]\n");
+  else
+    printf("  mov rax, [rax]\n");
   printf("  push rax\n");
 }
 
-static void store(void) {
+static void store(Type *ty) {
   printf("  pop rdi\n");
   printf("  pop rax\n");
-  printf("  mov [rax], rdi\n");
+
+  if (ty->size == 1)
+    printf("  mov [rax], dil\n");
+  else
+    printf("  mov [rax], rdi\n");
+
   printf("  push rdi\n");
 }
 
@@ -62,12 +71,12 @@ static void gen(Node *node) {
   case ND_VAR:
     gen_addr(node);
     if (node->ty->kind != TY_ARRAY)
-      load();
+      load(node->ty);
     return;
   case ND_ASSIGN:
     gen_lval(node->lhs);
     gen(node->rhs);
-    store();
+    store(node->ty);
     return;
   case ND_ADDR:
     gen_addr(node->lhs);
@@ -75,7 +84,7 @@ static void gen(Node *node) {
   case ND_DEREF:
     gen(node->lhs);
     if (node->ty->kind != TY_ARRAY)
-      load();
+      load(node->ty);
     return;
   case ND_IF: {
     int seq = labelseq++;
@@ -141,7 +150,7 @@ static void gen(Node *node) {
     }
 
     for (int i = nargs - 1; i >= 0; i--)
-      printf("  pop %s\n", argreg[i]);
+      printf("  pop %s\n", argreg8[i]);
 
     // We need to align RSP to a 16 byte boundary before
     // calling a function because it is an ABI requirement.
@@ -238,6 +247,16 @@ static void emit_data(Program *prog) {
   }
 }
 
+static void load_arg(Var *var, int idx) {
+  int sz = var->ty->size;
+  if (sz == 1) {
+    printf("  mov [rbp-%d], %s\n", var->offset, argreg1[idx]);
+  } else {
+    assert(sz == 8);
+    printf("  mov [rbp-%d], %s\n", var->offset, argreg8[idx]);
+  }
+}
+
 static void emit_text(Program *prog) {
   printf(".text\n");
 
@@ -253,10 +272,8 @@ static void emit_text(Program *prog) {
 
     // Push arguments to the stack
     int i = 0;
-    for (VarList *vl = fn->params; vl; vl = vl->next) {
-      Var *var = vl->var;
-      printf("  mov [rbp-%d], %s\n", var->offset, argreg[i++]);
-    }
+    for (VarList *vl = fn->params; vl; vl = vl->next)
+      load_arg(vl->var, i++);
 
     // Emit code
     for (Node *node = fn->node; node; node = node->next)
