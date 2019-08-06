@@ -106,6 +106,13 @@ void visit(Node *node) {
     node->val = size_of(node->lhs->ty);
     node->lhs = NULL;
     return;
+  case ND_STMT_EXPR: {
+    Node *last = node->body;
+    while (last->next)
+      last = last->next;
+    node->ty = last->ty;
+    return;
+  }
   }
 }
 
