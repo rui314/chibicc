@@ -51,12 +51,15 @@ extern Token *token;
 // parse.c
 //
 
-// Local variable
+// Variable
 typedef struct Var Var;
 struct Var {
-  char *name; // Variable name
-  Type *ty;   // Type
-  int offset; // Offset from RBP
+  char *name;    // Variable name
+  Type *ty;      // Type
+  bool is_local; // local or global
+
+  // Local variable
+  int offset;    // Offset from RBP
 };
 
 typedef struct VarList VarList;
@@ -131,7 +134,12 @@ struct Function {
   int stack_size;
 };
 
-Function *program();
+typedef struct {
+  VarList *globals;
+  Function *fns;
+} Program;
+
+Program *program();
 
 //
 // typing.c
@@ -150,10 +158,10 @@ Type *pointer_to(Type *base);
 Type *array_of(Type *base, int size);
 int size_of(Type *ty);
 
-void add_type(Function *prog);
+void add_type(Program *prog);
 
 //
 // codegen.c
 //
 
-void codegen(Function *prog);
+void codegen(Program *prog);
