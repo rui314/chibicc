@@ -8,7 +8,9 @@ chibicc: $(OBJS)
 $(OBJS): chibi.h
 
 test: chibicc
-	./test.sh
+	./chibicc tests > tmp.s
+	gcc -static -o tmp tmp.s
+	./tmp
 
 clean:
 	rm -f chibicc *.o *~ tmp*
