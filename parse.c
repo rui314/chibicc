@@ -2,16 +2,11 @@
 
 VarList *locals;
 VarList *globals;
+VarList *scope;
 
-// Find a local variable by name.
+// Find a variable by name.
 Var *find_var(Token *tok) {
-  for (VarList *vl = locals; vl; vl = vl->next) {
-    Var *var = vl->var;
-    if (strlen(var->name) == tok->len && !memcmp(tok->str, var->name, tok->len))
-      return var;
-  }
-
-  for (VarList *vl = globals; vl; vl = vl->next) {
+  for (VarList *vl = scope; vl; vl = vl->next) {
     Var *var = vl->var;
     if (strlen(var->name) == tok->len && !memcmp(tok->str, var->name, tok->len))
       return var;
@@ -59,7 +54,6 @@ Var *push_var(char *name, Type *ty, bool is_local) {
 
   VarList *vl = calloc(1, sizeof(VarList));
   vl->var = var;
-
   if (is_local) {
     vl->next = locals;
     locals = vl;
@@ -67,6 +61,11 @@ Var *push_var(char *name, Type *ty, bool is_local) {
     vl->next = globals;
     globals = vl;
   }
+
+  VarList *sc = calloc(1, sizeof(VarList));
+  sc->var = var;
+  sc->next = scope;
+  scope = sc;
 
   return var;
 }
@@ -295,10 +294,12 @@ Node *stmt() {
     head.next = NULL;
     Node *cur = &head;
 
+    VarList *sc = scope;
     while (!consume("}")) {
       cur->next = stmt();
       cur = cur->next;
     }
+    scope = sc;
 
     Node *node = new_node(ND_BLOCK, tok);
     node->body = head.next;
@@ -424,6 +425,8 @@ Node *postfix() {
 //
 // Statement expression is a GNU C extension.
 Node *stmt_expr(Token *tok) {
+  VarList *sc = scope;
+
   Node *node = new_node(ND_STMT_EXPR, tok);
   node->body = stmt();
   Node *cur = node->body;
@@ -433,6 +436,8 @@ Node *stmt_expr(Token *tok) {
     cur = cur->next;
   }
   expect(")");
+
+  scope = sc;
 
   if (cur->kind != ND_EXPR_STMT)
     error_tok(cur->tok, "stmt expr returning void is not supported");
