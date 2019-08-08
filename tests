@@ -243,6 +243,11 @@ int main() {
   assert(3, ({ struct t {char a;} x; struct t *y = &x; x.a=3; y->a; }), "struct t {char a;} x; struct t *y = &x; x.a=3; y->a;");
   assert(3, ({ struct t {char a;} x; struct t *y = &x; y->a=3; x.a; }), "struct t {char a;} x; struct t *y = &x; y->a=3; x.a;");
 
+  assert(1, ({ typedef int t; t x=1; x; }), "typedef int t; t x=1; x;");
+  assert(1, ({ typedef struct {int a;} t; t x; x.a=1; x.a; }), "typedef struct {int a;} t; t x; x.a=1; x.a;");
+  assert(1, ({ typedef int t; t t=1; t; }), "typedef int t; t t=1; t;");
+  assert(2, ({ typedef struct {int a;} t; { typedef int t; } t x; x.a=2; x.a; }), "typedef struct {int a;} t; { typedef int t; } t x; x.a=2; x.a;");
+
   printf("OK\n");
   return 0;
 }
