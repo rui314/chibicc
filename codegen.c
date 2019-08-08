@@ -249,6 +249,7 @@ static void assign_lvar_offsets(Obj *prog) {
     int offset = 0;
     for (Obj *var = fn->locals; var; var = var->next) {
       offset += var->ty->size;
+      offset = align_to(offset, var->ty->align);
       var->offset = -offset;
     }
     fn->stack_size = align_to(offset, 16);
