@@ -149,16 +149,16 @@ int main() {
   assert(5, ({ int x[2][3]; int *y=x; y[5]=5; x[1][2]; }), "int x[2][3]; int *y=x; y[5]=5; x[1][2];");
   assert(6, ({ int x[2][3]; int *y=x; y[6]=6; x[2][0]; }), "int x[2][3]; int *y=x; y[6]=6; x[2][0];");
 
-  assert(8, ({ int x; sizeof(x); }), "int x; sizeof(x);");
-  assert(8, ({ int x; sizeof x; }), "int x; sizeof x;");
+  assert(4, ({ int x; sizeof(x); }), "int x; sizeof(x);");
+  assert(4, ({ int x; sizeof x; }), "int x; sizeof x;");
   assert(8, ({ int *x; sizeof(x); }), "int *x; sizeof(x);");
-  assert(32, ({ int x[4]; sizeof(x); }), "int x[4]; sizeof(x);");
-  assert(96, ({ int x[3][4]; sizeof(x); }), "int x[3][4]; sizeof(x);");
-  assert(32, ({ int x[3][4]; sizeof(*x); }), "int x[3][4]; sizeof(*x);");
-  assert(8, ({ int x[3][4]; sizeof(**x); }), "int x[3][4]; sizeof(**x);");
-  assert(9, ({ int x[3][4]; sizeof(**x) + 1; }), "int x[3][4]; sizeof(**x) + 1;");
-  assert(9, ({ int x[3][4]; sizeof **x + 1; }), "int x[3][4]; sizeof **x + 1;");
-  assert(8, ({ int x[3][4]; sizeof(**x + 1); }), "int x[3][4]; sizeof(**x + 1);");
+  assert(16, ({ int x[4]; sizeof(x); }), "int x[4]; sizeof(x);");
+  assert(48, ({ int x[3][4]; sizeof(x); }), "int x[3][4]; sizeof(x);");
+  assert(16, ({ int x[3][4]; sizeof(*x); }), "int x[3][4]; sizeof(*x);");
+  assert(4, ({ int x[3][4]; sizeof(**x); }), "int x[3][4]; sizeof(**x);");
+  assert(5, ({ int x[3][4]; sizeof(**x) + 1; }), "int x[3][4]; sizeof(**x) + 1;");
+  assert(5, ({ int x[3][4]; sizeof **x + 1; }), "int x[3][4]; sizeof **x + 1;");
+  assert(4, ({ int x[3][4]; sizeof(**x + 1); }), "int x[3][4]; sizeof(**x + 1);");
 
   assert(0, g1, "g1");
   g1=3;
@@ -170,8 +170,8 @@ int main() {
   assert(2, g2[2], "g2[2]");
   assert(3, g2[3], "g2[3]");
 
-  assert(8, sizeof(g1), "sizeof(g1)");
-  assert(32, sizeof(g2), "sizeof(g2)");
+  assert(4, sizeof(g1), "sizeof(g1)");
+  assert(16, sizeof(g2), "sizeof(g2)");
 
   assert(1, ({ char x=1; x; }), "char x=1; x;");
   assert(1, ({ char x=1; char y=2; x; }), "char x=1; char y=2; x;");
@@ -223,20 +223,18 @@ int main() {
 
   assert(6, ({ struct { struct { int b; } a; } x; x.a.b=6; x.a.b; }), "struct { struct { int b; } a; } x; x.a.b=6; x.a.b;");
 
-  assert(8, ({ struct {int a;} x; sizeof(x); }), "struct {int a;} x; sizeof(x);");
-  assert(16, ({ struct {int a; int b;} x; sizeof(x); }), "struct {int a; int b;} x; sizeof(x);");
-  assert(24, ({ struct {int a[3];} x; sizeof(x); }), "struct {int a[3];} x; sizeof(x);");
-  assert(32, ({ struct {int a;} x[4]; sizeof(x); }), "struct {int a;} x[4]; sizeof(x);");
-  assert(48, ({ struct {int a[3];} x[2]; sizeof(x); }), "struct {int a[3];} x[2]; sizeof(x)};");
+  assert(4, ({ struct {int a;} x; sizeof(x); }), "struct {int a;} x; sizeof(x);");
+  assert(8, ({ struct {int a; int b;} x; sizeof(x); }), "struct {int a; int b;} x; sizeof(x);");
+  assert(12, ({ struct {int a[3];} x; sizeof(x); }), "struct {int a[3];} x; sizeof(x);");
+  assert(16, ({ struct {int a;} x[4]; sizeof(x); }), "struct {int a;} x[4]; sizeof(x);");
+  assert(24, ({ struct {int a[3];} x[2]; sizeof(x); }), "struct {int a[3];} x[2]; sizeof(x)};");
   assert(2, ({ struct {char a; char b;} x; sizeof(x); }), "struct {char a; char b;} x; sizeof(x);");
-  assert(16, ({ struct {char a; int b;} x; sizeof(x); }), "struct {char a; int b;} x; sizeof(x);");
-  assert(16, ({ struct {int a; char b;} x; sizeof(x); }), "struct {int a; char b;} x; sizeof(x);");
+  assert(8, ({ struct {char a; int b;} x; sizeof(x); }), "struct {char a; int b;} x; sizeof(x);");
+  assert(8, ({ struct {int a; char b;} x; sizeof(x); }), "struct {int a; char b;} x; sizeof(x);");
 
-  assert(15, ({ int x; char y; int a=&x; int b=&y; b-a; }), "int x; char y; int a=&x; int b=&y; b-a;");
+  assert(7, ({ int x; char y; int a=&x; int b=&y; b-a; }), "int x; char y; int a=&x; int b=&y; b-a;");
   assert(1, ({ char x; int y; int a=&x; int b=&y; b-a; }), "char x; int y; int a=&x; int b=&y; b-a;");
 
-  assert(16, ({ struct t {int a; int b;} x; struct t y; sizeof(y); }), "struct t {int a; int b;} x; struct t y; sizeof(y);");
-  assert(16, ({ struct t {int a; int b;}; struct t y; sizeof(y); }), "struct t {int a; int b;}; struct t y; sizeof(y);");
   assert(2, ({ struct t {char a[2];}; { struct t {char a[4];}; } struct t y; sizeof(y); }), "struct t {char a[2];}; { struct t {char a[4];}; } struct t y; sizeof(y);");
   assert(3, ({ struct t {int x;}; int t=1; struct t y; y.x=2; t+y.x; }), "struct t {int x;}; int t=1; struct t y; y.x=2; t+y.x;");
 
@@ -247,6 +245,9 @@ int main() {
   assert(1, ({ typedef struct {int a;} t; t x; x.a=1; x.a; }), "typedef struct {int a;} t; t x; x.a=1; x.a;");
   assert(1, ({ typedef int t; t t=1; t; }), "typedef int t; t t=1; t;");
   assert(2, ({ typedef struct {int a;} t; { typedef int t; } t x; x.a=2; x.a; }), "typedef struct {int a;} t; { typedef int t; } t x; x.a=2; x.a;");
+
+  assert(8, ({ struct t {int a; int b;} x; struct t y; sizeof(y); }), "struct t {int a; int b;} x; struct t y; sizeof(y);");
+  assert(8, ({ struct t {int a; int b;}; struct t y; sizeof(y); }), "struct t {int a; int b;}; struct t y; sizeof(y);");
 
   printf("OK\n");
   return 0;
