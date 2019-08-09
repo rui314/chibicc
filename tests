@@ -43,6 +43,14 @@ int sub_char(char a, char b, char c) {
   return a - b - c;
 }
 
+int sub_short(short a, short b, short c) {
+  return a - b - c;
+}
+
+int sub_long(long a, long b, long c) {
+  return a - b - c;
+}
+
 int fib(int x) {
   if (x<=1)
     return 1;
@@ -158,7 +166,7 @@ int main() {
   assert(4, ({ int x[3][4]; sizeof(**x); }), "int x[3][4]; sizeof(**x);");
   assert(5, ({ int x[3][4]; sizeof(**x) + 1; }), "int x[3][4]; sizeof(**x) + 1;");
   assert(5, ({ int x[3][4]; sizeof **x + 1; }), "int x[3][4]; sizeof **x + 1;");
-  assert(4, ({ int x[3][4]; sizeof(**x + 1); }), "int x[3][4]; sizeof(**x + 1);");
+  assert(8, ({ int x[3][4]; sizeof(**x + 1); }), "int x[3][4]; sizeof(**x + 1);");
 
   assert(0, g1, "g1");
   g1=3;
@@ -248,6 +256,15 @@ int main() {
 
   assert(8, ({ struct t {int a; int b;} x; struct t y; sizeof(y); }), "struct t {int a; int b;} x; struct t y; sizeof(y);");
   assert(8, ({ struct t {int a; int b;}; struct t y; sizeof(y); }), "struct t {int a; int b;}; struct t y; sizeof(y);");
+
+  assert(2, ({ short x; sizeof(x); }), "short x; sizeof(x);");
+  assert(4, ({ struct {char a; short b;} x; sizeof(x); }), "struct {char a; short b;} x; sizeof(x);");
+
+  assert(8, ({ long x; sizeof(x); }), "long x; sizeof(x);");
+  assert(16, ({ struct {char a; long b;} x; sizeof(x); }), "struct {char a; long b} x; sizeof(x);");
+
+  assert(1, sub_short(7, 3, 3), "sub_short(7, 3, 3)");
+  assert(1, sub_long(7, 3, 3), "sub_long(7, 3, 3)");
 
   printf("OK\n");
   return 0;
