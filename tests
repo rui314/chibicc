@@ -14,11 +14,11 @@ int g2[4];
 
 typedef int MyInt;
 
-int assert(int expected, int actual, char *code) {
+int assert(long expected, long actual, char *code) {
   if (expected == actual) {
-    printf("%s => %d\n", code, actual);
+    printf("%s => %ld\n", code, actual);
   } else {
-    printf("%s => %d expected but got %d\n", code, expected, actual);
+    printf("%s => %ld expected but got %ld\n", code, expected, actual);
     exit(1);
   }
 }
