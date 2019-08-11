@@ -35,6 +35,10 @@ Type *long_type() {
   return new_type(TY_LONG, 8);
 }
 
+Type *enum_type() {
+  return new_type(TY_ENUM, 4);
+}
+
 Type *func_type(Type *return_ty) {
   Type *ty = new_type(TY_FUNC, 1);
   ty->return_ty = return_ty;
@@ -64,6 +68,7 @@ int size_of(Type *ty) {
   case TY_SHORT:
     return 2;
   case TY_INT:
+  case TY_ENUM:
     return 4;
   case TY_LONG:
   case TY_PTR:

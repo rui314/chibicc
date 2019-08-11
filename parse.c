@@ -7,6 +7,8 @@ struct VarScope {
   char *name;
   Var *var;
   Type *type_def;
+  Type *enum_ty;
+  int enum_val;
 };
 
 // Scope for struct tags
@@ -122,6 +124,7 @@ Type *abstract_declarator(Type *ty);
 Type *type_suffix(Type *ty);
 Type *type_name();
 Type *struct_decl();
+Type *enum_specifier();
 Member *struct_member();
 void global_var();
 Node *declaration();
@@ -176,7 +179,7 @@ Program *program() {
   return prog;
 }
 
-// type-specifier = builtin-type | struct-decl | typedef-name
+// type-specifier = builtin-type | struct-decl | typedef-name | enum-specifier
 //
 // builtin-type   = "void"
 //                | "_Bool"
@@ -227,6 +230,10 @@ Type *type_specifier() {
       if (base_type || user_type)
         break;
       user_type = struct_decl();
+    } else if (peek("enum")) {
+      if (base_type || user_type)
+        break;
+      user_type = enum_specifier();
     } else {
       if (base_type || user_type)
         break;
@@ -339,6 +346,8 @@ Type *struct_decl() {
     TagScope *sc = find_tag(tag);
     if (!sc)
       error_tok(tag, "unknown struct type");
+    if (sc->ty->kind != TY_STRUCT)
+      error_tok(tag, "not a struct tag");
     return sc->ty;
   }
 
@@ -370,6 +379,52 @@ Type *struct_decl() {
   }
 
   // Register the struct type if a name was given.
+  if (tag)
+    push_tag_scope(tag, ty);
+  return ty;
+}
+
+// enum-specifier = "enum" ident
+//                | "enum" ident? "{" enum-list? "}"
+//
+// enum-list = ident ("=" num)? ("," ident ("=" num)?)* ","?
+Type *enum_specifier() {
+  expect("enum");
+  Type *ty = enum_type();
+
+  // Read an enum tag.
+  Token *tag = consume_ident();
+  if (tag && !peek("{")) {
+    TagScope *sc = find_tag(tag);
+    if (!sc)
+      error_tok(tag, "unknown enum type");
+    if (sc->ty->kind != TY_ENUM)
+      error_tok(tag, "not an enum tag");
+    return sc->ty;
+  }
+
+  expect("{");
+
+  // Read enum-list.
+  int cnt = 0;
+  for (;;) {
+    char *name = expect_ident();
+    if (consume("="))
+      cnt = expect_number();
+
+    VarScope *sc = push_scope(name);
+    sc->enum_ty = ty;
+    sc->enum_val = cnt++;
+
+    if (consume(",")) {
+      if (consume("}"))
+        break;
+      continue;
+    }
+    expect("}");
+    break;
+  }
+
   if (tag)
     push_tag_scope(tag, ty);
   return ty;
@@ -504,8 +559,8 @@ Node *read_expr_stmt() {
 
 bool is_typename() {
   return peek("void") || peek("_Bool") || peek("char") || peek("short") ||
-         peek("int") || peek("long") || peek("struct") || peek("typedef") ||
-         find_typedef(token);
+         peek("int") || peek("long") || peek("enum") || peek("struct") ||
+         peek("typedef") || find_typedef(token);
 }
 
 // stmt = "return" expr ";"
@@ -822,8 +877,12 @@ Node *primary() {
     }
 
     VarScope *sc = find_var(tok);
-    if (sc && sc->var)
-      return new_var(sc->var, tok);
+    if (sc) {
+      if (sc->var)
+        return new_var(sc->var, tok);
+      if (sc->enum_ty)
+        return new_num(sc->enum_val, tok);
+    }
     error_tok(tok, "undefined variable");
   }
 
