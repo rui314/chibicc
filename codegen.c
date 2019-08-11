@@ -112,6 +112,42 @@ static void store(Type *ty) {
     println("  mov %%rax, (%%rdi)");
 }
 
+enum { I8, I16, I32, I64 };
+
+static int getTypeId(Type *ty) {
+  switch (ty->kind) {
+  case TY_CHAR:
+    return I8;
+  case TY_SHORT:
+    return I16;
+  case TY_INT:
+    return I32;
+  }
+  return I64;
+}
+
+// The table for type casts
+static char i32i8[] = "movsbl %al, %eax";
+static char i32i16[] = "movswl %ax, %eax";
+static char i32i64[] = "movsxd %eax, %rax";
+
+static char *cast_table[][10] = {
+  {NULL,  NULL,   NULL, i32i64}, // i8
+  {i32i8, NULL,   NULL, i32i64}, // i16
+  {i32i8, i32i16, NULL, i32i64}, // i32
+  {i32i8, i32i16, NULL, NULL},   // i64
+};
+
+static void cast(Type *from, Type *to) {
+  if (to->kind == TY_VOID)
+    return;
+
+  int t1 = getTypeId(from);
+  int t2 = getTypeId(to);
+  if (cast_table[t1][t2])
+    println("  %s", cast_table[t1][t2]);
+}
+
 // Generate code for a given node.
 static void gen_expr(Node *node) {
   println("  .loc 1 %d", node->tok->line_no);
@@ -149,6 +185,10 @@ static void gen_expr(Node *node) {
   case ND_COMMA:
     gen_expr(node->lhs);
     gen_expr(node->rhs);
+    return;
+  case ND_CAST:
+    gen_expr(node->lhs);
+    cast(node->lhs->ty, node->ty);
     return;
   case ND_FUNCALL: {
     int nargs = 0;
