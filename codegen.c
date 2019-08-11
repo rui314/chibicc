@@ -86,6 +86,25 @@ void store(Type *ty) {
   printf("  push rdi\n");
 }
 
+void truncate(Type *ty) {
+  printf("  pop rax\n");
+
+  if (ty->kind == TY_BOOL) {
+    printf("  cmp rax, 0\n");
+    printf("  setne al\n");
+  }
+
+  int sz = size_of(ty);
+  if (sz == 1) {
+    printf("  movsx rax, al\n");
+  } else if (sz == 2) {
+    printf("  movsx rax, ax\n");
+  } else if (sz == 4) {
+    printf("  movsxd rax, eax\n");
+  }
+  printf("  push rax\n");
+}
+
 // Generate code for a given node.
 void gen(Node *node) {
   switch (node->kind) {
@@ -212,6 +231,10 @@ void gen(Node *node) {
     gen(node->lhs);
     printf("  pop rax\n");
     printf("  jmp .Lreturn.%s\n", funcname);
+    return;
+  case ND_CAST:
+    gen(node->lhs);
+    truncate(node->ty);
     return;
   }
 
