@@ -192,11 +192,15 @@ Program *program(void) {
 
   while (!at_eof()) {
     if (is_function()) {
-      cur->next = function();
+      Function *fn = function();
+      if (!fn)
+        continue;
+      cur->next = fn;
       cur = cur->next;
-    } else {
-      global_var();
+      continue;
     }
+
+    global_var();
   }
 
   Program *prog = calloc(1, sizeof(Program));
@@ -345,7 +349,7 @@ static VarList *read_func_params(void) {
   return head;
 }
 
-// function = basetype declarator "(" params? ")" "{" stmt* "}"
+// function = basetype declarator "(" params? ")" ("{" stmt* "}" | ";")
 // params   = param ("," param)*
 // param    = basetype declarator type-suffix
 static Function *function(void) {
@@ -361,10 +365,15 @@ static Function *function(void) {
 
   Scope *sc = enter_scope();
   fn->params = read_func_params();
-  expect("{");
+
+  if (consume(";")) {
+    leave_scope(sc);
+    return NULL;
+  }
 
   Node head = {};
   Node *cur = &head;
+  expect("{");
   while (!consume("}")) {
     cur->next = stmt();
     cur = cur->next;

@@ -6,6 +6,9 @@
  * This is a block comment.
  */
 
+int printf();
+int exit();
+
 int g1;
 int g2[4];
 
