@@ -301,6 +301,24 @@ int main() {
 
   assert(3, ({ MyInt x=3; x; }), "MyInt x=3; x;");
 
+  assert(1, sizeof(char), "sizeof(char)");
+  assert(2, sizeof(short), "sizeof(short)");
+  assert(2, sizeof(short int), "sizeof(short int)");
+  assert(2, sizeof(int short), "sizeof(int short)");
+  assert(4, sizeof(int), "sizeof(int)");
+  assert(8, sizeof(long), "sizeof(long)");
+  assert(8, sizeof(long int), "sizeof(long int)");
+  assert(8, sizeof(long int), "sizeof(long int)");
+  assert(8, sizeof(char *), "sizeof(char *)");
+  assert(8, sizeof(int *), "sizeof(int *)");
+  assert(8, sizeof(long *), "sizeof(long *)");
+  assert(8, sizeof(int **), "sizeof(int **)");
+  assert(8, sizeof(int(*)[4]), "sizeof(int(*)[4])");
+  assert(32, sizeof(int*[4]), "sizeof(int(*)[4])");
+  assert(16, sizeof(int[4]), "sizeof(int[4])");
+  assert(48, sizeof(int[3][4]), "sizeof(int[3][4])");
+  assert(8, sizeof(struct {int a; int b;}), "sizeof(struct {int a; int b;})");
+
   printf("OK\n");
   return 0;
 }
