@@ -211,6 +211,28 @@ static Token *read_string_literal(Token *cur, char *start) {
   return tok;
 }
 
+static Token *read_char_literal(Token *cur, char *start) {
+  char *p = start + 1;
+  if (*p == '\0')
+    error_at(start, "unclosed char literal");
+
+  char c;
+  if (*p == '\\') {
+    p++;
+    c = get_escape_char(*p++);
+  } else {
+    c = *p++;
+  }
+
+  if (*p != '\'')
+    error_at(start, "char literal too long");
+  p++;
+
+  Token *tok = new_token(TK_NUM, cur, start, p - start);
+  tok->val = c;
+  return tok;
+}
+
 // Tokenize `user_input` and returns new tokens.
 Token *tokenize(void) {
   char *p = user_input;
@@ -244,6 +266,13 @@ Token *tokenize(void) {
     // String literal
     if (*p == '"') {
       cur = read_string_literal(cur, p);
+      p += cur->len;
+      continue;
+    }
+
+    // Character literal
+    if (*p == '\'') {
+      cur = read_char_literal(cur, p);
       p += cur->len;
       continue;
     }
