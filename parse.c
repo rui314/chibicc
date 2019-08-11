@@ -90,7 +90,7 @@ Var *push_var(char *name, Type *ty, bool is_local) {
   if (is_local) {
     vl->next = locals;
     locals = vl;
-  } else {
+  } else if (ty->kind != TY_FUNC) {
     vl->next = globals;
     globals = vl;
   }
@@ -317,14 +317,19 @@ Function *function() {
 
   Type *ty = type_specifier();
   char *name = NULL;
-  declarator(ty, &name);
+  ty = declarator(ty, &name);
 
+  // Add a function type to the scope
+  push_var(name, func_type(ty), false);
+
+  // Construct a function object
   Function *fn = calloc(1, sizeof(Function));
   fn->name = name;
   expect("(");
   fn->params = read_func_params();
   expect("{");
 
+  // Read function body
   Node head;
   head.next = NULL;
   Node *cur = &head;
@@ -667,6 +672,15 @@ Node *primary() {
       Node *node = new_node(ND_FUNCALL, tok);
       node->funcname = strndup(tok->str, tok->len);
       node->args = func_args();
+
+      VarScope *sc = find_var(tok);
+      if (sc) {
+        if (!sc->var || sc->var->ty->kind != TY_FUNC)
+          error_tok(tok, "not a function");
+        node->ty = sc->var->ty->return_ty;
+      } else {
+        node->ty = int_type();
+      }
       return node;
     }
 

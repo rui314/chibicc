@@ -27,6 +27,12 @@ Type *long_type() {
   return new_type(TY_LONG, 8);
 }
 
+Type *func_type(Type *return_ty) {
+  Type *ty = new_type(TY_FUNC, 1);
+  ty->return_ty = return_ty;
+  return ty;
+}
+
 Type *pointer_to(Type *base) {
   Type *ty = new_type(TY_PTR, 8);
   ty->base = base;
@@ -95,7 +101,6 @@ void visit(Node *node) {
   case ND_NE:
   case ND_LT:
   case ND_LE:
-  case ND_FUNCALL:
   case ND_NUM:
     node->ty = int_type();
     return;
