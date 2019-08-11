@@ -287,6 +287,23 @@ int main() {
   assert(8, ({ long int x; sizeof(x); }), "long int x; sizeof(x);");
   assert(8, ({ int long x; sizeof(x); }), "int long x; sizeof(x);");
 
+  assert(1, sizeof(char), "sizeof(char)");
+  assert(2, sizeof(short), "sizeof(short)");
+  assert(2, sizeof(short int), "sizeof(short int)");
+  assert(2, sizeof(int short), "sizeof(int short)");
+  assert(4, sizeof(int), "sizeof(int)");
+  assert(8, sizeof(long), "sizeof(long)");
+  assert(8, sizeof(long int), "sizeof(long int)");
+  assert(8, sizeof(long int), "sizeof(long int)");
+  assert(8, sizeof(char *), "sizeof(char *)");
+  assert(8, sizeof(int *), "sizeof(int *)");
+  assert(8, sizeof(long *), "sizeof(long *)");
+  assert(8, sizeof(int **), "sizeof(int **)");
+  assert(8, sizeof(int(*)[4]), "sizeof(int(*)[4])");
+  assert(32, sizeof(int*[4]), "sizeof(int(*)[4])");
+  assert(16, sizeof(int[4]), "sizeof(int[4])");
+  assert(48, sizeof(int[3][4]), "sizeof(int[3][4])");
+
   printf("OK\n");
   return 0;
 }
