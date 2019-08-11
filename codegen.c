@@ -92,7 +92,12 @@ void gen(Node *node) {
   case ND_NULL:
     return;
   case ND_NUM:
-    printf("  push %d\n", node->val);
+    if (node->val == (int)node->val) {
+      printf("  push %ld\n", node->val);
+    } else {
+      printf("  movabs rax, %ld\n", node->val);
+      printf("  push rax\n");
+    }
     return;
   case ND_EXPR_STMT:
     gen(node->lhs);

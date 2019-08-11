@@ -29,7 +29,7 @@ typedef struct Token Token;
 struct Token {
   TokenKind kind; // Token kind
   Token *next;    // Next token
-  int val;        // If kind is TK_NUM, its value
+  long val;       // If kind is TK_NUM, its value
   char *str;      // Token string
   int len;        // Token length
 
@@ -45,7 +45,7 @@ Token *consume(char *op);
 char *strndup(char *p, int len);
 Token *consume_ident();
 void expect(char *op);
-int expect_number();
+long expect_number();
 char *expect_ident();
 bool at_eof();
 Token *new_token(TokenKind kind, Token *cur, char *str, int len);
@@ -138,7 +138,7 @@ struct Node {
   Node *args;
 
   Var *var;      // Used if kind == ND_VAR
-  int val;       // Used if kind == ND_NUM
+  long val;      // Used if kind == ND_NUM
 };
 
 typedef struct Function Function;
