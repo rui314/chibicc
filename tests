@@ -286,6 +286,8 @@ int main() {
   assert(1, ({ _Bool x=1; x; }), "_Bool x=1; x;");
   assert(1, ({ _Bool x=2; x; }), "_Bool x=2; x;");
 
+  assert(8, ({ long long x; sizeof(x); }), "long long x; sizeof(x);");
+
   printf("OK\n");
   return 0;
 }

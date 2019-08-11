@@ -227,8 +227,10 @@ static Type *basetype(void) {
     return short_type;
   if (consume("int"))
     return int_type;
-  if (consume("long"))
+  if (consume("long")) {
+    consume("long");
     return long_type;
+  }
   if (consume("struct"))
     return struct_decl();
   return find_var(consume_ident())->type_def;
