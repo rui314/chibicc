@@ -64,6 +64,12 @@ static void store(Type *ty) {
   printf("  pop rdi\n");
   printf("  pop rax\n");
 
+  if (ty->kind == TY_BOOL) {
+    printf("  cmp rdi, 0\n");
+    printf("  setne dil\n");
+    printf("  movzb rdi, dil\n");
+  }
+
   if (ty->size == 1) {
     printf("  mov [rax], dil\n");
   } else if (ty->size == 2) {

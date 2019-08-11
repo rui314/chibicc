@@ -282,6 +282,10 @@ int main() {
 
   { void *x; }
 
+  assert(0, ({ _Bool x=0; x; }), "_Bool x=0; x;");
+  assert(1, ({ _Bool x=1; x; }), "_Bool x=1; x;");
+  assert(1, ({ _Bool x=2; x; }), "_Bool x=2; x;");
+
   printf("OK\n");
   return 0;
 }
