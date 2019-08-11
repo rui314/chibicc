@@ -61,6 +61,8 @@ int fib(int x) {
   return fib(x-1) + fib(x-2);
 }
 
+char char_fn() { return 257; }
+
 int main() {
   assert(8, ({ int a=3; int z=5; a+z; }), "int a=3; int z=5; a+z;");
 
@@ -320,6 +322,8 @@ int main() {
 
   assert(97, 'a', "'a'");
   assert(10, '\n', "\'\\n\'");
+
+  assert(1, char_fn(), "char_fn()");
 
   printf("OK\n");
   return 0;
