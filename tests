@@ -61,7 +61,7 @@ int fib(int x) {
   return fib(x-1) + fib(x-2);
 }
 
-char char_fn() { return 257; }
+char char_fn();
 
 int main() {
   assert(8, ({ int a=3; int z=5; a+z; }), "int a=3; int z=5; a+z;");
