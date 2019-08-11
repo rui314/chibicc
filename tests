@@ -280,6 +280,8 @@ int main() {
 
   assert(3, *g1_ptr(), "*g1_ptr()");
 
+  { void *x; }
+
   printf("OK\n");
   return 0;
 }
