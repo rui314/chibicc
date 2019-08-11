@@ -11,6 +11,10 @@ Type *new_type(TypeKind kind, int align) {
   return ty;
 }
 
+Type *void_type() {
+  return new_type(TY_VOID, 1);
+}
+
 Type *char_type() {
   return new_type(TY_CHAR, 1);
 }
@@ -47,6 +51,8 @@ Type *array_of(Type *base, int size) {
 }
 
 int size_of(Type *ty) {
+  assert(ty->kind != TY_VOID);
+
   switch (ty->kind) {
   case TY_CHAR:
     return 1;
@@ -144,6 +150,8 @@ void visit(Node *node) {
     if (!node->lhs->ty->base)
       error_tok(node->tok, "invalid pointer dereference");
     node->ty = node->lhs->ty->base;
+    if (node->ty->kind == TY_VOID)
+      error_tok(node->tok, "dereferencing a void pointer");
     return;
   case ND_SIZEOF:
     node->kind = ND_NUM;
