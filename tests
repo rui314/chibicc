@@ -347,6 +347,9 @@ int main() {
   assert(2, count(), "count()");
   assert(3, count(), "count()");
 
+  assert(55, ({ int j=0; for (int i=0; i<=10; i=i+1) j=j+i; j; }), "int j=0; for (int i=0; i<=10; i=i+1) j=j+i; j;");
+  assert(3, ({ int i=3; int j=0; for (int i=0; i<=10; i=i+1) j=j+i; i; }), "int i=3; int j=0; for (int i=0; i<=10; i=i+1) j=j+i; i;");
+
   printf("OK\n");
   return 0;
 }
