@@ -1,15 +1,19 @@
 #include "chibi.h"
 
-// Scope for local variables, global variables or typedefs
+// Scope for local variables, global variables, typedefs
+// or enum constants
 typedef struct VarScope VarScope;
 struct VarScope {
   VarScope *next;
   char *name;
+
   Var *var;
   Type *type_def;
+  Type *enum_ty;
+  int enum_val;
 };
 
-// Scope for struct tags
+// Scope for struct or enum tags
 typedef struct TagScope TagScope;
 struct TagScope {
   TagScope *next;
@@ -30,7 +34,7 @@ static VarList *locals;
 static VarList *globals;
 
 // C has two block scopes; one is for variables/typedefs and
-// the other is for struct tags.
+// the other is for struct/union/enum tags.
 static VarScope *var_scope;
 static TagScope *tag_scope;
 
@@ -158,6 +162,7 @@ static Type *abstract_declarator(Type *ty);
 static Type *type_suffix(Type *ty);
 static Type *type_name(void);
 static Type *struct_decl(void);
+static Type *enum_specifier(void);
 static Member *struct_member(void);
 static void global_var(void);
 static Node *declaration(void);
@@ -215,7 +220,7 @@ Program *program(void) {
   return prog;
 }
 
-// basetype = builtin-type | struct-decl | typedef-name
+// basetype = builtin-type | struct-decl | typedef-name | enum-specifier
 //
 // builtin-type = "void" | "_Bool" | "char" | "short" | "int"
 //              | "long" | "long" "long"
@@ -261,6 +266,8 @@ static Type *basetype(bool *is_typedef) {
 
       if (peek("struct")) {
         ty = struct_decl();
+      } else if (peek("enum")) {
+        ty = enum_specifier();
       } else {
         ty = find_typedef(token);
         assert(ty);
@@ -383,6 +390,8 @@ static Type *struct_decl(void) {
     TagScope *sc = find_tag(tag);
     if (!sc)
       error_tok(tag, "unknown struct type");
+    if (sc->ty->kind != TY_STRUCT)
+      error_tok(tag, "not a struct tag");
     return sc->ty;
   }
 
@@ -414,6 +423,59 @@ static Type *struct_decl(void) {
   ty->size = align_to(offset, ty->align);
 
   // Register the struct type if a name was given.
+  if (tag)
+    push_tag_scope(tag, ty);
+  return ty;
+}
+
+// Some types of list can end with an optional "," followed by "}"
+// to allow a trailing comma. This function returns true if it looks
+// like we are at the end of such list.
+static bool consume_end(void) {
+  Token *tok = token;
+  if (consume("}") || (consume(",") && consume("}")))
+    return true;
+  token = tok;
+  return false;
+}
+
+// enum-specifier = "enum" ident
+//                | "enum" ident? "{" enum-list? "}"
+//
+// enum-list = ident ("=" num)? ("," ident ("=" num)?)* ","?
+static Type *enum_specifier(void) {
+  expect("enum");
+  Type *ty = enum_type();
+
+  // Read an enum tag.
+  Token *tag = consume_ident();
+  if (tag && !peek("{")) {
+    TagScope *sc = find_tag(tag);
+    if (!sc)
+      error_tok(tag, "unknown enum type");
+    if (sc->ty->kind != TY_ENUM)
+      error_tok(tag, "not an enum tag");
+    return sc->ty;
+  }
+
+  expect("{");
+
+  // Read enum-list.
+  int cnt = 0;
+  for (;;) {
+    char *name = expect_ident();
+    if (consume("="))
+      cnt = expect_number();
+
+    VarScope *sc = push_scope(name);
+    sc->enum_ty = ty;
+    sc->enum_val = cnt++;
+
+    if (consume_end())
+      break;
+    expect(",");
+  }
+
   if (tag)
     push_tag_scope(tag, ty);
   return ty;
@@ -558,8 +620,8 @@ static Node *read_expr_stmt(void) {
 // Returns true if the next token represents a type.
 static bool is_typename(void) {
   return peek("void") || peek("_Bool") || peek("char") || peek("short") ||
-         peek("int") || peek("long") || peek("struct") || peek("typedef") ||
-         find_typedef(token);
+         peek("int") || peek("long") || peek("enum") || peek("struct") ||
+         peek("typedef") || find_typedef(token);
 }
 
 static Node *stmt(void) {
@@ -927,10 +989,14 @@ static Node *primary(void) {
       return node;
     }
 
-    // Variable
+    // Variable or enum constant
     VarScope *sc = find_var(tok);
-    if (sc && sc->var)
-      return new_var_node(sc->var, tok);
+    if (sc) {
+      if (sc->var)
+        return new_var_node(sc->var, tok);
+      if (sc->enum_ty)
+        return new_num(sc->enum_val, tok);
+    }
     error_tok(tok, "undefined variable");
   }
 
