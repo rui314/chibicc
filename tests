@@ -63,6 +63,12 @@ int fib(int x) {
 
 char char_fn();
 
+int count() {
+  static cnt;
+  cnt = cnt + 1;
+  return cnt;
+}
+
 int main() {
   assert(8, ({ int a=3; int z=5; a+z; }), "int a=3; int z=5; a+z;");
 
@@ -336,6 +342,10 @@ int main() {
   assert(4, ({ enum { zero, five=5, three=3, four }; four; }), "enum { zero, five=5, three=3, four }; four;");
   assert(4, ({ enum { zero, one, two } x; sizeof(x); }), "enum { zero, one, two } x; sizeof(x);");
   assert(4, ({ enum t { zero, one, two }; enum t y; sizeof(y); }), "enum t { zero, one, two }; enum t y; sizeof(y);");
+
+  assert(1, count(), "count()");
+  assert(2, count(), "count()");
+  assert(3, count(), "count()");
 
   printf("OK\n");
   return 0;
