@@ -130,6 +130,10 @@ static void gen(Node *node) {
     gen(node->rhs);
     store(node->ty);
     return;
+  case ND_COMMA:
+    gen(node->lhs);
+    gen(node->rhs);
+    return;
   case ND_ADDR:
     gen_addr(node->lhs);
     return;
