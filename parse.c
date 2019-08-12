@@ -895,6 +895,7 @@ static Node *cast(Token **rest, Token *tok) {
 }
 
 // unary = ("+" | "-" | "*" | "&") cast
+//       | ("++" | "--") unary
 //       | postfix
 static Node *unary(Token **rest, Token *tok) {
   if (equal(tok, "+"))
@@ -908,6 +909,14 @@ static Node *unary(Token **rest, Token *tok) {
 
   if (equal(tok, "*"))
     return new_unary(ND_DEREF, cast(rest, tok->next), tok);
+
+  // Read ++i as i+=1
+  if (equal(tok, "++"))
+    return to_assign(new_add(unary(rest, tok->next), new_num(1, tok), tok));
+
+  // Read --i as i-=1
+  if (equal(tok, "--"))
+    return to_assign(new_sub(unary(rest, tok->next), new_num(1, tok), tok));
 
   return postfix(rest, tok);
 }
