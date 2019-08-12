@@ -105,6 +105,18 @@ void truncate(Type *ty) {
   printf("  push rax\n");
 }
 
+void inc(Type *ty) {
+  printf("  pop rax\n");
+  printf("  add rax, %d\n", ty->base ? size_of(ty->base) : 1);
+  printf("  push rax\n");
+}
+
+void dec(Type *ty) {
+  printf("  pop rax\n");
+  printf("  sub rax, %d\n", ty->base ? size_of(ty->base) : 1);
+  printf("  push rax\n");
+}
+
 // Generate code for a given node.
 void gen(Node *node) {
   switch (node->kind) {
@@ -132,6 +144,36 @@ void gen(Node *node) {
     gen_lval(node->lhs);
     gen(node->rhs);
     store(node->ty);
+    return;
+  case ND_PRE_INC:
+    gen_lval(node->lhs);
+    printf("  push [rsp]\n");
+    load(node->ty);
+    inc(node->ty);
+    store(node->ty);
+    return;
+  case ND_PRE_DEC:
+    gen_lval(node->lhs);
+    printf("  push [rsp]\n");
+    load(node->ty);
+    dec(node->ty);
+    store(node->ty);
+    return;
+  case ND_POST_INC:
+    gen_lval(node->lhs);
+    printf("  push [rsp]\n");
+    load(node->ty);
+    inc(node->ty);
+    store(node->ty);
+    dec(node->ty);
+    return;
+  case ND_POST_DEC:
+    gen_lval(node->lhs);
+    printf("  push [rsp]\n");
+    load(node->ty);
+    dec(node->ty);
+    store(node->ty);
+    inc(node->ty);
     return;
   case ND_COMMA:
     gen(node->lhs);

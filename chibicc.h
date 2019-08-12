@@ -91,6 +91,10 @@ typedef enum {
   ND_LT,        // <
   ND_LE,        // <=
   ND_ASSIGN,    // =
+  ND_PRE_INC,   // pre ++
+  ND_PRE_DEC,   // pre --
+  ND_POST_INC,  // post ++
+  ND_POST_DEC,  // post --
   ND_COMMA,     // ,
   ND_MEMBER,    // . (struct member access)
   ND_ADDR,      // unary &
