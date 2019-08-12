@@ -146,6 +146,9 @@ void visit(Node *node) {
   case ND_ASSIGN:
     node->ty = node->lhs->ty;
     return;
+  case ND_COMMA:
+    node->ty = node->rhs->ty;
+    return;
   case ND_MEMBER: {
     if (node->lhs->ty->kind != TY_STRUCT)
       error_tok(node->tok, "not a struct");
