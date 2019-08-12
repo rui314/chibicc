@@ -81,6 +81,10 @@ void add_type(Node *node) {
   case ND_PTR_ADD:
   case ND_PTR_SUB:
   case ND_ASSIGN:
+  case ND_PRE_INC:
+  case ND_PRE_DEC:
+  case ND_POST_INC:
+  case ND_POST_DEC:
     node->ty = node->lhs->ty;
     return;
   case ND_VAR:

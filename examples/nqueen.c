@@ -6,8 +6,8 @@
 // $ ./tmp
 
 int print_board(int (*board)[10]) {
-  for (int i = 0; i < 10; i=i+1) {
-    for (int j = 0; j < 10; j=j+1)
+  for (int i = 0; i < 10; i++) {
+    for (int j = 0; j < 10; j++)
       if (board[i][j])
 	printf("Q ");
       else
@@ -18,7 +18,7 @@ int print_board(int (*board)[10]) {
 }
 
 int conflict(int (*board)[10], int row, int col) {
-  for (int i = 0; i < row; i=i+1) {
+  for (int i = 0; i < row; i++) {
     if (board[i][col])
       return 1;
     int j = row - i;
@@ -37,7 +37,7 @@ int solve(int (*board)[10], int row) {
     print_board(board);
     return 0;
   }
-  for (int i = 0; i < 10; i=i+1) {
+  for (int i = 0; i < 10; i++) {
     if (conflict(board, row, i)) {
     } else {
       board[row][i] = 1;
@@ -49,7 +49,7 @@ int solve(int (*board)[10], int row) {
 
 int main() {
   int board[100];
-  for (int i = 0; i < 100; i=i+1)
+  for (int i = 0; i < 100; i++)
     board[i] = 0;
   solve(board, 0);
   return 0;
