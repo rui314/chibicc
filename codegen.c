@@ -175,6 +175,41 @@ void gen(Node *node) {
     store(node->ty);
     inc(node->ty);
     return;
+  case ND_A_ADD:
+  case ND_A_SUB:
+  case ND_A_MUL:
+  case ND_A_DIV: {
+    gen_lval(node->lhs);
+    printf("  push [rsp]\n");
+    load(node->lhs->ty);
+    gen(node->rhs);
+    printf("  pop rdi\n");
+    printf("  pop rax\n");
+
+    switch (node->kind) {
+    case ND_A_ADD:
+      if (node->ty->base)
+        printf("  imul rdi, %d\n", size_of(node->ty->base));
+      printf("  add rax, rdi\n");
+      break;
+    case ND_A_SUB:
+      if (node->ty->base)
+        printf("  imul rdi, %d\n", size_of(node->ty->base));
+      printf("  sub rax, rdi\n");
+      break;
+    case ND_A_MUL:
+      printf("  imul rax, rdi\n");
+      break;
+    case ND_A_DIV:
+      printf("  cqo\n");
+      printf("  idiv rdi\n");
+      break;
+    }
+
+    printf("  push rax\n");
+    store(node->ty);
+    return;
+  }
   case ND_COMMA:
     gen(node->lhs);
     gen(node->rhs);
