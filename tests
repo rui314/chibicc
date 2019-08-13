@@ -369,6 +369,15 @@ int main() {
   assert(2, ({ int a[3]; a[0]=0; a[1]=1; a[2]=2; int *p=a+1; (*p++)--; a[2]; }), "int a[3]; a[0]=0; a[1]=1; a[2]=2; int *p=a+1; (*p++); a[0];");
   assert(2, ({ int a[3]; a[0]=0; a[1]=1; a[2]=2; int *p=a+1; (*p++)--; *p; }), "int a[3]; a[0]=0; a[1]=1; a[2]=2; int *p=a+1; (*p++); a[0];");
 
+  assert(7, ({ int i=2; i+=5; i; }), "int i=2; i+=5; i;");
+  assert(7, ({ int i=2; i+=5; }), "int i=2; i+=5;");
+  assert(3, ({ int i=5; i-=2; i; }), "int i=5; i-=2; i;");
+  assert(3, ({ int i=5; i-=2; }), "int i=5; i-=2;");
+  assert(6, ({ int i=3; i*=2; i; }), "int i=3; i*=2; i;");
+  assert(6, ({ int i=3; i*=2; }), "int i=3; i*=2;");
+  assert(3, ({ int i=6; i/=2; i; }), "int i=6; i/=2; i;");
+  assert(3, ({ int i=6; i/=2; }), "int i=6; i/=2;");
+
   printf("OK\n");
   return 0;
 }

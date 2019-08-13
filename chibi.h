@@ -82,38 +82,44 @@ struct VarList {
 
 // AST node
 typedef enum {
-  ND_ADD,       // num + num
-  ND_PTR_ADD,   // ptr + num or num + ptr
-  ND_SUB,       // num - num
-  ND_PTR_SUB,   // ptr - num
-  ND_PTR_DIFF,  // ptr - ptr
-  ND_MUL,       // *
-  ND_DIV,       // /
-  ND_EQ,        // ==
-  ND_NE,        // !=
-  ND_LT,        // <
-  ND_LE,        // <=
-  ND_ASSIGN,    // =
-  ND_PRE_INC,   // pre ++
-  ND_PRE_DEC,   // pre --
-  ND_POST_INC,  // post ++
-  ND_POST_DEC,  // post --
-  ND_COMMA,     // ,
-  ND_MEMBER,    // . (struct member access)
-  ND_ADDR,      // unary &
-  ND_DEREF,     // unary *
-  ND_RETURN,    // "return"
-  ND_IF,        // "if"
-  ND_WHILE,     // "while"
-  ND_FOR,       // "for"
-  ND_BLOCK,     // { ... }
-  ND_FUNCALL,   // Function call
-  ND_EXPR_STMT, // Expression statement
-  ND_STMT_EXPR, // Statement expression
-  ND_VAR,       // Variable
-  ND_NUM,       // Integer
-  ND_CAST,      // Type cast
-  ND_NULL,      // Empty statement
+  ND_ADD,        // num + num
+  ND_PTR_ADD,    // ptr + num or num + ptr
+  ND_SUB,        // num - num
+  ND_PTR_SUB,    // ptr - num
+  ND_PTR_DIFF,   // ptr - ptr
+  ND_MUL,        // *
+  ND_DIV,        // /
+  ND_EQ,         // ==
+  ND_NE,         // !=
+  ND_LT,         // <
+  ND_LE,         // <=
+  ND_ASSIGN,     // =
+  ND_PRE_INC,    // pre ++
+  ND_PRE_DEC,    // pre --
+  ND_POST_INC,   // post ++
+  ND_POST_DEC,   // post --
+  ND_ADD_EQ,     // +=
+  ND_PTR_ADD_EQ, // +=
+  ND_SUB_EQ,     // -=
+  ND_PTR_SUB_EQ, // -=
+  ND_MUL_EQ,     // *=
+  ND_DIV_EQ,     // /=
+  ND_COMMA,      // ,
+  ND_MEMBER,     // . (struct member access)
+  ND_ADDR,       // unary &
+  ND_DEREF,      // unary *
+  ND_RETURN,     // "return"
+  ND_IF,         // "if"
+  ND_WHILE,      // "while"
+  ND_FOR,        // "for"
+  ND_BLOCK,      // { ... }
+  ND_FUNCALL,    // Function call
+  ND_EXPR_STMT,  // Expression statement
+  ND_STMT_EXPR,  // Statement expression
+  ND_VAR,        // Variable
+  ND_NUM,        // Integer
+  ND_CAST,       // Type cast
+  ND_NULL,       // Empty statement
 } NodeKind;
 
 // AST node type

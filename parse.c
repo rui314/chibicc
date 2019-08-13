@@ -742,12 +742,37 @@ static Node *expr(void) {
   return node;
 }
 
-// assign = equality ("=" assign)?
+// assign    = equality (assign-op assign)?
+// assign-op = "=" | "+=" | "-=" | "*=" | "/="
 static Node *assign(void) {
   Node *node = equality();
   Token *tok;
+
   if (tok = consume("="))
-    node = new_binary(ND_ASSIGN, node, assign(), tok);
+    return new_binary(ND_ASSIGN, node, assign(), tok);
+
+  if (tok = consume("*="))
+    return new_binary(ND_MUL_EQ, node, assign(), tok);
+
+  if (tok = consume("/="))
+    return new_binary(ND_DIV_EQ, node, assign(), tok);
+
+  if (tok = consume("+=")) {
+    add_type(node);
+    if (node->ty->base)
+      return new_binary(ND_PTR_ADD_EQ, node, assign(), tok);
+    else
+      return new_binary(ND_ADD_EQ, node, assign(), tok);
+  }
+
+  if (tok = consume("-=")) {
+    add_type(node);
+    if (node->ty->base)
+      return new_binary(ND_PTR_SUB_EQ, node, assign(), tok);
+    else
+      return new_binary(ND_SUB_EQ, node, assign(), tok);
+  }
+
   return node;
 }
 
