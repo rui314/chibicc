@@ -377,6 +377,10 @@ int main() {
   assert(3, ({ int i=6; i/=2; i; }), "int i=6; i/=2; i;");
   assert(3, ({ int i=6; i/=2; }), "int i=6; i/=2;");
 
+  assert(0, !1, "!1");
+  assert(0, !2, "!2");
+  assert(1, !0, "!0");
+
   printf("OK\n");
   return 0;
 }
