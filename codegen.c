@@ -283,6 +283,40 @@ static void gen(Node *node) {
     printf("  not rax\n");
     printf("  push rax\n");
     return;
+  case ND_LOGAND: {
+    int seq = labelseq++;
+    gen(node->lhs);
+    printf("  pop rax\n");
+    printf("  cmp rax, 0\n");
+    printf("  je  .L.false.%d\n", seq);
+    gen(node->rhs);
+    printf("  pop rax\n");
+    printf("  cmp rax, 0\n");
+    printf("  je  .L.false.%d\n", seq);
+    printf("  push 1\n");
+    printf("  jmp .L.end.%d\n", seq);
+    printf(".L.false.%d:\n", seq);
+    printf("  push 0\n");
+    printf(".L.end.%d:\n", seq);
+    return;
+  }
+  case ND_LOGOR: {
+    int seq = labelseq++;
+    gen(node->lhs);
+    printf("  pop rax\n");
+    printf("  cmp rax, 0\n");
+    printf("  jne .L.true.%d\n", seq);
+    gen(node->rhs);
+    printf("  pop rax\n");
+    printf("  cmp rax, 0\n");
+    printf("  jne .L.true.%d\n", seq);
+    printf("  push 0\n");
+    printf("  jmp .L.end.%d\n", seq);
+    printf(".L.true.%d:\n", seq);
+    printf("  push 1\n");
+    printf(".L.end.%d:\n", seq);
+    return;
+  }
   case ND_IF: {
     int seq = labelseq++;
     if (node->els) {
