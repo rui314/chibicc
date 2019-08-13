@@ -19,11 +19,28 @@ struct TagScope {
   Type *ty;
 };
 
+typedef struct {
+  VarScope *var_scope;
+  TagScope *tag_scope;
+} Scope;
+
 VarList *locals;
 VarList *globals;
 
 VarScope *var_scope;
 TagScope *tag_scope;
+
+Scope *enter_scope() {
+  Scope *sc = calloc(1, sizeof(Scope));
+  sc->var_scope = var_scope;
+  sc->tag_scope = tag_scope;
+  return sc;
+}
+
+void leave_scope(Scope *sc) {
+  var_scope = sc->var_scope;
+  tag_scope = sc->tag_scope;
+}
 
 // Find a variable or a typedef by name.
 VarScope *find_var(Token *tok) {
@@ -81,11 +98,12 @@ VarScope *push_scope(char *name) {
   return sc;
 }
 
-Var *push_var(char *name, Type *ty, bool is_local) {
+Var *push_var(char *name, Type *ty, bool is_local, Token *tok) {
   Var *var = calloc(1, sizeof(Var));
   var->name = name;
   var->ty = ty;
   var->is_local = is_local;
+  var->tok = tok;
 
   VarList *vl = calloc(1, sizeof(VarList));
   vl->var = var;
@@ -318,14 +336,23 @@ Type *abstract_declarator(Type *ty) {
   return type_suffix(ty);
 }
 
-// type-suffix = ("[" num "]" type-suffix)?
+// type-suffix = ("[" num? "]" type-suffix)?
 Type *type_suffix(Type *ty) {
   if (!consume("["))
     return ty;
-  int sz = expect_number();
-  expect("]");
+
+  int sz = 0;
+  bool is_incomplete = true;
+  if (!consume("]")) {
+    sz = expect_number();
+    is_incomplete = false;
+    expect("]");
+  }
+
   ty = type_suffix(ty);
-  return array_of(ty, sz);
+  ty = array_of(ty, sz);
+  ty->is_incomplete = is_incomplete;
+  return ty;
 }
 
 // type-name = type-specifier abstract-declarator type-suffix
@@ -379,7 +406,7 @@ Type *struct_decl() {
   for (Member *mem = ty->members; mem; mem = mem->next) {
     offset = align_to(offset, mem->ty->align);
     mem->offset = offset;
-    offset += size_of(mem->ty);
+    offset += size_of(mem->ty, mem->tok);
 
     if (ty->align < mem->ty->align)
       ty->align = mem->ty->align;
@@ -440,6 +467,7 @@ Type *enum_specifier() {
 // struct-member = type-specifier declarator type-suffix ";"
 Member *struct_member() {
   Type *ty = type_specifier();
+  Token *tok = token;
   char *name = NULL;
   ty = declarator(ty, &name);
   ty = type_suffix(ty);
@@ -448,16 +476,18 @@ Member *struct_member() {
   Member *mem = calloc(1, sizeof(Member));
   mem->name = name;
   mem->ty = ty;
+  mem->tok = tok;
   return mem;
 }
 
 VarList *read_func_param() {
   Type *ty = type_specifier();
   char *name = NULL;
+  Token *tok = token;
   ty = declarator(ty, &name);
   ty = type_suffix(ty);
 
-  Var *var = push_var(name, ty, true);
+  Var *var = push_var(name, ty, true, tok);
   push_scope(name)->var = var;
 
   VarList *vl = calloc(1, sizeof(VarList));
@@ -489,10 +519,11 @@ Function *function() {
 
   Type *ty = type_specifier();
   char *name = NULL;
+  Token *tok = token;
   ty = declarator(ty, &name);
 
   // Add a function type to the scope
-  Var *var = push_var(name, func_type(ty), false);
+  Var *var = push_var(name, func_type(ty), false, tok);
   push_scope(name)->var = var;
 
   // Construct a function object
@@ -523,22 +554,24 @@ Function *function() {
 void global_var() {
   Type *ty = type_specifier();
   char *name = NULL;
+  Token *tok = token;
   ty = declarator(ty, &name);
   ty = type_suffix(ty);
   expect(";");
 
-  Var *var = push_var(name, ty, false);
+  Var *var = push_var(name, ty, false, tok);
   push_scope(name)->var = var;
 }
 
 // declaration = type-specifier declarator type-suffix ("=" expr)? ";"
 //             | type-specifier ";"
 Node *declaration() {
-  Token *tok = token;
+  Token *tok;
   Type *ty = type_specifier();
-  if (consume(";"))
+  if (tok = consume(";"))
     return new_node(ND_NULL, tok);
 
+  tok = token;
   char *name = NULL;
   ty = declarator(ty, &name);
   ty = type_suffix(ty);
@@ -555,9 +588,9 @@ Node *declaration() {
 
   Var *var;
   if (ty->is_static)
-    var = push_var(new_label(), ty, false);
+    var = push_var(new_label(), ty, false, tok);
   else
-    var = push_var(name, ty, true);
+    var = push_var(name, ty, true, tok);
   push_scope(name)->var = var;
 
   if (consume(";"))
@@ -621,9 +654,7 @@ Node *stmt() {
   if (tok = consume("for")) {
     Node *node = new_node(ND_FOR, tok);
     expect("(");
-
-    VarScope *sc1 = var_scope;
-    TagScope *sc2 = tag_scope;
+    Scope *sc = enter_scope();
 
     if (!consume(";")) {
       if (is_typename()) {
@@ -643,8 +674,7 @@ Node *stmt() {
     }
     node->then = stmt();
 
-    var_scope = sc1;
-    tag_scope = sc2;
+    leave_scope(sc);
     return node;
   }
 
@@ -653,14 +683,12 @@ Node *stmt() {
     head.next = NULL;
     Node *cur = &head;
 
-    VarScope *sc1 = var_scope;
-    TagScope *sc2 = tag_scope;
+    Scope *sc = enter_scope();
     while (!consume("}")) {
       cur->next = stmt();
       cur = cur->next;
     }
-    var_scope = sc1;
-    tag_scope = sc2;
+    leave_scope(sc);
 
     Node *node = new_node(ND_BLOCK, tok);
     node->body = head.next;
@@ -901,9 +929,7 @@ Node *postfix() {
 //
 // Statement expression is a GNU C extension.
 Node *stmt_expr(Token *tok) {
-  VarScope *sc1 = var_scope;
-  TagScope *sc2 = tag_scope;
-
+  Scope *sc = enter_scope();
   Node *node = new_node(ND_STMT_EXPR, tok);
   node->body = stmt();
   Node *cur = node->body;
@@ -913,9 +939,7 @@ Node *stmt_expr(Token *tok) {
     cur = cur->next;
   }
   expect(")");
-
-  var_scope = sc1;
-  tag_scope = sc2;
+  leave_scope(sc);
 
   if (cur->kind != ND_EXPR_STMT)
     error_tok(cur->tok, "stmt expr returning void is not supported");
@@ -962,7 +986,7 @@ Node *primary() {
       if (is_typename()) {
         Type *ty = type_name();
         expect(")");
-        return new_num(size_of(ty), tok);
+        return new_num(size_of(ty, tok), tok);
       }
       token = tok->next;
     }
@@ -1001,7 +1025,7 @@ Node *primary() {
     token = token->next;
 
     Type *ty = array_of(char_type(), tok->cont_len);
-    Var *var = push_var(new_label(), ty, false);
+    Var *var = push_var(new_label(), ty, false, NULL);
     var->contents = tok->contents;
     var->cont_len = tok->cont_len;
     return new_var(var, tok);
