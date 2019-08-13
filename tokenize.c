@@ -226,6 +226,29 @@ static Token *read_char_literal(Token *cur, char *start) {
   return tok;
 }
 
+static Token *read_int_literal(Token *cur, char *start) {
+  char *p = start;
+
+  int base = 10;
+  if (!strncasecmp(p, "0x", 2) && isalnum(p[2])) {
+    p += 2;
+    base = 16;
+  } else if (!strncasecmp(p, "0b", 2) && isalnum(p[2])) {
+    p += 2;
+    base = 2;
+  } else if (*p == '0') {
+    base = 8;
+  }
+
+  long val = strtoul(p, &p, base);
+  if (isalnum(*p))
+    error_at(p, "invalid digit");
+
+  Token *tok = new_token(TK_NUM, cur, start, p - start);
+  tok->val = val;
+  return tok;
+}
+
 static void convert_keywords(Token *tok) {
   for (Token *t = tok; t->kind != TK_EOF; t = t->next)
     if (is_keyword(t))
@@ -280,10 +303,8 @@ static Token *tokenize(char *filename, char *p) {
 
     // Numeric literal
     if (isdigit(*p)) {
-      cur = new_token(TK_NUM, cur, p, 0);
-      char *q = p;
-      cur->val = strtoul(p, &p, 10);
-      cur->len = p - q;
+      cur = read_int_literal(cur, p);
+      p += cur->len;
       continue;
     }
 
