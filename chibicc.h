@@ -86,6 +86,9 @@ typedef enum {
   ND_SUB,       // -
   ND_MUL,       // *
   ND_DIV,       // /
+  ND_BITAND,    // &
+  ND_BITOR,     // |
+  ND_BITXOR,    // ^
   ND_EQ,        // ==
   ND_NE,        // !=
   ND_LT,        // <

@@ -384,6 +384,20 @@ int main() {
   assert(-1, ~0, "~0");
   assert(0, ~-1, "~-1");
 
+  assert(0, 0&1, "0&1");
+  assert(1, 3&1, "3&1");
+  assert(3, 7&3, "7&3");
+  assert(10, -1&10, " -1&10");
+
+  assert(1, 0|1, "0|1");
+  assert(3, 2|1, "2|1");
+  assert(3, 1|3, "1|3");
+
+  assert(0, 0^0, "0^0");
+  assert(0, 8^8, "8^8");
+  assert(4, 7^3, "7^3");
+  assert(2, 7^5, "7^5");
+
   printf("OK\n");
   return 0;
 }

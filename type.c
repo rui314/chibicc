@@ -113,6 +113,9 @@ void visit(Node *node) {
   switch (node->kind) {
   case ND_MUL:
   case ND_DIV:
+  case ND_BITAND:
+  case ND_BITOR:
+  case ND_BITXOR:
   case ND_EQ:
   case ND_NE:
   case ND_LT:
