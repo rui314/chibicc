@@ -268,6 +268,12 @@ static void gen(Node *node) {
     printf("  movzb rax, al\n");
     printf("  push rax\n");
     return;
+  case ND_BITNOT:
+    gen(node->lhs);
+    printf("  pop rax\n");
+    printf("  not rax\n");
+    printf("  push rax\n");
+    return;
   case ND_IF: {
     int seq = labelseq++;
     if (node->els) {
