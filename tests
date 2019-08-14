@@ -69,6 +69,8 @@ int count() {
   return cnt;
 }
 
+int param_decay(int x[]) { return x[0]; }
+
 int main() {
   assert(8, ({ int a=3; int z=5; a+z; }), "int a=3; int z=5; a+z;");
 
@@ -406,6 +408,8 @@ int main() {
   assert(0, 0&&1, "0&&1");
   assert(0, (2-2)&&5, "(2-2)&&5");
   assert(1, 1&&5, "1&&5");
+
+  assert(3, ({ int x[2]; x[0]=3; param_decay(x); }), "int x[2]; x[0]=3; param_decay(x);");
 
   printf("OK\n");
   return 0;
