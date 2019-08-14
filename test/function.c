@@ -53,6 +53,8 @@ _Bool bool_fn_sub(_Bool x) { return x - 1; }
 
 static int static_fn() { return 3; }
 
+int param_decay(int x[]) { return x[0]; }
+
 int main() {
   ASSERT(3, ret3());
   ASSERT(8, add2(3, 5));
@@ -85,6 +87,8 @@ int main() {
   ASSERT(1, bool_fn_sub(0));
 
   ASSERT(3, static_fn());
+
+  ASSERT(3, ({ int x[2]; x[0]=3; param_decay(x); }));
 
   printf("OK\n");
   return 0;
