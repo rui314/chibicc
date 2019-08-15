@@ -718,6 +718,7 @@ static Node *stmt(void) {
 //       | "for" "(" (expr? ";" | declaration) expr? ";" expr? ")" stmt
 //       | "{" stmt* "}"
 //       | "break" ";"
+//       | "continue" ";"
 //       | declaration
 //       | expr ";"
 static Node *stmt2(void) {
@@ -794,6 +795,11 @@ static Node *stmt2(void) {
   if (tok = consume("break")) {
     expect(";");
     return new_node(ND_BREAK, tok);
+  }
+
+  if (tok = consume("continue")) {
+    expect(";");
+    return new_node(ND_CONTINUE, tok);
   }
 
   if (is_typename())
