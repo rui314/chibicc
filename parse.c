@@ -5,6 +5,7 @@ typedef struct VarScope VarScope;
 struct VarScope {
   VarScope *next;
   char *name;
+  int depth;
   Var *var;
   Type *type_def;
   Type *enum_ty;
@@ -16,6 +17,7 @@ typedef struct TagScope TagScope;
 struct TagScope {
   TagScope *next;
   char *name;
+  int depth;
   Type *ty;
 };
 
@@ -29,17 +31,20 @@ VarList *globals;
 
 VarScope *var_scope;
 TagScope *tag_scope;
+int scope_depth;
 
 Scope *enter_scope() {
   Scope *sc = calloc(1, sizeof(Scope));
   sc->var_scope = var_scope;
   sc->tag_scope = tag_scope;
+  ++scope_depth;
   return sc;
 }
 
 void leave_scope(Scope *sc) {
   var_scope = sc->var_scope;
   tag_scope = sc->tag_scope;
+  --scope_depth;
 }
 
 // Find a variable or a typedef by name.
@@ -94,6 +99,7 @@ VarScope *push_scope(char *name) {
   VarScope *sc = calloc(1, sizeof(VarScope));
   sc->name = name;
   sc->next = var_scope;
+  sc->depth = scope_depth;
   var_scope = sc;
   return sc;
 }
@@ -366,26 +372,52 @@ void push_tag_scope(Token *tok, Type *ty) {
   TagScope *sc = calloc(1, sizeof(TagScope));
   sc->next = tag_scope;
   sc->name = strndup(tok->str, tok->len);
+  sc->depth = scope_depth;
   sc->ty = ty;
   tag_scope = sc;
 }
 
-// struct-decl = "struct" ident
-//             | "struct" ident? "{" struct-member "}"
+// struct-decl = "struct" ident? ("{" struct-member "}")?
 Type *struct_decl() {
   // Read a struct tag.
   expect("struct");
   Token *tag = consume_ident();
   if (tag && !peek("{")) {
     TagScope *sc = find_tag(tag);
-    if (!sc)
-      error_tok(tag, "unknown struct type");
+
+    if (!sc) {
+      Type *ty = struct_type();
+      push_tag_scope(tag, ty);
+      return ty;
+    }
+
     if (sc->ty->kind != TY_STRUCT)
       error_tok(tag, "not a struct tag");
     return sc->ty;
   }
 
-  expect("{");
+  // Although it looks weird, "struct *foo" is legal C that defines
+  // foo as a pointer to an unnamed incomplete struct type.
+  if (!consume("{"))
+    return struct_type();
+
+  TagScope *sc = find_tag(tag);
+  Type *ty;
+
+  if (sc && sc->depth == scope_depth) {
+    // If there's an existing struct type having the same tag name in
+    // the same block scope, this is a redefinition.
+    if (sc->ty->kind != TY_STRUCT)
+      error_tok(tag, "not a struct tag");
+    ty = sc->ty;
+  } else {
+    // Register a struct type as an incomplete type early, so that you
+    // can write recursive structs such as
+    // "struct T { struct T *next; }".
+    ty = struct_type();
+    if (tag)
+      push_tag_scope(tag, ty);
+  }
 
   // Read struct members.
   Member head;
@@ -397,8 +429,6 @@ Type *struct_decl() {
     cur = cur->next;
   }
 
-  Type *ty = calloc(1, sizeof(Type));
-  ty->kind = TY_STRUCT;
   ty->members = head.next;
 
   // Assign offsets within the struct to members.
@@ -412,9 +442,7 @@ Type *struct_decl() {
       ty->align = mem->ty->align;
   }
 
-  // Register the struct type if a name was given.
-  if (tag)
-    push_tag_scope(tag, ty);
+  ty->is_incomplete = false;
   return ty;
 }
 
