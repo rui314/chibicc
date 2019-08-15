@@ -233,6 +233,7 @@ Type *pointer_to(Type *base);
 Type *array_of(Type *base, int size);
 Type *func_type(Type *return_ty);
 Type *enum_type(void);
+Type *struct_type(void);
 void add_type(Node *node);
 
 //

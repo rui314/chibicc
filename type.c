@@ -48,6 +48,12 @@ Type *enum_type(void) {
   return new_type(TY_ENUM, 4, 4);
 }
 
+Type *struct_type(void) {
+  Type *ty = new_type(TY_STRUCT, 0, 1);
+  ty->is_incomplete = true;
+  return ty;
+}
+
 void add_type(Node *node) {
   if (!node || node->ty)
     return;
@@ -115,13 +121,18 @@ void add_type(Node *node) {
     else
       node->ty = pointer_to(node->lhs->ty);
     return;
-  case ND_DEREF:
+  case ND_DEREF: {
     if (!node->lhs->ty->base)
       error_tok(node->tok, "invalid pointer dereference");
-    node->ty = node->lhs->ty->base;
-    if (node->ty->kind == TY_VOID)
+
+    Type *ty = node->lhs->ty->base;
+    if (ty->kind == TY_VOID)
       error_tok(node->tok, "dereferencing a void pointer");
+    if (ty->kind == TY_STRUCT && ty->is_incomplete)
+      error_tok(node->tok, "incomplete struct type");
+    node->ty = ty;
     return;
+  }
   case ND_STMT_EXPR: {
     Node *last = node->body;
     while (last->next)
