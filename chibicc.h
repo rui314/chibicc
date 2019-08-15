@@ -118,6 +118,7 @@ typedef enum {
   ND_SIZEOF,    // "sizeof"
   ND_BLOCK,     // { ... }
   ND_BREAK,     // "break"
+  ND_CONTINUE,  // "continue"
   ND_FUNCALL,   // Function call
   ND_EXPR_STMT, // Expression statement
   ND_STMT_EXPR, // Statement expression
