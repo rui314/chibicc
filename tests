@@ -70,6 +70,8 @@ static int static_fn() { return 3; }
 
 int param_decay(int x[]) { return x[0]; }
 
+void voidfn() {}
+
 int main() {
   assert(8, ({ int a=3; int z=5; a+z; }), "int a=3; int z=5; a+z;");
 
@@ -450,6 +452,8 @@ int main() {
   assert(7, ({ int i=0; switch(1) { case 0:i=5;break; default:i=7; } i; }), "int i=0; switch(1) { case 0:i=5;break; default:i=7; } i;");
   assert(2, ({ int i=0; switch(1) { case 0: 0; case 1: 0; case 2: 0; i=2; } i; }), "int i=0; switch(1) { case 0: 0; case 1: 0; case 2: 0; i=2; } i;");
   assert(0, ({ int i=0; switch(3) { case 0: 0; case 1: 0; case 2: 0; i=2; } i; }), "int i=0; switch(3) { case 0: 0; case 1: 0; case 2: 0; i=2; } i;");
+
+  voidfn();
 
   printf("OK\n");
   return 0;
