@@ -426,7 +426,8 @@ void gen(Node *node) {
     printf(".Lend%d:\n", seq);
     printf("  push rax\n");
 
-    truncate(node->ty);
+    if (node->ty->kind != TY_VOID)
+      truncate(node->ty);
     return;
   }
   case ND_RETURN:
