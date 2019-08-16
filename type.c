@@ -93,6 +93,8 @@ void add_type(Node *node) {
   case ND_PTR_ADD:
   case ND_PTR_SUB:
   case ND_ASSIGN:
+  case ND_SHL:
+  case ND_SHR:
   case ND_PRE_INC:
   case ND_PRE_DEC:
   case ND_POST_INC:
@@ -103,6 +105,8 @@ void add_type(Node *node) {
   case ND_PTR_SUB_EQ:
   case ND_MUL_EQ:
   case ND_DIV_EQ:
+  case ND_SHL_EQ:
+  case ND_SHR_EQ:
   case ND_BITNOT:
     node->ty = node->lhs->ty;
     return;
