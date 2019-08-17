@@ -108,6 +108,19 @@ int main() {
   ASSERT(-1, ({ int i=-1; i; }));
   ASSERT(-1, ({ int i=-1; i>>=1; i; }));
 
+  ASSERT(2, 0?1:2);
+  ASSERT(1, 1?1:2);
+  ASSERT(-1, 0?-2:-1);
+  ASSERT(-2, 1?-2:-1);
+  ASSERT(4, sizeof(0?1:2));
+  ASSERT(8, sizeof(0?(long)1:(long)2));
+  ASSERT(-1, 0?(long)-2:-1);
+  ASSERT(-1, 0?-2:(long)-1);
+  ASSERT(-2, 1?(long)-2:-1);
+  ASSERT(-2, 1?-2:(long)-1);
+
+  1 ? -2 : (void)-1;
+
   printf("OK\n");
   return 0;
 }
