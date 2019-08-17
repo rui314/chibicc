@@ -174,6 +174,9 @@ void visit(Node *node) {
   case ND_BITNOT:
     node->ty = node->lhs->ty;
     return;
+  case ND_TERNARY:
+    node->ty = node->then->ty;
+    return;
   case ND_COMMA:
     node->ty = node->rhs->ty;
     return;

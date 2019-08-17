@@ -455,6 +455,9 @@ int main() {
   assert(-1, ({ int i=-1; i; }), "int i=-1; i;");
   assert(-1, ({ int i=-1; i>>=1; i; }), "int i=1; i>>1;");
 
+  assert(2, 0?1:2, "0?1:2");
+  assert(1, 1?1:2, "0?1:2");
+
   printf("OK\n");
   return 0;
 }
