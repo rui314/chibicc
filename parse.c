@@ -694,8 +694,27 @@ static Initializer *emit_struct_padding(Initializer *cur, Type *parent, Member *
   return new_init_zero(cur, end - start);
 }
 
+static void skip_excess_elements2(void) {
+  for (;;) {
+    if (consume("{"))
+      skip_excess_elements2();
+    else
+      assign();
+
+    if (consume_end())
+      return;
+    expect(",");
+  }
+}
+
+static void skip_excess_elements(void) {
+  expect(",");
+  warn_tok(token, "excess elements in initializer");
+  skip_excess_elements2();
+}
+
 // gvar-initializer2 = assign
-//                  | "{" (gvar-initializer2 ("," gvar-initializer2)* ","?)? "}"
+//                   | "{" (gvar-initializer2 ("," gvar-initializer2)* ","?)? "}"
 static Initializer *gvar_initializer2(Initializer *cur, Type *ty) {
   Token *tok = token;
 
@@ -711,8 +730,8 @@ static Initializer *gvar_initializer2(Initializer *cur, Type *ty) {
       } while (i < limit && !peek_end() && consume(","));
     }
 
-    if (open)
-      expect_end();
+    if (open && !consume_end())
+      skip_excess_elements();
 
     // Set excess array elements to zero.
     cur = new_init_zero(cur, ty->base->size * (ty->array_len - i));
@@ -737,8 +756,8 @@ static Initializer *gvar_initializer2(Initializer *cur, Type *ty) {
       } while (mem && !peek_end() && consume(","));
     }
 
-    if (open)
-      expect_end();
+    if (open && !consume_end())
+      skip_excess_elements();
 
     // Set excess struct elements to zero.
     if (mem)
@@ -914,8 +933,8 @@ static Node *lvar_initializer2(Node *cur, Var *var, Type *ty, Designator *desg) 
       } while (i < limit && !peek_end() && consume(","));
     }
 
-    if (open)
-      expect_end();
+    if (open && !consume_end())
+      skip_excess_elements();
 
     // Set excess array elements to zero.
     while (i < ty->array_len) {
@@ -943,8 +962,8 @@ static Node *lvar_initializer2(Node *cur, Var *var, Type *ty, Designator *desg) 
       } while (mem && !peek_end() && consume(","));
     }
 
-    if (open)
-      expect_end();
+    if (open && !consume_end())
+      skip_excess_elements();
 
     // Set excess struct elements to zero.
     for (; mem; mem = mem->next) {
