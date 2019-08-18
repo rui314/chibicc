@@ -682,7 +682,8 @@ static void global_var(void) {
 typedef struct Designator Designator;
 struct Designator {
   Designator *next;
-  int idx;
+  int idx;     // array
+  Member *mem; // struct
 };
 
 // Creates a node for an array access. For example, if var represents
@@ -693,6 +694,13 @@ static Node *new_desg_node2(Var *var, Designator *desg, Token *tok) {
     return new_var_node(var, tok);
 
   Node *node = new_desg_node2(var, desg->next, tok);
+
+  if (desg->mem) {
+    node = new_unary(ND_MEMBER, node, desg->mem->tok);
+    node->member = desg->mem;
+    return node;
+  }
+
   node = new_add(node, new_num(desg->idx, tok), tok);
   return new_unary(ND_DEREF, node, tok);
 }
@@ -729,6 +737,9 @@ static Node *lvar_init_zero(Node *cur, Var *var, Type *ty, Designator *desg) {
 //   x[1][0]=4;
 //   x[1][1]=5;
 //   x[1][2]=6;
+//
+// Struct members are initialized in declaration order. For example,
+// `struct { int a; int b; } x = {1, 2}` sets x.a to 1 and x.b to 2.
 //
 // There are a few special rules for ambiguous initializers and
 // shorthand notations:
@@ -795,6 +806,27 @@ static Node *lvar_initializer2(Node *cur, Var *var, Type *ty, Designator *desg) 
       ty->size = ty->base->size * i;
       ty->array_len = i;
       ty->is_incomplete = false;
+    }
+    return cur;
+  }
+
+  if (ty->kind == TY_STRUCT) {
+    expect("{");
+    Member *mem = ty->members;
+
+    if (!peek("}")) {
+      do {
+        Designator desg2 = {desg, 0, mem};
+        cur = lvar_initializer2(cur, var, mem->ty, &desg2);
+        mem = mem->next;
+      } while (!peek_end() && consume(","));
+    }
+    expect_end();
+
+    // Set excess struct elements to zero.
+    for (; mem; mem = mem->next) {
+      Designator desg2 = {desg, 0, mem};
+      cur = lvar_init_zero(cur, var, mem->ty, &desg2);
     }
     return cur;
   }
