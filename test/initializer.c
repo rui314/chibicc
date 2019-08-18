@@ -35,6 +35,26 @@ int main() {
   ASSERT(2, ({ typedef char T[]; T x="x"; T y="foo"; sizeof(x); }));
   ASSERT(4, ({ typedef char T[]; T x="x"; T y="foo"; sizeof(y); }));
 
+  ASSERT(1, ({ struct {int a; int b; int c;} x={1,2,3}; x.a; }));
+  ASSERT(2, ({ struct {int a; int b; int c;} x={1,2,3}; x.b; }));
+  ASSERT(3, ({ struct {int a; int b; int c;} x={1,2,3}; x.c; }));
+  ASSERT(1, ({ struct {int a; int b; int c;} x={1}; x.a; }));
+  ASSERT(0, ({ struct {int a; int b; int c;} x={1}; x.b; }));
+  ASSERT(0, ({ struct {int a; int b; int c;} x={1}; x.c; }));
+
+  ASSERT(1, ({ struct {int a; int b;} x[2]={{1,2},{3,4}}; x[0].a; }));
+  ASSERT(2, ({ struct {int a; int b;} x[2]={{1,2},{3,4}}; x[0].b; }));
+  ASSERT(3, ({ struct {int a; int b;} x[2]={{1,2},{3,4}}; x[1].a; }));
+  ASSERT(4, ({ struct {int a; int b;} x[2]={{1,2},{3,4}}; x[1].b; }));
+
+  ASSERT(0, ({ struct {int a; int b;} x[2]={{1,2}}; x[1].b; }));
+
+  ASSERT(0, ({ struct {int a; int b;} x={}; x.a; }));
+  ASSERT(0, ({ struct {int a; int b;} x={}; x.b; }));
+
+  ASSERT(5, ({ typedef struct {int a,b,c,d,e,f;} T; T x={1,2,3,4,5,6}; T y; y=x; y.e; }));
+  ASSERT(2, ({ typedef struct {int a,b;} T; T x={1,2}; T y, z; z=y=x; z.b; }));
+
   printf("OK\n");
   return 0;
 }
