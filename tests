@@ -19,6 +19,10 @@ int g9[3] = {0, 1, 2};
 char *g10[] = {"foo", "bar"};
 struct {char a; int b;} g11[2] = {{1, 2}, {3, 4}};
 struct {int a[2];} g12[2] = {{{1, 2}}, {{3, 4}}};
+struct {int a[2];} g13[2] = {{1, 2}, 3, 4};
+struct {int a[2];} g14[2] = {1, 2, 3, 4};
+char *g15 = {"foo"};
+char g16[][4] = {'f', 'o', 'o', 0, 'b', 'a', 'r', 0};
 
 int assert(long expected, long actual, char *code) {
   if (expected == actual) {
@@ -539,6 +543,26 @@ int main() {
   assert(2, g12[0].a[1], "g12[0].a[1]");
   assert(3, g12[1].a[0], "g12[1].a[0]");
   assert(4, g12[1].a[1], "g12[1].a[1]");
+
+  assert(1, g13[0].a[0], "g13[0].a[0]");
+  assert(2, g13[0].a[1], "g13[0].a[1]");
+  assert(3, g13[1].a[0], "g13[1].a[0]");
+  assert(4, g13[1].a[1], "g13[1].a[1]");
+
+  assert(1, g14[0].a[0], "g14[0].a[0]");
+  assert(2, g14[0].a[1], "g14[0].a[1]");
+  assert(3, g14[1].a[0], "g14[1].a[0]");
+  assert(4, g14[1].a[1], "g14[1].a[1]");
+
+  assert(0, ({ int x[2][3]={0,1,2,3,4,5,}; x[0][0]; }), "int x[2][3]={0,1,2,3,4,5,}; x[0][0];");
+  assert(3, ({ int x[2][3]={0,1,2,3,4,5,}; x[1][0]; }), "int x[2][3]={0,1,2,3,4,5,}; x[1][0];");
+
+  assert(0, ({ struct {int a; int b;} x[2]={0,1,2,3}; x[0].a; }), "struct {int a; int b;} x[2]={0,1,2,3}; x[0].a;");
+  assert(2, ({ struct {int a; int b;} x[2]={0,1,2,3}; x[1].a; }), "struct {int a; int b;} x[2]={0,1,2,3}; x[1].a;");
+
+  assert(0, strcmp(g15, "foo"), "strcmp(g15, \"foo\")");
+  assert(0, strcmp(g16[0], "foo"), "strcmp(g16[0], \"foo\")");
+  assert(0, strcmp(g16[1], "bar"), "strcmp(g16[1], \"bar\")");
 
   printf("OK\n");
   return 0;
