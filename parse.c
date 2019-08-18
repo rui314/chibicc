@@ -700,8 +700,21 @@ static Node *new_desg_node(Var *var, Designator *desg, Node *rhs) {
   return new_unary(ND_EXPR_STMT, node, rhs->tok);
 }
 
+static Node *lvar_init_zero(Node *cur, Var *var, Type *ty, Designator *desg) {
+  if (ty->kind == TY_ARRAY) {
+    for (int i = 0; i < ty->array_len; i++) {
+      Designator desg2 = {desg, i++};
+      cur = lvar_init_zero(cur, var, ty->base, &desg2);
+    }
+    return cur;
+  }
+
+  cur->next = new_desg_node(var, desg, new_num(0, token));
+  return cur->next;
+}
+
 // lvar-initializer2 = assign
-//                   | "{" lvar-initializer2 ("," lvar-initializer2)* ","? "}"
+//                   | "{" (lvar-initializer2 ("," lvar-initializer2)* ","?)? "}"
 //
 // An initializer for a local variable is expanded to multiple
 // assignments. For example, this function creates the following
@@ -713,17 +726,27 @@ static Node *new_desg_node(Var *var, Designator *desg, Node *rhs) {
 //   x[1][0]=4;
 //   x[1][1]=5;
 //   x[1][2]=6;
+//
+// If an initializer list is shorter than an array, excess array
+// elements are initialized with 0.
 static Node *lvar_initializer2(Node *cur, Var *var, Type *ty, Designator *desg) {
   if (ty->kind == TY_ARRAY) {
     expect("{");
     int i = 0;
 
-    do {
-      Designator desg2 = {desg, i++};
-      cur = lvar_initializer2(cur, var, ty->base, &desg2);
-    } while (!peek_end() && consume(","));
-
+    if (!peek("}")) {
+      do {
+        Designator desg2 = {desg, i++};
+        cur = lvar_initializer2(cur, var, ty->base, &desg2);
+      } while (!peek_end() && consume(","));
+    }
     expect_end();
+
+    // Set excess array elements to zero.
+    while (i < ty->array_len) {
+      Designator desg2 = {desg, i++};
+      cur = lvar_init_zero(cur, var, ty->base, &desg2);
+    }
     return cur;
   }
 
