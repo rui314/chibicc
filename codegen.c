@@ -537,13 +537,22 @@ void emit_data(Program *prog) {
     Var *var = vl->var;
     printf("%s:\n", var->name);
 
-    if (!var->contents) {
+    if (!var->initializer) {
       printf("  .zero %d\n", size_of(var->ty, var->tok));
       continue;
     }
 
-    for (int i = 0; i < var->cont_len; i++)
-      printf("  .byte %d\n", var->contents[i]);
+    for (Initializer *init = var->initializer; init; init = init->next) {
+      if (init->label) {
+        printf("  .quad %s\n", init->label);
+        continue;
+      }
+
+      if (init->sz == 1)
+        printf("  .byte %ld\n", init->val);
+      else
+        printf("  .%dbyte %ld\n", init->sz, init->val);
+    }
   }
 }
 
