@@ -624,6 +624,12 @@ Initializer *new_init_label(Initializer *cur, char *label) {
   return init;
 }
 
+Initializer *new_init_zero(Initializer *cur, int nbytes) {
+  for (int i = 0; i < nbytes; i++)
+    cur = new_init_val(cur, 1, 0);
+  return cur;
+}
+
 Initializer *gvar_init_string(char *p, int len) {
   Initializer head;
   head.next = NULL;
@@ -633,8 +639,69 @@ Initializer *gvar_init_string(char *p, int len) {
   return head.next;
 }
 
+Initializer *emit_struct_padding(Initializer *cur, Type *parent, Member *mem) {
+  int end = mem->offset + size_of(mem->ty, token);
+
+  int padding;
+  if (mem->next)
+    padding = mem->next->offset - end;
+  else
+    padding = size_of(parent, token) - end;
+
+  if (padding)
+    cur = new_init_zero(cur, padding);
+  return cur;
+}
+
 Initializer *gvar_initializer(Initializer *cur, Type *ty) {
   Token *tok = token;
+
+  if (consume("{")) {
+    if (ty->kind == TY_ARRAY) {
+      int i = 0;
+
+      do {
+        cur = gvar_initializer(cur, ty->base);
+        i++;
+      } while (!peek_end() && consume(","));
+
+      expect_end();
+
+      // Set excess array elements to zero.
+      if (i < ty->array_size)
+        cur = new_init_zero(cur, size_of(ty->base, tok) * (ty->array_size - i));
+
+      if (ty->is_incomplete) {
+        ty->array_size = i;
+        ty->is_incomplete = false;
+      }
+
+      return cur;
+    }
+
+    if (ty->kind == TY_STRUCT) {
+      Member *mem = ty->members;
+
+      do {
+        cur = gvar_initializer(cur, mem->ty);
+        cur = emit_struct_padding(cur, ty, mem);
+        mem = mem->next;
+      } while (!peek_end() && consume(","));
+
+      expect_end();
+
+      // Set excess struct elements to zero.
+      if (mem) {
+        int sz = size_of(ty, tok) - mem->offset;
+        if (sz)
+          cur = new_init_zero(cur, sz);
+      }
+      return cur;
+    }
+
+    error_tok(tok, "invalid initializer");
+  }
+
   Node *expr = conditional();
 
   if (expr->kind == ND_ADDR) {
