@@ -10,6 +10,9 @@
 #include <string.h>
 #include <strings.h>
 
+#define MAX(x, y) ((x) < (y) ? (y) : (x))
+#define MIN(x, y) ((x) < (y) ? (x) : (y))
+
 typedef struct Type Type;
 typedef struct Node Node;
 typedef struct Member Member;
