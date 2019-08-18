@@ -42,6 +42,7 @@ struct Token {
 void error(char *fmt, ...);
 void error_at(char *loc, char *fmt, ...);
 void error_tok(Token *tok, char *fmt, ...);
+void warn_tok(Token *tok, char *fmt, ...);
 Token *peek(char *s);
 Token *consume(char *op);
 char *strndup(char *p, int len);

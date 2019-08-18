@@ -43,7 +43,6 @@ void verror_at(char *loc, char *fmt, va_list ap) {
   fprintf(stderr, "^ ");
   vfprintf(stderr, fmt, ap);
   fprintf(stderr, "\n");
-  exit(1);
 }
 
 // Reports an error location and exit.
@@ -51,18 +50,31 @@ void error_at(char *loc, char *fmt, ...) {
   va_list ap;
   va_start(ap, fmt);
   verror_at(loc, fmt, ap);
+  exit(1);
 }
 
 // Reports an error location and exit.
 void error_tok(Token *tok, char *fmt, ...) {
   va_list ap;
   va_start(ap, fmt);
-  if (tok)
+  if (tok) {
     verror_at(tok->str, fmt, ap);
-
-  vfprintf(stderr, fmt, ap);
-  fprintf(stderr, "\n");
+  } else {
+    vfprintf(stderr, fmt, ap);
+    fprintf(stderr, "\n");
+  }
   exit(1);
+}
+
+void warn_tok(Token *tok, char *fmt, ...) {
+  va_list ap;
+  va_start(ap, fmt);
+  if (tok) {
+    verror_at(tok->str, fmt, ap);
+  } else {
+    vfprintf(stderr, fmt, ap);
+    fprintf(stderr, "\n");
+  }
 }
 
 char *strndup(char *p, int len) {
