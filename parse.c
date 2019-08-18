@@ -852,6 +852,12 @@ static void write_gvar_data(Initializer *init, Type *ty, char *buf, int offset) 
     return;
   }
 
+  if (ty->kind == TY_STRUCT) {
+    for (Member *mem = ty->members; mem; mem = mem->next)
+      write_gvar_data(init->children[mem->idx], mem->ty, buf, offset + mem->offset);
+    return;
+  }
+
   if (init->expr)
     write_buf(buf + offset, eval(init->expr), ty->size);
 }
