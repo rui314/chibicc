@@ -94,7 +94,7 @@ int count() {
 
 int param_decay(int x[]) { return x[0]; }
 
-void voidfn() {}
+void voidfn(void) {}
 
 int main() {
   assert(8, ({ int a=3; int z=5; a+z; }), "int a=3; int z=5; a+z;");
