@@ -718,6 +718,24 @@ static void skip_excess_elements(void) {
 static Initializer *gvar_initializer2(Initializer *cur, Type *ty) {
   Token *tok = token;
 
+  if (ty->kind == TY_ARRAY && ty->base->kind == TY_CHAR &&
+      token->kind == TK_STR) {
+    token = token->next;
+
+    if (ty->is_incomplete) {
+      ty->size = tok->cont_len;
+      ty->array_len = tok->cont_len;
+      ty->is_incomplete = false;
+    }
+
+    int len = (ty->array_len < tok->cont_len)
+      ? ty->array_len : tok->cont_len;
+
+    for (int i = 0; i < len; i++)
+      cur = new_init_val(cur, 1, tok->contents[i]);
+    return new_init_zero(cur, ty->array_len - len);
+  }
+
   if (ty->kind == TY_ARRAY) {
     bool open = consume("{");
     int i = 0;
