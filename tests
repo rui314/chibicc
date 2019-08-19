@@ -26,6 +26,11 @@ char g16[][4] = {'f', 'o', 'o', 0, 'b', 'a', 'r', 0};
 char g17[] = "foobar";
 char g18[10] = "foobar";
 char g19[3] = "foobar";
+char *g20 = g17+0;
+char *g21 = g17+3;
+char *g22 = g17-3;
+int g23=3;
+int *g24=&g23;
 
 int assert(long expected, long actual, char *code) {
   if (expected == actual) {
@@ -574,6 +579,13 @@ int main() {
   assert(0, memcmp(g17, "foobar", 7), "memcmp(g17, \"foobar\", 7)");
   assert(0, memcmp(g18, "foobar\0\0\0", 10), "memcmp(g18, \"foobar\\0\\0\\0\", 10)");
   assert(0, memcmp(g19, "foo", 3), "memcmp(g19, \"foo\", 3)");
+
+  assert(0, strcmp(g20, "foobar"), "strcmp(g20, \"foobar\")");
+  assert(0, strcmp(g21, "bar"), "strcmp(g21, \"bar\")");
+  assert(0, strcmp(g22+3, "foobar"), "strcmp(g22+3, \"foobar\")");
+
+  assert(3, g23, "g23");
+  assert(3, *g24, "*g24");
 
   printf("OK\n");
   return 0;

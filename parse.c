@@ -156,6 +156,7 @@ bool is_typename();
 Node *stmt();
 Node *expr();
 long eval(Node *node);
+long eval2(Node *node, Var **var);
 long const_expr();
 Node *assign();
 Node *conditional();
@@ -617,9 +618,10 @@ Initializer *new_init_val(Initializer *cur, int sz, int val) {
   return init;
 }
 
-Initializer *new_init_label(Initializer *cur, char *label) {
+Initializer *new_init_label(Initializer *cur, char *label, long addend) {
   Initializer *init = calloc(1, sizeof(Initializer));
   init->label = label;
+  init->addend = addend;
   cur->next = init;
   return init;
 }
@@ -743,16 +745,12 @@ Initializer *gvar_initializer(Initializer *cur, Type *ty) {
   if (open)
     expect("}");
 
-  if (expr->kind == ND_ADDR) {
-    if (expr->lhs->kind != ND_VAR)
-      error_tok(tok, "invalid initializer");
-    return new_init_label(cur, expr->lhs->var->name);
-  }
+  Var *var = NULL;
+  long addend = eval2(expr, &var);
 
-  if (expr->kind == ND_VAR && expr->var->ty->kind == TY_ARRAY)
-    return new_init_label(cur, expr->var->name);
-
-  return new_init_val(cur, size_of(ty, token), eval(expr));
+  if (var)
+    return new_init_label(cur, var->name, addend);
+  return new_init_val(cur, size_of(ty, token), addend);
 }
 
 // global-var = type-specifier declarator type-suffix ("=" gvar-initializer)? ";"
@@ -1159,11 +1157,19 @@ Node *expr() {
 }
 
 long eval(Node *node) {
+  return eval2(node, NULL);
+}
+
+long eval2(Node *node, Var **var) {
   switch (node->kind) {
-  case ND_ADD:
-    return eval(node->lhs) + eval(node->rhs);
-  case ND_SUB:
-    return eval(node->lhs) - eval(node->rhs);
+  case ND_ADD: {
+    long lhs = eval2(node->lhs, var);
+    return lhs + eval2(node->rhs, var);
+  }
+  case ND_SUB: {
+    long lhs = eval2(node->lhs, var);
+    return lhs - eval(node->rhs);
+  }
   case ND_MUL:
     return eval(node->lhs) * eval(node->rhs);
   case ND_DIV:
@@ -1200,6 +1206,16 @@ long eval(Node *node) {
     return eval(node->lhs) || eval(node->rhs);
   case ND_NUM:
     return node->val;
+  case ND_ADDR:
+    if (!var || *var || node->lhs->kind != ND_VAR)
+      error_tok(node->tok, "invalid initializer");
+    *var = node->lhs->var;
+    return 0;
+  case ND_VAR:
+    if (!var || *var || node->var->ty->kind != TY_ARRAY)
+      error_tok(node->tok, "invalid initializer");
+    *var = node->var;
+    return 0;
   }
 
   error_tok(node->tok, "not a constant expression");
