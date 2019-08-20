@@ -513,16 +513,25 @@ static void gen(Node *node) {
 }
 
 static void emit_data(Program *prog) {
+  printf(".bss\n");
+
+  for (VarList *vl = prog->globals; vl; vl = vl->next) {
+    Var *var = vl->var;
+    if (var->initializer)
+      continue;
+
+    printf("%s:\n", var->name);
+    printf("  .zero %d\n", var->ty->size);
+  }
+
   printf(".data\n");
 
   for (VarList *vl = prog->globals; vl; vl = vl->next) {
     Var *var = vl->var;
-    printf("%s:\n", var->name);
-
-    if (!var->initializer) {
-      printf("  .zero %d\n", var->ty->size);
+    if (!var->initializer)
       continue;
-    }
+
+    printf("%s:\n", var->name);
 
     for (Initializer *init = var->initializer; init; init = init->next) {
       if (init->label)
