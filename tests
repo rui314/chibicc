@@ -107,6 +107,12 @@ int param_decay(int x[]) { return x[0]; }
 
 void voidfn(void) {}
 
+int counter() {
+  static int i;
+  static int j = 1+1;
+  return i++ + j++;
+}
+
 int main() {
   assert(8, ({ int a=3; int z=5; a+z; }), "int a=3; int z=5; a+z;");
 
@@ -641,6 +647,10 @@ int main() {
   assert(4, _Alignof(int[3]), "_Alignof(int[3])");
   assert(1, _Alignof(struct {char a; char b;}[2]), "_Alignof(struct {char a; char b;}[2])");
   assert(8, _Alignof(struct {char a; long b;}[2]), "_Alignof(struct {char a; long b;}[2])");
+
+  assert(2, counter(), "counter()");
+  assert(4, counter(), "counter()");
+  assert(6, counter(), "counter()");
 
   printf("OK\n");
   return 0;
