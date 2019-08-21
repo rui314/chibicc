@@ -1705,6 +1705,7 @@ static Node *func_args(void) {
 //         | "(" expr ")"
 //         | "sizeof" "(" type-name ")"
 //         | "sizeof" unary
+//         | "_Alignof" "(" type-name ")"
 //         | ident func-args?
 //         | str
 //         | num
@@ -1737,6 +1738,13 @@ static Node *primary(void) {
     if (node->ty->is_incomplete)
       error_tok(node->tok, "incomplete type");
     return new_num(node->ty->size, tok);
+  }
+
+  if (tok = consume("_Alignof")) {
+    expect("(");
+    Type *ty = type_name();
+    expect(")");
+    return new_num(ty->align, tok);
   }
 
   if (tok = consume_ident()) {
