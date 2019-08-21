@@ -211,12 +211,16 @@ static Node *primary(void);
 // or a global variable by looking ahead input tokens.
 static bool is_function(void) {
   Token *tok = token;
+  bool isfunc = false;
 
   StorageClass sclass;
   Type *ty = basetype(&sclass);
-  char *name = NULL;
-  declarator(ty, &name);
-  bool isfunc = name && consume("(");
+
+  if (!consume(";")) {
+    char *name = NULL;
+    declarator(ty, &name);
+    isfunc = name && consume("(");
+  }
 
   token = tok;
   return isfunc;
@@ -842,6 +846,9 @@ static Initializer *gvar_initializer(Type *ty) {
 static void global_var(void) {
   StorageClass sclass;
   Type *ty = basetype(&sclass);
+  if (consume(";"))
+    return;
+
   char *name = NULL;
   Token *tok = token;
   ty = declarator(ty, &name);
