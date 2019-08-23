@@ -506,8 +506,10 @@ static void gen(Node *node) {
     return;
   }
   case ND_RETURN:
-    gen(node->lhs);
-    printf("  pop rax\n");
+    if (node->lhs) {
+      gen(node->lhs);
+      printf("  pop rax\n");
+    }
     printf("  jmp .L.return.%s\n", funcname);
     return;
   case ND_CAST:

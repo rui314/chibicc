@@ -117,6 +117,10 @@ int fib(int x) {
   return fib(x-1) + fib(x-2);
 }
 
+void ret_none() {
+  return;
+}
+
 static int static_fn() { return 3; }
 
 int param_decay(int x[]) { return x[0]; }
@@ -677,6 +681,8 @@ int main() {
   assert(2, tree->lhs->val, "tree->lhs->val");
   assert(3, tree->lhs->lhs->val, "tree->lhs->lhs->val");
   assert(4, tree->lhs->rhs->val, "tree->lhs->rhs->val");
+
+  ret_none();
 
   printf("OK\n");
   return 0;

@@ -1121,7 +1121,7 @@ static Node *stmt(void) {
   return node;
 }
 
-// stmt2 = "return" expr ";"
+// stmt2 = "return" expr? ";"
 //       | "if" "(" expr ")" stmt ("else" stmt)?
 //       | "switch" "(" expr ")" stmt
 //       | "case" const-expr ":" stmt
@@ -1139,6 +1139,9 @@ static Node *stmt(void) {
 static Node *stmt2(void) {
   Token *tok;
   if (tok = consume("return")) {
+    if (consume(";"))
+      return new_node(ND_RETURN, tok);
+
     Node *node = new_unary(ND_RETURN, expr(), tok);
     expect(";");
     return node;
