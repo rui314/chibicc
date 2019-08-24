@@ -6,3 +6,4 @@
 /tmp*
 /chibicc
 /test/*.exe
+/stage2
