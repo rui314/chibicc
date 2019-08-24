@@ -1067,6 +1067,7 @@ static bool is_typename(Token *tok) {
 //      | "default" ":" stmt
 //      | "for" "(" expr-stmt expr? ";" expr? ")" stmt
 //      | "while" "(" expr ")" stmt
+//      | "do" stmt "while" "(" expr ")" ";"
 //      | "goto" ident ";"
 //      | "break" ";"
 //      | "continue" ";"
@@ -1194,6 +1195,27 @@ static Node *stmt(Token **rest, Token *tok) {
 
     brk_label = brk;
     cont_label = cont;
+    return node;
+  }
+
+  if (equal(tok, "do")) {
+    Node *node = new_node(ND_DO, tok);
+
+    char *brk = brk_label;
+    char *cont = cont_label;
+    brk_label = node->brk_label = new_unique_name();
+    cont_label = node->cont_label = new_unique_name();
+
+    node->then = stmt(&tok, tok->next);
+
+    brk_label = brk;
+    cont_label = cont;
+
+    tok = skip(tok, "while");
+    tok = skip(tok, "(");
+    node->cond = expr(&tok, tok);
+    tok = skip(tok, ")");
+    *rest = skip(tok, ";");
     return node;
   }
 
