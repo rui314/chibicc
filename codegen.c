@@ -527,6 +527,8 @@ static void gen(Node *node) {
     printf("  call %s\n", node->funcname);
     printf("  add rsp, 8\n");
     printf(".L.end.%d:\n", seq);
+    if (node->ty->kind == TY_BOOL)
+      printf("  movzb rax, al\n");
     printf("  push rax\n");
     return;
   }
