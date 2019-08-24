@@ -687,6 +687,10 @@ int main() {
 
   assert(3, ext3, "ext3");
 
+  assert(2, ({ int i=6; i&=3; i; }), "int i=6; i&=3; i;");
+  assert(7, ({ int i=6; i|=3; i; }), "int i=6; i|=3; i;");
+  assert(10, ({ int i=15; i^=5; i; }), "int 15; i^=5; i;");
+
   printf("OK\n");
   return 0;
 }

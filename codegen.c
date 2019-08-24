@@ -158,12 +158,15 @@ static void gen_binary(Node *node) {
     printf("  idiv rdi\n");
     break;
   case ND_BITAND:
+  case ND_BITAND_EQ:
     printf("  and rax, rdi\n");
     break;
   case ND_BITOR:
+  case ND_BITOR_EQ:
     printf("  or rax, rdi\n");
     break;
   case ND_BITXOR:
+  case ND_BITXOR_EQ:
     printf("  xor rax, rdi\n");
     break;
   case ND_SHL:
@@ -286,6 +289,9 @@ static void gen(Node *node) {
   case ND_DIV_EQ:
   case ND_SHL_EQ:
   case ND_SHR_EQ:
+  case ND_BITAND_EQ:
+  case ND_BITOR_EQ:
+  case ND_BITXOR_EQ:
     gen_lval(node->lhs);
     printf("  push [rsp]\n");
     load(node->lhs->ty);
