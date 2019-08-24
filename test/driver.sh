@@ -1,4 +1,6 @@
 #!/bin/sh
+chibicc=$1
+
 tmp=`mktemp -d /tmp/chibicc-test-XXXXXX`
 trap 'rm -rf $tmp' INT TERM HUP EXIT
 echo > $tmp/empty.c
@@ -19,7 +21,7 @@ rm -f $tmp/out
 check -o
 
 # --help
-./chibicc --help 2>&1 | grep -q chibicc
+$chibicc --help 2>&1 | grep -q chibicc
 check --help
 
 echo OK
