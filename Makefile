@@ -7,15 +7,23 @@ chibicc: $(OBJS)
 
 $(OBJS): chibi.h
 
-test: chibicc
+chibicc-gen2: chibicc $(SRCS) chibi.h
+	./self.sh
+
+extern.o: tests-extern
+	gcc -xc -c -o extern.o tests-extern
+
+test: chibicc extern.o
 	./chibicc tests > tmp.s
-	echo 'int ext1; int *ext2; int char_fn() { return 257; }' \
-          'int static_fn() { return 5; }' | \
-          gcc -xc -c -o tmp2.o -
-	gcc -static -o tmp tmp.s tmp2.o
+	gcc -static -o tmp tmp.s extern.o
+	./tmp
+
+test-gen2: chibicc-gen2 extern.o
+	./chibicc-gen2 tests > tmp.s
+	gcc -static -o tmp tmp.s extern.o
 	./tmp
 
 clean:
-	rm -f chibicc *.o *~ tmp*
+	rm -rf chibicc chibicc-gen* *.o *~ tmp*
 
 .PHONY: test clean
