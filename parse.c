@@ -1841,6 +1841,8 @@ static Node *primary(void) {
         if (!sc->var || sc->var->ty->kind != TY_FUNC)
           error_tok(tok, "not a function");
         node->ty = sc->var->ty->return_ty;
+      } else if (!strcmp(node->funcname, "__builtin_va_start")) {
+        node->ty = void_type;
       } else {
         warn_tok(node->tok, "implicit declaration of a function");
         node->ty = int_type;
