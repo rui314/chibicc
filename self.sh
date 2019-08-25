@@ -36,7 +36,6 @@ EOF
     sed -i 's/\berrno\b/*__errno_location()/g' $TMP/$1
     sed -i 's/\btrue\b/1/g; s/\bfalse\b/0/g;' $TMP/$1
     sed -i 's/\bNULL\b/0/g' $TMP/$1
-    sed -i 's/, \.\.\.//g' $TMP/$1
     sed -i 's/INT_MAX/2147483647/g' $TMP/$1
 
     ./chibicc $TMP/$1 > $TMP/${1%.c}.s
