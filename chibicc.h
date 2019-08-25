@@ -86,6 +86,7 @@ struct Var {
   Var *params;
   Node *body;
   Var *locals;
+  Var *va_area;
   int stack_size;
 };
 
