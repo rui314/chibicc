@@ -377,13 +377,14 @@ static Type *typespec(Token **rest, Token *tok, VarAttr *attr) {
   // keyword "void" so far. With this, we can use a switch statement
   // as you can see below.
   enum {
-    VOID  = 1 << 0,
-    BOOL  = 1 << 2,
-    CHAR  = 1 << 4,
-    SHORT = 1 << 6,
-    INT   = 1 << 8,
-    LONG  = 1 << 10,
-    OTHER = 1 << 12,
+    VOID   = 1 << 0,
+    BOOL   = 1 << 2,
+    CHAR   = 1 << 4,
+    SHORT  = 1 << 6,
+    INT    = 1 << 8,
+    LONG   = 1 << 10,
+    OTHER  = 1 << 12,
+    SIGNED = 1 << 13,
   };
 
   Type *ty = ty_int;
@@ -455,6 +456,8 @@ static Type *typespec(Token **rest, Token *tok, VarAttr *attr) {
       counter += INT;
     else if (equal(tok, "long"))
       counter += LONG;
+    else if (equal(tok, "signed"))
+      counter |= SIGNED;
     else
       unreachable();
 
@@ -466,19 +469,28 @@ static Type *typespec(Token **rest, Token *tok, VarAttr *attr) {
       ty = ty_bool;
       break;
     case CHAR:
+    case SIGNED + CHAR:
       ty = ty_char;
       break;
     case SHORT:
     case SHORT + INT:
+    case SIGNED + SHORT:
+    case SIGNED + SHORT + INT:
       ty = ty_short;
       break;
     case INT:
+    case SIGNED:
+    case SIGNED + INT:
       ty = ty_int;
       break;
     case LONG:
     case LONG + INT:
     case LONG + LONG:
     case LONG + LONG + INT:
+    case SIGNED + LONG:
+    case SIGNED + LONG + INT:
+    case SIGNED + LONG + LONG:
+    case SIGNED + LONG + LONG + INT:
       ty = ty_long;
       break;
     default:
@@ -1063,7 +1075,7 @@ static void gvar_initializer(Token **rest, Token *tok, Obj *var) {
 static bool is_typename(Token *tok) {
   static char *kw[] = {
     "void", "_Bool", "char", "short", "int", "long", "struct", "union",
-    "typedef", "enum", "static", "extern", "_Alignas",
+    "typedef", "enum", "static", "extern", "_Alignas", "signed",
   };
 
   for (int i = 0; i < sizeof(kw) / sizeof(*kw); i++)
