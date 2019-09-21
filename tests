@@ -732,6 +732,16 @@ int main() {
   assert(8, sizeof(signed long long), "sizeof(signed long long)");
   assert(8, sizeof(signed long long int), "sizeof(signed long long int)");
 
+  assert(4, sizeof(0), "sizeof(0)");
+  assert(8, sizeof(0L), "sizeof(0L)");
+  assert(8, sizeof(0LL), "sizeof(0LL)");
+  assert(8, sizeof(0l), "sizeof(0l)");
+  assert(8, sizeof(0ll), "sizeof(0ll)");
+  assert(8, sizeof(0x0L), "sizeof(0x0L)");
+  assert(8, sizeof(0b0L), "sizeof(0b0L)");
+  assert(4, sizeof(2147483647), "sizeof(2147483647)");
+  assert(8, sizeof(2147483648), "sizeof(2147483648)");
+
   printf("OK\n");
   return 0;
 }

@@ -99,6 +99,7 @@ static Node *new_unary(NodeKind kind, Node *expr, Token *tok) {
 static Node *new_num(long val, Token *tok) {
   Node *node = new_node(ND_NUM, tok);
   node->val = val;
+  node->ty = int_type;
   return node;
 }
 
@@ -1887,5 +1888,9 @@ static Node *primary(void) {
 
   if (tok->kind != TK_NUM)
     error_tok(tok, "expected expression");
-  return new_num(expect_number(), tok);
+  token = tok->next;
+
+  Node *node = new_num(tok->val, tok);
+  node->ty = tok->ty;
+  return node;
 }

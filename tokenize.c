@@ -101,15 +101,6 @@ void expect(char *s) {
   token = token->next;
 }
 
-// Ensure that the current token is TK_NUM.
-long expect_number(void) {
-  if (token->kind != TK_NUM)
-    error_tok(token, "expected a number");
-  long val = token->val;
-  token = token->next;
-  return val;
-}
-
 // Ensure that the current token is TK_IDENT.
 char *expect_ident(void) {
   if (token->kind != TK_IDENT)
@@ -234,12 +225,14 @@ static Token *read_char_literal(Token *cur, char *start) {
 
   Token *tok = new_token(TK_NUM, cur, start, p - start);
   tok->val = c;
+  tok->ty = int_type;
   return tok;
 }
 
 static Token *read_int_literal(Token *cur, char *start) {
   char *p = start;
 
+  // Read a binary, octal, decimal or hexadecimal number.
   int base;
   if (!strncasecmp(p, "0x", 2) && is_alnum(p[2])) {
     p += 2;
@@ -254,11 +247,25 @@ static Token *read_int_literal(Token *cur, char *start) {
   }
 
   long val = strtol(p, &p, base);
+  Type *ty = int_type;
+
+  // Read L or LL prefix or infer a type.
+  if (startswith(p, "LL") || startswith(p, "ll")) {
+    p += 2;
+    ty = long_type;
+  } else if (*p == 'L' || *p == 'l') {
+    p++;
+    ty = long_type;
+  } else if (val != (int)val) {
+    ty = long_type;
+  }
+
   if (is_alnum(*p))
     error_at(p, "invalid digit");
 
   Token *tok = new_token(TK_NUM, cur, start, p - start);
   tok->val = val;
+  tok->ty = ty;
   return tok;
 }
 

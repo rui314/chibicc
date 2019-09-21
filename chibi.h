@@ -34,6 +34,7 @@ struct Token {
   TokenKind kind; // Token kind
   Token *next;    // Next token
   long val;       // If kind is TK_NUM, its value
+  Type *ty;       // Used if TK_NUM
   char *str;      // Token string
   int len;        // Token length
 
@@ -49,7 +50,6 @@ Token *peek(char *s);
 Token *consume(char *op);
 Token *consume_ident(void);
 void expect(char *op);
-long expect_number(void);
 char *expect_ident(void);
 bool at_eof(void);
 Token *tokenize(void);
