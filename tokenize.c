@@ -218,17 +218,19 @@ static Token *read_char_literal(char *start) {
 
   Token *tok = new_token(TK_NUM, start, end + 1);
   tok->val = c;
+  tok->ty = ty_int;
   return tok;
 }
 
 static Token *read_int_literal(char *start) {
   char *p = start;
 
+  // Read a binary, octal, decimal or hexadecimal number.
   int base = 10;
-  if (!strncasecmp(p, "0x", 2) && isalnum(p[2])) {
+  if (!strncasecmp(p, "0x", 2) && isxdigit(p[2])) {
     p += 2;
     base = 16;
-  } else if (!strncasecmp(p, "0b", 2) && isalnum(p[2])) {
+  } else if (!strncasecmp(p, "0b", 2) && (p[2] == '0' || p[2] == '1')) {
     p += 2;
     base = 2;
   } else if (*p == '0') {
@@ -236,11 +238,65 @@ static Token *read_int_literal(char *start) {
   }
 
   int64_t val = strtoul(p, &p, base);
+
+  // Read U, L or LL suffixes.
+  bool l = false;
+  bool u = false;
+
+  if (startswith(p, "LLU") || startswith(p, "LLu") ||
+      startswith(p, "llU") || startswith(p, "llu") ||
+      startswith(p, "ULL") || startswith(p, "Ull") ||
+      startswith(p, "uLL") || startswith(p, "ull")) {
+    p += 3;
+    l = u = true;
+  } else if (!strncasecmp(p, "lu", 2) || !strncasecmp(p, "ul", 2)) {
+    p += 2;
+    l = u = true;
+  } else if (startswith(p, "LL") || startswith(p, "ll")) {
+    p += 2;
+    l = true;
+  } else if (*p == 'L' || *p == 'l') {
+    p++;
+    l = true;
+  } else if (*p == 'U' || *p == 'u') {
+    p++;
+    u = true;
+  }
+
   if (isalnum(*p))
     error_at(p, "invalid digit");
 
+  // Infer a type.
+  Type *ty;
+  if (base == 10) {
+    if (l && u)
+      ty = ty_ulong;
+    else if (l)
+      ty = ty_long;
+    else if (u)
+      ty = (val >> 32) ? ty_ulong : ty_uint;
+    else
+      ty = (val >> 31) ? ty_long : ty_int;
+  } else {
+    if (l && u)
+      ty = ty_ulong;
+    else if (l)
+      ty = (val >> 63) ? ty_ulong : ty_long;
+    else if (u)
+      ty = (val >> 32) ? ty_ulong : ty_uint;
+    else if (val >> 63)
+      ty = ty_ulong;
+    else if (val >> 32)
+      ty = ty_long;
+    else if (val >> 31)
+      ty = ty_uint;
+    else
+      ty = ty_int;
+  }
+
   Token *tok = new_token(TK_NUM, start, p);
   tok->val = val;
+  tok->ty = ty;
   return tok;
 }
 
