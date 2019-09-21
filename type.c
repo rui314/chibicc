@@ -110,7 +110,7 @@ void add_type(Node *node) {
 
   switch (node->kind) {
   case ND_NUM:
-    node->ty = (node->val == (int)node->val) ? ty_int : ty_long;
+    node->ty = ty_int;
     return;
   case ND_ADD:
   case ND_SUB:
