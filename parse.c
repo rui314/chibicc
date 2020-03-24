@@ -221,6 +221,13 @@ static Node *new_long(int64_t val, Token *tok) {
   return node;
 }
 
+static Node *new_ulong(long val, Token *tok) {
+  Node *node = new_node(ND_NUM, tok);
+  node->val = val;
+  node->ty = ty_ulong;
+  return node;
+}
+
 static Node *new_var_node(Obj *var, Token *tok) {
   Node *node = new_node(ND_VAR, tok);
   node->var = var;
@@ -1746,7 +1753,7 @@ static Node *new_sub(Node *lhs, Node *rhs, Token *tok) {
   // ptr - ptr, which returns how many elements are between the two.
   if (lhs->ty->base && rhs->ty->base) {
     Node *node = new_binary(ND_SUB, lhs, rhs, tok);
-    node->ty = ty_int;
+    node->ty = ty_long;
     return new_binary(ND_DIV, node, new_num(lhs->ty->base->size, tok), tok);
   }
 
@@ -2147,25 +2154,25 @@ static Node *primary(Token **rest, Token *tok) {
   if (equal(tok, "sizeof") && equal(tok->next, "(") && is_typename(tok->next->next)) {
     Type *ty = typename(&tok, tok->next->next);
     *rest = skip(tok, ")");
-    return new_num(ty->size, start);
+    return new_ulong(ty->size, start);
   }
 
   if (equal(tok, "sizeof")) {
     Node *node = unary(rest, tok->next);
     add_type(node);
-    return new_num(node->ty->size, tok);
+    return new_ulong(node->ty->size, tok);
   }
 
   if (equal(tok, "_Alignof") && equal(tok->next, "(") && is_typename(tok->next->next)) {
     Type *ty = typename(&tok, tok->next->next);
     *rest = skip(tok, ")");
-    return new_num(ty->align, tok);
+    return new_ulong(ty->align, tok);
   }
 
   if (equal(tok, "_Alignof")) {
     Node *node = unary(rest, tok->next);
     add_type(node);
-    return new_num(node->ty->align, tok);
+    return new_ulong(node->ty->align, tok);
   }
 
   if (tok->kind == TK_IDENT) {
