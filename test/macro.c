@@ -62,6 +62,46 @@ int main() {
 #endif
   assert(2, m, "m");
 
+#if 1
+  m = 2;
+#else
+  m = 3;
+#endif
+  assert(2, m, "m");
+
+#if 0
+  m = 1;
+#elif 0
+  m = 2;
+#elif 3+5
+  m = 3;
+#elif 1*5
+  m = 4;
+#endif
+  assert(3, m, "m");
+
+#if 1+5
+  m = 1;
+#elif 1
+  m = 2;
+#elif 3
+  m = 2;
+#endif
+  assert(1, m, "m");
+
+#if 0
+  m = 1;
+#elif 1
+# if 1
+  m = 2;
+# else
+  m = 3;
+# endif
+#else
+  m = 5;
+#endif
+  assert(2, m, "m");
+
   printf("OK\n");
   return 0;
 }
