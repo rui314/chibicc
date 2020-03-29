@@ -1,5 +1,12 @@
 #include "chibicc.h"
 
+typedef struct Macro Macro;
+struct Macro {
+  Macro *next;
+  char *name;
+  Token *body;
+};
+
 // `#if` can be nested, so we use a stack to manage nested `#if`s.
 typedef struct CondIncl CondIncl;
 struct CondIncl {
@@ -9,6 +16,7 @@ struct CondIncl {
   bool included;
 };
 
+static Macro *macros;
 static CondIncl *cond_incl;
 
 static bool is_hash(Token *tok) {
@@ -42,13 +50,13 @@ static Token *new_eof(Token *tok) {
 
 // Append tok2 to the end of tok1.
 static Token *append(Token *tok1, Token *tok2) {
-  if (!tok1 || tok1->kind == TK_EOF)
+  if (tok1->kind == TK_EOF)
     return tok2;
 
   Token head = {};
   Token *cur = &head;
 
-  for (; tok1 && tok1->kind != TK_EOF; tok1 = tok1->next)
+  for (; tok1->kind != TK_EOF; tok1 = tok1->next)
     cur = cur->next = copy_token(tok1);
   cur->next = tok2;
   return head.next;
@@ -125,6 +133,35 @@ static CondIncl *push_cond_incl(Token *tok, bool included) {
   return ci;
 }
 
+static Macro *find_macro(Token *tok) {
+  if (tok->kind != TK_IDENT)
+    return NULL;
+
+  for (Macro *m = macros; m; m = m->next)
+    if (strlen(m->name) == tok->len && !strncmp(m->name, tok->loc, tok->len))
+      return m;
+  return NULL;
+}
+
+static Macro *add_macro(char *name, Token *body) {
+  Macro *m = calloc(1, sizeof(Macro));
+  m->next = macros;
+  m->name = name;
+  m->body = body;
+  macros = m;
+  return m;
+}
+
+// If tok is a macro, expand it and return true.
+// Otherwise, do nothing and return false.
+static bool expand_macro(Token **rest, Token *tok) {
+  Macro *m = find_macro(tok);
+  if (!m)
+    return false;
+  *rest = append(m->body, tok->next);
+  return true;
+}
+
 // Visit all tokens in `tok` while evaluating preprocessing
 // macros and directives.
 static Token *preprocess2(Token *tok) {
@@ -132,6 +169,10 @@ static Token *preprocess2(Token *tok) {
   Token *cur = &head;
 
   while (tok->kind != TK_EOF) {
+    // If it is a macro, expand it.
+    if (expand_macro(&tok, tok))
+      continue;
+
     // Pass through if it is not a "#".
     if (!is_hash(tok)) {
       cur = cur->next = tok;
@@ -159,6 +200,15 @@ static Token *preprocess2(Token *tok) {
         error_tok(tok, "%s", strerror(errno));
       tok = skip_line(tok->next);
       tok = append(tok2, tok);
+      continue;
+    }
+
+    if (equal(tok, "define")) {
+      tok = tok->next;
+      if (tok->kind != TK_IDENT)
+        error_tok(tok, "macro name must be an identifier");
+      char *name = strndup(tok->loc, tok->len);
+      add_macro(name, copy_line(&tok, tok->next));
       continue;
     }
 
