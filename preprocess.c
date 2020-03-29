@@ -1,3 +1,26 @@
+// This file implements the C preprocessor.
+//
+// The preprocessor takes a list of tokens as an input and returns a
+// new list of tokens as an output.
+//
+// The preprocessing language is designed in such a way that that's
+// guaranteed to stop even if there is a recursive macro.
+// Informally speaking, a macro is applied only once for each token.
+// That is, if a macro token T appears in a result of direct or
+// indirect macro expansion of T, T won't be expanded any further.
+// For example, if T is defined as U, and U is defined as T, then
+// token T is expanded to U and then to T and the macro expansion
+// stops at that point.
+//
+// To achieve the above behavior, we attach for each token a set of
+// macro names from which the token is expanded. The set is called
+// "hideset". Hideset is initially empty, and every time we expand a
+// macro, the macro name is added to the resulting tokens' hidesets.
+//
+// The above macro expansion algorithm is explained in this document,
+// which is used as a basis for the standard's wording:
+// https://github.com/rui314/chibicc/wiki/cpp.algo.pdf
+
 #include "chibicc.h"
 
 typedef struct Macro Macro;
@@ -15,6 +38,12 @@ struct CondIncl {
   enum { IN_THEN, IN_ELIF, IN_ELSE } ctx;
   Token *tok;
   bool included;
+};
+
+typedef struct Hideset Hideset;
+struct Hideset {
+  Hideset *next;
+  char *name;
 };
 
 static Macro *macros;
@@ -49,6 +78,41 @@ static Token *new_eof(Token *tok) {
   t->kind = TK_EOF;
   t->len = 0;
   return t;
+}
+
+static Hideset *new_hideset(char *name) {
+  Hideset *hs = calloc(1, sizeof(Hideset));
+  hs->name = name;
+  return hs;
+}
+
+static Hideset *hideset_union(Hideset *hs1, Hideset *hs2) {
+  Hideset head = {};
+  Hideset *cur = &head;
+
+  for (; hs1; hs1 = hs1->next)
+    cur = cur->next = new_hideset(hs1->name);
+  cur->next = hs2;
+  return head.next;
+}
+
+static bool hideset_contains(Hideset *hs, char *s, int len) {
+  for (; hs; hs = hs->next)
+    if (strlen(hs->name) == len && !strncmp(hs->name, s, len))
+      return true;
+  return false;
+}
+
+static Token *add_hideset(Token *tok, Hideset *hs) {
+  Token head = {};
+  Token *cur = &head;
+
+  for (; tok; tok = tok->next) {
+    Token *t = copy_token(tok);
+    t->hideset = hideset_union(t->hideset, hs);
+    cur = cur->next = t;
+  }
+  return head.next;
 }
 
 // Append tok2 to the end of tok1.
@@ -159,10 +223,16 @@ static Macro *add_macro(char *name, Token *body) {
 // If tok is a macro, expand it and return true.
 // Otherwise, do nothing and return false.
 static bool expand_macro(Token **rest, Token *tok) {
+  if (hideset_contains(tok->hideset, tok->loc, tok->len))
+    return false;
+
   Macro *m = find_macro(tok);
   if (!m)
     return false;
-  *rest = append(m->body, tok->next);
+
+  Hideset *hs = hideset_union(tok->hideset, new_hideset(m->name));
+  Token *body = add_hideset(m->body, hs);
+  *rest = append(body, tok->next);
   return true;
 }
 
