@@ -21,6 +21,7 @@ typedef struct Type Type;
 typedef struct Node Node;
 typedef struct Member Member;
 typedef struct Relocation Relocation;
+typedef struct Hideset Hideset;
 
 //
 // strings.c
@@ -57,18 +58,19 @@ typedef struct {
 // Token type
 typedef struct Token Token;
 struct Token {
-  TokenKind kind; // Token kind
-  Token *next;    // Next token
-  int64_t val;    // If kind is TK_NUM, its value
-  double fval;    // If kind is TK_NUM, its value
-  char *loc;      // Token location
-  int len;        // Token length
-  Type *ty;       // Used if TK_NUM or TK_STR
-  char *str;      // String literal contents including terminating '\0'
+  TokenKind kind;   // Token kind
+  Token *next;      // Next token
+  int64_t val;      // If kind is TK_NUM, its value
+  double fval;      // If kind is TK_NUM, its value
+  char *loc;        // Token location
+  int len;          // Token length
+  Type *ty;         // Used if TK_NUM or TK_STR
+  char *str;        // String literal contents including terminating '\0'
 
-  File *file;     // Source location
-  int line_no;    // Line number
-  bool at_bol;    // True if this token is at beginning of line
+  File *file;       // Source location
+  int line_no;      // Line number
+  bool at_bol;      // True if this token is at beginning of line
+  Hideset *hideset; // For macro expansion
 };
 
 void error(char *fmt, ...);
