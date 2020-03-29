@@ -5,6 +5,7 @@ struct Macro {
   Macro *next;
   char *name;
   Token *body;
+  bool deleted;
 };
 
 // `#if` can be nested, so we use a stack to manage nested `#if`s.
@@ -139,7 +140,7 @@ static Macro *find_macro(Token *tok) {
 
   for (Macro *m = macros; m; m = m->next)
     if (strlen(m->name) == tok->len && !strncmp(m->name, tok->loc, tok->len))
-      return m;
+      return m->deleted ? NULL : m;
   return NULL;
 }
 
@@ -209,6 +210,18 @@ static Token *preprocess2(Token *tok) {
         error_tok(tok, "macro name must be an identifier");
       char *name = strndup(tok->loc, tok->len);
       add_macro(name, copy_line(&tok, tok->next));
+      continue;
+    }
+
+    if (equal(tok, "undef")) {
+      tok = tok->next;
+      if (tok->kind != TK_IDENT)
+        error_tok(tok, "macro name must be an identifier");
+      char *name = strndup(tok->loc, tok->len);
+      tok = skip_line(tok->next);
+
+      Macro *m = add_macro(name, NULL);
+      m->deleted = true;
       continue;
     }
 
