@@ -17,6 +17,8 @@ int main() {
 #if 0
 #include "/no/such/file"
   assert(0, 1, "1");
+#if nested
+#endif
 #endif
 
   int m = 0;
