@@ -64,6 +64,7 @@ struct Token {
   char *str;      // String literal contents including terminating '\0'
 
   int line_no;    // Line number
+  bool at_bol;    // True if this token is at beginning of line
 };
 
 void error(char *fmt, ...);
