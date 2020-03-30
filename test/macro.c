@@ -28,6 +28,40 @@ int main() {
 #endif
   assert(5, m, "m");
 
+#if 1
+# if 0
+#  if 1
+    foo bar
+#  endif
+# endif
+      m = 3;
+#endif
+    assert(3, m, "m");
+
+#if 1-1
+# if 1
+# endif
+# if 1
+# else
+# endif
+# if 0
+# else
+# endif
+  m = 2;
+#else
+# if 1
+  m = 3;
+# endif
+#endif
+  assert(3, m, "m");
+
+#if 1
+  m = 2;
+#else
+  m = 3;
+#endif
+  assert(2, m, "m");
+
   printf("OK\n");
   return 0;
 }
