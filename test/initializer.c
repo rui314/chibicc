@@ -26,6 +26,7 @@ int *g31=g30.a.a;
 struct {int a[2];} g40[2] = {{1, 2}, 3, 4};
 struct {int a[2];} g41[2] = {1, 2, 3, 4};
 char g43[][4] = {'f', 'o', 'o', 0, 'b', 'a', 'r', 0};
+char *g44 = {"foo"};
 
 int main() {
   ASSERT(1, ({ int x[3]={1,2,3}; x[0]; }));
@@ -157,6 +158,7 @@ int main() {
 
   ASSERT(0, strcmp(g43[0], "foo"));
   ASSERT(0, strcmp(g43[1], "bar"));
+  ASSERT(0, strcmp(g44, "foo"));
 
   printf("OK\n");
   return 0;
