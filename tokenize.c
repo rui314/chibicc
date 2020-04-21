@@ -65,6 +65,13 @@ void error_tok(Token *tok, char *fmt, ...) {
   exit(1);
 }
 
+void warn_tok(Token *tok, char *fmt, ...) {
+  va_list ap;
+  va_start(ap, fmt);
+  verror_at(tok->file->name, tok->file->contents, tok->line_no, tok->loc, fmt, ap);
+  va_end(ap);
+}
+
 // Consumes the current token if it matches `op`.
 bool equal(Token *tok, char *op) {
   return strlen(op) == tok->len &&
