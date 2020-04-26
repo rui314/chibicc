@@ -35,6 +35,12 @@ int main() {
   ASSERT(0, "\x00"[0]);
   ASSERT(119, "\x77"[0]);
 
+  ASSERT(7, sizeof("abc" "def"));
+  ASSERT(9, sizeof("abc" "d" "efgh"));
+  ASSERT(0, strcmp("abc" "d" "\nefgh", "abcd\nefgh"));
+  ASSERT(0, !strcmp("abc" "d", "abcd\nefgh"));
+  ASSERT(0, strcmp("\x9" "0", "\t0"));
+
   printf("OK\n");
   return 0;
 }
