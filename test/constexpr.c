@@ -1,5 +1,8 @@
 #include "test.h"
 
+float g40 = 1.5;
+double g41 = 0.0 ? 55 : (0, 1 + 1 * 5.0 / 2 * (double)2 * (int)2.0);
+
 int main() {
   ASSERT(10, ({ enum { ten=1+2+3+4 }; ten; }));
   ASSERT(1, ({ int i=0; switch(3) { case 5-2+0*3: i++; } i; }));
@@ -43,6 +46,9 @@ int main() {
   ASSERT(4, ({ char x[(unsigned long)-1/((long)1<<62)+1]; sizeof(x); }));
   ASSERT(1, ({ char x[(unsigned)1<-1]; sizeof(x); }));
   ASSERT(1, ({ char x[(unsigned)1<=-1]; sizeof(x); }));
+
+  ASSERT(1, g40==1.5);
+  ASSERT(1, g41==11);
 
   printf("OK\n");
   return 0;
