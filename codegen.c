@@ -785,14 +785,19 @@ static void emit_text(Obj *prog) {
 
     // Save arg registers if function is variadic
     if (fn->va_area) {
-      int gp = 0;
-      for (Obj *var = fn->params; var; var = var->next)
-        gp++;
+      int gp = 0, fp = 0;
+      for (Obj *var = fn->params; var; var = var->next) {
+        if (is_flonum(var->ty))
+          fp++;
+        else
+          gp++;
+      }
+
       int off = fn->va_area->offset;
 
       // va_elem
       println("  movl $%d, %d(%%rbp)", gp * 8, off);
-      println("  movl $0, %d(%%rbp)", off + 4);
+      println("  movl $%d, %d(%%rbp)", fp * 8 + 48, off + 4);
       println("  movq %%rbp, %d(%%rbp)", off + 16);
       println("  addq $%d, %d(%%rbp)", off + 24, off + 16);
 
