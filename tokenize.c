@@ -114,14 +114,21 @@ static bool startswith(char *p, char *q) {
   return strncmp(p, q, strlen(q)) == 0;
 }
 
-// Returns true if c is valid as the first character of an identifier.
-static bool is_ident1(char c) {
-  return ('a' <= c && c <= 'z') || ('A' <= c && c <= 'Z') || c == '_';
-}
+// Read an identifier and returns the length of it.
+// If p does not point to a valid identifier, 0 is returned.
+static int read_ident(char *start) {
+  char *p = start;
+  uint32_t c = decode_utf8(&p, p);
+  if (!is_ident1(c))
+    return 0;
 
-// Returns true if c is valid as a non-first character of an identifier.
-static bool is_ident2(char c) {
-  return is_ident1(c) || ('0' <= c && c <= '9');
+  for (;;) {
+    char *q;
+    c = decode_utf8(&q, p);
+    if (!is_ident2(c))
+      return p - start;
+    p = q;
+  }
 }
 
 static int from_hex(char c) {
@@ -589,12 +596,10 @@ Token *tokenize(File *file) {
     }
 
     // Identifier or keyword
-    if (is_ident1(*p)) {
-      char *start = p;
-      do {
-        p++;
-      } while (is_ident2(*p));
-      cur = cur->next = new_token(TK_IDENT, start, p);
+    int ident_len = read_ident(p);
+    if (ident_len) {
+      cur = cur->next = new_token(TK_IDENT, p, p + ident_len);
+      p += cur->len;
       continue;
     }
 
