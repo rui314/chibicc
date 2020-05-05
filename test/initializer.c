@@ -160,6 +160,10 @@ int main() {
   ASSERT(0, strcmp(g43[1], "bar"));
   ASSERT(0, strcmp(g44, "foo"));
 
+  ASSERT(3, ({ int a[]={1,2,3,}; a[2]; }));
+  ASSERT(1, ({ struct {int a,b,c;} x={1,2,3,}; x.a; }));
+  ASSERT(2, ({ enum {x,y,z,}; z; }));
+
   printf("OK\n");
   return 0;
 }
