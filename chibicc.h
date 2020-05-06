@@ -359,6 +359,7 @@ int align_to(int n, int align);
 //
 
 int encode_utf8(char *buf, uint32_t c);
+uint32_t decode_utf8(char **new_pos, char *p);
 
 //
 // main.c
