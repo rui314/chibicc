@@ -226,11 +226,11 @@ static Token *read_char_literal(Token *cur, char *start) {
   if (*p == '\0')
     error_at(start, "unclosed char literal");
 
-  char c;
+  int c;
   if (*p == '\\')
     c = read_escaped_char(&p, p + 1);
   else
-    c = *p++;
+    c = decode_utf8(&p, p);
 
   char *end = strchr(p, '\'');
   if (!end)
@@ -450,6 +450,7 @@ Token *tokenize(File *file) {
     // Character literal
     if (*p == '\'') {
       cur = read_char_literal(cur, p);
+      cur->val = (char)cur->val;
       p += cur->len;
       continue;
     }
