@@ -178,4 +178,4 @@ void add_type(Node *node);
 // codegen.c
 //
 
-void codegen(Var *prog);
+void codegen(Var *prog, FILE *out);
