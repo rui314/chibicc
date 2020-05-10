@@ -1101,8 +1101,15 @@ static void assign_lvar_offsets(Obj *prog) {
       if (var->offset)
         continue;
 
+      // AMD64 System V ABI has a special alignment rule for an array of
+      // length at least 16 bytes. We need to align such array to at least
+      // 16-byte boundaries. See p.14 of
+      // https://github.com/hjl-tools/x86-psABI/wiki/x86-64-psABI-draft.pdf.
+      int align = (var->ty->kind == TY_ARRAY && var->ty->size >= 16)
+        ? MAX(16, var->align) : var->align;
+
       bottom += var->ty->size;
-      bottom = align_to(bottom, var->align);
+      bottom = align_to(bottom, align);
       var->offset = -bottom;
     }
 
@@ -1120,7 +1127,9 @@ static void emit_data(Obj *prog) {
     else
       println("  .globl %s", var->name);
 
-    println("  .align %d", var->align);
+    int align = (var->ty->kind == TY_ARRAY && var->ty->size >= 16)
+      ? MAX(16, var->align) : var->align;
+    println("  .align %d", align);
 
     if (var->init_data) {
       println("  .data");
