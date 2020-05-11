@@ -1283,6 +1283,13 @@ static void emit_text(Obj *prog) {
     gen_stmt(fn->body);
     assert(depth == 0);
 
+    // The C spec defines a special rule for the main function.
+    // Reaching the end of the main function is equivalent to
+    // returning 0, even though the behavior is undefined for the
+    // other functions. See C11 5.1.2.2.3.
+    if (strcmp(fn->name, "main") == 0)
+      println("  mov $0, %%rax");
+
     // Epilogue
     println(".L.return.%s:", fn->name);
     println("  mov %%rbp, %%rsp");
