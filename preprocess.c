@@ -864,6 +864,12 @@ static Token *line_macro(Token *tmpl) {
   return new_num_token(tmpl->line_no, tmpl);
 }
 
+// __COUNTER__ is expanded to serial values starting from 0.
+static Token *counter_macro(Token *tmpl) {
+  static int i = 0;
+  return new_num_token(i++, tmpl);
+}
+
 // __DATE__ is expanded to the current date, e.g. "May 17 2020".
 static char *format_date(struct tm *tm) {
   static char mon[][4] = {
@@ -929,6 +935,7 @@ void init_macros(void) {
 
   add_builtin("__FILE__", file_macro);
   add_builtin("__LINE__", line_macro);
+  add_builtin("__COUNTER__", counter_macro);
 
   time_t now = time(NULL);
   struct tm *tm = localtime(&now);
