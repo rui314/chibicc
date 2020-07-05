@@ -257,6 +257,28 @@ static Token *read_utf16_string_literal(Token *cur, char *start) {
   return tok;
 }
 
+// Read a UTF-8-encoded string literal and transcode it in UTF-32.
+//
+// UTF-32 is a fixed-width encoding for Unicode. Each code point is
+// encoded in 4 bytes.
+static Token *read_utf32_string_literal(Token *cur, char *start, Type *ty) {
+  char *end = string_literal_end(start + 1);
+  uint32_t *buf = calloc(4, end - start);
+  int len = 0;
+
+  for (char *p = start + 1; p < end;) {
+    if (*p == '\\')
+      buf[len++] = read_escaped_char(&p, p + 1);
+    else
+      buf[len++] = decode_utf8(&p, p);
+  }
+
+  Token *tok = new_token(TK_STR, cur, start, end - start + 1);
+  tok->ty = array_of(ty, len + 1);
+  tok->str = (char *)buf;
+  return tok;
+}
+
 static Token *read_char_literal(Token *cur, char *start, Type *ty) {
   char *p = start + 1;
   if (*p == '\0')
@@ -493,6 +515,13 @@ Token *tokenize(File *file) {
     // UTF-16 string literal
     if (startswith(p, "u\"")) {
       cur = read_utf16_string_literal(cur, p + 1);
+      p += cur->len + 1;
+      continue;
+    }
+
+    // UTF-32 string literal
+    if (startswith(p, "U\"")) {
+      cur = read_utf32_string_literal(cur, p + 1, ty_uint);
       p += cur->len + 1;
       continue;
     }
