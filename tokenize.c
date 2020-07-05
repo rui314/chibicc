@@ -519,6 +519,13 @@ Token *tokenize(File *file) {
       continue;
     }
 
+    // Wide string literal
+    if (startswith(p, "L\"")) {
+      cur = read_utf32_string_literal(cur, p + 1, ty_int);
+      p += cur->len + 1;
+      continue;
+    }
+
     // UTF-32 string literal
     if (startswith(p, "U\"")) {
       cur = read_utf32_string_literal(cur, p + 1, ty_uint);
