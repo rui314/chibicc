@@ -447,6 +447,13 @@ Token *tokenize(File *file) {
       continue;
     }
 
+    // UTF-8 string literal
+    if (startswith(p, "u8\"")) {
+      cur = read_string_literal(cur, p + 2);
+      p += cur->len + 2;
+      continue;
+    }
+
     // Character literal
     if (*p == '\'') {
       cur = read_char_literal(cur, p, ty_int);
