@@ -221,7 +221,7 @@ static Token *read_string_literal(Token *cur, char *start) {
   return tok;
 }
 
-static Token *read_char_literal(Token *cur, char *start) {
+static Token *read_char_literal(Token *cur, char *start, Type *ty) {
   char *p = start + 1;
   if (*p == '\0')
     error_at(start, "unclosed char literal");
@@ -238,7 +238,7 @@ static Token *read_char_literal(Token *cur, char *start) {
 
   Token *tok = new_token(TK_NUM, cur, start, end - start + 1);
   tok->val = c;
-  tok->ty = ty_int;
+  tok->ty = ty;
   return tok;
 }
 
@@ -449,15 +449,23 @@ Token *tokenize(File *file) {
 
     // Character literal
     if (*p == '\'') {
-      cur = read_char_literal(cur, p);
+      cur = read_char_literal(cur, p, ty_int);
       cur->val = (char)cur->val;
       p += cur->len;
       continue;
     }
 
+    // UTF-16 character literal
+    if (startswith(p, "u'")) {
+      cur = read_char_literal(cur, p + 1, ty_ushort);
+      cur->val &= 0xffff;
+      p += cur->len + 1;
+      continue;
+    }
+
     // Wide character literal
     if (startswith(p, "L'")) {
-      cur = read_char_literal(cur, p + 1);
+      cur = read_char_literal(cur, p + 1, ty_int);
       p += cur->len + 1;
       continue;
     }
