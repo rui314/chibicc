@@ -470,6 +470,13 @@ Token *tokenize(File *file) {
       continue;
     }
 
+    // UTF-32 character literal
+    if (startswith(p, "U'")) {
+      cur = cur->next = read_char_literal(p, p + 1, ty_uint);
+      p += cur->len;
+      continue;
+    }
+
     // Identifier or keyword
     if (is_ident1(*p)) {
       char *start = p;
