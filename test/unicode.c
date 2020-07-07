@@ -1,5 +1,7 @@
 #include "test.h"
 
+typedef unsigned short char16_t;
+
 int main() {
   ASSERT(4, sizeof(L'\0'));
   ASSERT(97, L'a');
@@ -62,6 +64,10 @@ int main() {
   ASSERT(u'b', L"βb"[1]);
   ASSERT(0, L"βb"[2]);
   ASSERT(-1, L"\xffffffff"[0] >> 31);
+
+  ASSERT(u'α', ({ char16_t x[] = u"αβ"; x[0]; }));
+  ASSERT(u'β', ({ char16_t x[] = u"αβ"; x[1]; }));
+  ASSERT(6, ({ char16_t x[] = u"αβ"; sizeof(x); }));
 
   printf("OK\n");
   return 0;
