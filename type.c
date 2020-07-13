@@ -10,7 +10,7 @@ Type *long_type  = &(Type){ TY_LONG, 8, 8 };
 bool is_integer(Type *ty) {
   TypeKind k = ty->kind;
   return k == TY_BOOL || k == TY_CHAR || k == TY_SHORT ||
-         k == TY_INT  ||k == TY_LONG;
+         k == TY_INT  || k == TY_LONG || k == TY_ENUM;
 }
 
 int align_to(int n, int align) {
