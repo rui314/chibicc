@@ -86,7 +86,7 @@ static bool in_range(uint32_t *range, uint32_t c) {
 // (U+3000, full-width space) are allowed because they are out of range.
 bool is_ident1(uint32_t c) {
   static uint32_t range[] = {
-    '_', '_', 'a', 'z', 'A', 'Z',
+    '_', '_', 'a', 'z', 'A', 'Z', '$', '$',
     0x00A8, 0x00A8, 0x00AA, 0x00AA, 0x00AD, 0x00AD, 0x00AF, 0x00AF,
     0x00B2, 0x00B5, 0x00B7, 0x00BA, 0x00BC, 0x00BE, 0x00C0, 0x00D6,
     0x00D8, 0x00F6, 0x00F8, 0x00FF, 0x0100, 0x02FF, 0x0370, 0x167F,
@@ -109,7 +109,7 @@ bool is_ident1(uint32_t c) {
 // character of an identifier.
 bool is_ident2(uint32_t c) {
   static uint32_t range[] = {
-    '0', '9', 0x0300, 0x036F, 0x1DC0, 0x1DFF, 0x20D0, 0x20FF,
+    '0', '9', '$', '$', 0x0300, 0x036F, 0x1DC0, 0x1DFF, 0x20D0, 0x20FF,
     0xFE20, 0xFE2F, -1,
   };
 
