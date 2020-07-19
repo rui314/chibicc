@@ -97,6 +97,7 @@ int main() {
 
   ASSERT(3, π);
   ASSERT(3, ({ int あβ0¾=3; あβ0¾; }));
+  ASSERT(5, ({ int $$$=5; $$$; }));
 
   printf("OK\n");
   return 0;
