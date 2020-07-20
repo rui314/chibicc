@@ -7,6 +7,22 @@ long g6 = 6;
 int g9[3] = {0, 1, 2};
 struct {char a; int b;} g11[2] = {{1, 2}, {3, 4}};
 struct {int a[2];} g12[2] = {{{1, 2}}};
+union { int a; char b[8]; } g13[2] = {{0x01020304}, {0x05060708}};
+char g17[] = "foobar";
+char g18[10] = "foobar";
+char g19[3] = "foobar";
+char *g20 = g17+0;
+char *g21 = g17+3;
+char *g22 = &g17-3;
+char *g23[] = {g17+0, g17+3, g17-3};
+int g24=3;
+int *g25=&g24;
+int g26[3] = {1, 2, 3};
+int *g27 = g26 + 1;
+int *g28 = &g11[1].a;
+long g29 = (long)(long)g26;
+struct { struct { int a[3]; } a; } g30 = {{{1,2,3}}};
+int *g31=g30.a.a;
 
 int main() {
   ASSERT(1, ({ int x[3]={1,2,3}; x[0]; }));
@@ -88,6 +104,37 @@ int main() {
   ASSERT(2, g12[0].a[1]);
   ASSERT(0, g12[1].a[0]);
   ASSERT(0, g12[1].a[1]);
+
+  ASSERT(4, g13[0].b[0]);
+  ASSERT(3, g13[0].b[1]);
+  ASSERT(8, g13[1].b[0]);
+  ASSERT(7, g13[1].b[1]);
+
+  ASSERT(7, sizeof(g17));
+  ASSERT(10, sizeof(g18));
+  ASSERT(3, sizeof(g19));
+
+  ASSERT(0, memcmp(g17, "foobar", 7));
+  ASSERT(0, memcmp(g18, "foobar\0\0\0", 10));
+  ASSERT(0, memcmp(g19, "foo", 3));
+
+  ASSERT(0, strcmp(g20, "foobar"));
+  ASSERT(0, strcmp(g21, "bar"));
+  ASSERT(0, strcmp(g22+3, "foobar"));
+
+  ASSERT(0, strcmp(g23[0], "foobar"));
+  ASSERT(0, strcmp(g23[1], "bar"));
+  ASSERT(0, strcmp(g23[2]+3, "foobar"));
+
+  ASSERT(3, g24);
+  ASSERT(3, *g25);
+  ASSERT(2, *g27);
+  ASSERT(3, *g28);
+  ASSERT(1, *(int *)g29);
+
+  ASSERT(1, g31[0]);
+  ASSERT(2, g31[1]);
+  ASSERT(3, g31[2]);
 
   printf("OK\n");
   return 0;
