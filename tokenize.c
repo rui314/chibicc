@@ -432,6 +432,13 @@ Token *tokenize(File *file) {
       continue;
     }
 
+    // Wide character literal
+    if (startswith(p, "L'")) {
+      cur = read_char_literal(cur, p + 1);
+      p += cur->len + 1;
+      continue;
+    }
+
     // Identifier or keyword
     if (is_ident1(*p)) {
       char *q = p++;
