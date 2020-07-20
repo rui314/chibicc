@@ -41,7 +41,7 @@ static void verror_at(char *filename, char *input, int line_no,
   fprintf(stderr, "%.*s\n", (int)(end - line), line);
 
   // Show the error message.
-  int pos = loc - line + indent;
+  int pos = str_width(line, loc - line) + indent;
 
   fprintf(stderr, "%*s", pos, ""); // print pos spaces.
   fprintf(stderr, "^ ");
