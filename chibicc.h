@@ -16,6 +16,7 @@
 typedef struct Type Type;
 typedef struct Node Node;
 typedef struct Member Member;
+typedef struct Relocation Relocation;
 
 //
 // tokenize.c
@@ -77,12 +78,24 @@ struct Obj {
 
   // Global variable
   char *init_data;
+  Relocation *rel;
 
   // Function
   Obj *params;
   Node *body;
   Obj *locals;
   int stack_size;
+};
+
+// Global variable can be initialized either by a constant expression
+// or a pointer to another global variable. This struct represents the
+// latter.
+typedef struct Relocation Relocation;
+struct Relocation {
+  Relocation *next;
+  int offset;
+  char *label;
+  long addend;
 };
 
 // AST node
