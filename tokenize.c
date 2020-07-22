@@ -103,6 +103,7 @@ static Token *new_token(TokenKind kind, Token *cur, char *str, int len) {
   tok->loc = str;
   tok->len = len;
   tok->file = current_file;
+  tok->filename = current_file->display_name;
   tok->at_bol = at_bol;
   tok->has_space = has_space;
   cur->next = tok;
@@ -667,6 +668,7 @@ File **get_input_files(void) {
 File *new_file(char *name, int file_no, char *contents) {
   File *file = calloc(1, sizeof(File));
   file->name = name;
+  file->display_name = name;
   file->file_no = file_no;
   file->contents = contents;
   return file;
