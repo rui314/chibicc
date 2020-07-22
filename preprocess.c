@@ -847,6 +847,11 @@ static Token *preprocess2(Token *tok) {
       continue;
     }
 
+    if (tok->kind == TK_PP_NUM) {
+      read_line_marker(&tok, tok);
+      continue;
+    }
+
     if (equal(tok, "error"))
       error_tok(tok, "error");
 

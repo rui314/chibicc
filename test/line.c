@@ -12,6 +12,10 @@ int main() {
 #line 1
   ASSERT(2, __LINE__);
 
+# 200 "xyz" 2 3
+  ASSERT(201, __LINE__);
+  ASSERT(0, strcmp(__FILE__, "xyz"));
+
   printf("OK\n");
   return 0;
 }
