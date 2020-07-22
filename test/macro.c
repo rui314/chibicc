@@ -373,6 +373,8 @@ int main() {
   ASSERT(1, __COUNTER__);
   ASSERT(2, __COUNTER__);
 
+  ASSERT(24, strlen(__TIMESTAMP__));
+
   printf("OK\n");
   return 0;
 }
