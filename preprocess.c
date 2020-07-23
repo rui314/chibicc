@@ -528,6 +528,22 @@ static Token *subst(Token *tok, MacroArg *args) {
       continue;
     }
 
+    // [GNU] If __VA_ARG__ is empty, `,##__VA_ARGS__` is expanded
+    // to the empty token list. Otherwise, its expaned to `,` and
+    // __VA_ARGS__.
+    if (equal(tok, ",") && equal(tok->next, "##")) {
+      MacroArg *arg = find_arg(args, tok->next->next);
+      if (arg && !strcmp(arg->name, "__VA_ARGS__")) {
+        if (arg->tok->kind == TK_EOF) {
+          tok = tok->next->next->next;
+        } else {
+          cur = cur->next = copy_token(tok);
+          tok = tok->next->next;
+        }
+        continue;
+      }
+    }
+
     if (equal(tok, "##")) {
       if (cur == &head)
         error_tok(tok, "'##' cannot appear at start of macro expansion");
