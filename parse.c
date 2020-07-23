@@ -123,6 +123,7 @@ static bool is_typename(Token *tok);
 static Type *typespec(Token **rest, Token *tok, VarAttr *attr);
 static Type *typename(Token **rest, Token *tok);
 static Type *enum_specifier(Token **rest, Token *tok);
+static Type *typeof_specifier(Token **rest, Token *tok);
 static Type *type_suffix(Token **rest, Token *tok, Type *ty);
 static Type *declarator(Token **rest, Token *tok, Type *ty);
 static Node *declaration(Token **rest, Token *tok, Type *basety, VarAttr *attr);
@@ -453,7 +454,8 @@ static Type *typespec(Token **rest, Token *tok, VarAttr *attr) {
 
     // Handle user-defined types.
     Type *ty2 = find_typedef(tok);
-    if (equal(tok, "struct") || equal(tok, "union") || equal(tok, "enum") || ty2) {
+    if (equal(tok, "struct") || equal(tok, "union") || equal(tok, "enum") ||
+        equal(tok, "typeof") || ty2) {
       if (counter)
         break;
 
@@ -463,6 +465,8 @@ static Type *typespec(Token **rest, Token *tok, VarAttr *attr) {
         ty = union_decl(&tok, tok->next);
       } else if (equal(tok, "enum")) {
         ty = enum_specifier(&tok, tok->next);
+      } else if (equal(tok, "typeof")) {
+        ty = typeof_specifier(&tok, tok->next);
       } else {
         ty = ty2;
         tok = tok->next;
@@ -771,6 +775,22 @@ static Type *enum_specifier(Token **rest, Token *tok) {
 
   if (tag)
     push_tag_scope(tag, ty);
+  return ty;
+}
+
+// typeof-specifier = "(" (expr | typename) ")"
+static Type *typeof_specifier(Token **rest, Token *tok) {
+  tok = skip(tok, "(");
+
+  Type *ty;
+  if (is_typename(tok)) {
+    ty = typename(&tok, tok);
+  } else {
+    Node *node = expr(&tok, tok);
+    add_type(node);
+    ty = node->ty;
+  }
+  *rest = skip(tok, ")");
   return ty;
 }
 
@@ -1386,7 +1406,7 @@ static bool is_typename(Token *tok) {
     "void", "_Bool", "char", "short", "int", "long", "struct", "union",
     "typedef", "enum", "static", "extern", "_Alignas", "signed", "unsigned",
     "const", "volatile", "auto", "register", "restrict", "__restrict",
-    "__restrict__", "_Noreturn", "float", "double",
+    "__restrict__", "_Noreturn", "float", "double", "typeof",
   };
 
   for (int i = 0; i < sizeof(kw) / sizeof(*kw); i++)
