@@ -99,8 +99,9 @@ Type *pointer_to(Type *base) {
 }
 
 Type *func_type(Type *return_ty) {
-  Type *ty = calloc(1, sizeof(Type));
-  ty->kind = TY_FUNC;
+  // The C spec disallows sizeof(<function type>), but
+  // GCC allows that and the expression is evaluated to 1.
+  Type *ty = new_type(TY_FUNC, 1, 1);
   ty->return_ty = return_ty;
   return ty;
 }
