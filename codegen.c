@@ -896,10 +896,27 @@ static void assign_lvar_offsets(Obj *prog) {
 
     // Assign offsets to pass-by-stack parameters.
     for (Obj *var = fn->params; var; var = var->next) {
-      if (is_flonum(var->ty)) {
+      Type *ty = var->ty;
+
+      switch (ty->kind) {
+      case TY_STRUCT:
+      case TY_UNION:
+        if (ty->size <= 16) {
+          bool fp1 = has_flonum(ty, 0, 8, 0);
+          bool fp2 = has_flonum(ty, 8, 16, 8);
+          if (fp + fp1 + fp2 < FP_MAX && gp + !fp1 + !fp2 < GP_MAX) {
+            fp = fp + fp1 + fp2;
+            gp = gp + !fp1 + !fp2;
+            continue;
+          }
+        }
+        break;
+      case TY_FLOAT:
+      case TY_DOUBLE:
         if (fp++ < FP_MAX)
           continue;
-      } else {
+        break;
+      default:
         if (gp++ < GP_MAX)
           continue;
       }
@@ -985,8 +1002,13 @@ static void store_gp(int r, int offset, int sz) {
   case 8:
     println("  mov %s, %d(%%rbp)", argreg64[r], offset);
     return;
+  default:
+    for (int i = 0; i < sz; i++) {
+      println("  mov %s, %d(%%rbp)", argreg8[r], offset + i);
+      println("  shr $8, %s", argreg64[r]);
+    }
+    return;
   }
-  unreachable();
 }
 
 static void emit_text(Obj *prog) {
@@ -1049,10 +1071,31 @@ static void emit_text(Obj *prog) {
       if (var->offset > 0)
         continue;
 
-      if (is_flonum(var->ty))
-        store_fp(fp++, var->offset, var->ty->size);
-      else
-        store_gp(gp++, var->offset, var->ty->size);
+      Type *ty = var->ty;
+
+      switch (ty->kind) {
+      case TY_STRUCT:
+      case TY_UNION:
+        assert(ty->size <= 16);
+        if (has_flonum(ty, 0, 8, 0))
+          store_fp(fp++, var->offset, MIN(8, ty->size));
+        else
+          store_gp(gp++, var->offset, MIN(8, ty->size));
+
+        if (ty->size > 8) {
+          if (has_flonum(ty, 8, 16, 0))
+            store_fp(fp++, var->offset + 8, ty->size - 8);
+          else
+            store_gp(gp++, var->offset + 8, ty->size - 8);
+        }
+        break;
+      case TY_FLOAT:
+      case TY_DOUBLE:
+        store_fp(fp++, var->offset, ty->size);
+        break;
+      default:
+        store_gp(gp++, var->offset, ty->size);
+      }
     }
 
     // Emit code
