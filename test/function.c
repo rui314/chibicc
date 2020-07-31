@@ -151,6 +151,23 @@ int struct_test4(Ty4 x, int n);
 int struct_test6(Ty6 x, int n);
 int struct_test7(Ty7 x, int n);
 
+int struct_test14(Ty4 x, int n) {
+  switch (n) {
+  case 0: return x.a;
+  case 1: return x.b;
+  case 2: return x.c;
+  default: return x.d;
+  }
+}
+
+int struct_test15(Ty5 x, int n) {
+  switch (n) {
+  case 0: return x.a;
+  case 1: return x.b;
+  default: return x.c;
+  }
+}
+
 int main() {
   ASSERT(3, ret3());
   ASSERT(8, add2(3, 5));
@@ -261,6 +278,15 @@ int main() {
   ASSERT(10, ({ Ty7 x={10,20,30}; struct_test7(x, 0); }));
   ASSERT(20, ({ Ty7 x={10,20,30}; struct_test7(x, 1); }));
   ASSERT(30, ({ Ty7 x={10,20,30}; struct_test7(x, 2); }));
+
+  ASSERT(10, ({ Ty4 x={10,20,30,40}; struct_test14(x, 0); }));
+  ASSERT(20, ({ Ty4 x={10,20,30,40}; struct_test14(x, 1); }));
+  ASSERT(30, ({ Ty4 x={10,20,30,40}; struct_test14(x, 2); }));
+  ASSERT(40, ({ Ty4 x={10,20,30,40}; struct_test14(x, 3); }));
+
+  ASSERT(10, ({ Ty5 x={10,20,30}; struct_test15(x, 0); }));
+  ASSERT(20, ({ Ty5 x={10,20,30}; struct_test15(x, 1); }));
+  ASSERT(30, ({ Ty5 x={10,20,30}; struct_test15(x, 2); }));
 
   printf("OK\n");
   return 0;
