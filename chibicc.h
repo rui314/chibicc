@@ -20,6 +20,10 @@
 #define MAX(x, y) ((x) < (y) ? (y) : (x))
 #define MIN(x, y) ((x) < (y) ? (x) : (y))
 
+#ifndef __GNUC__
+# define __attribute__(x)
+#endif
+
 typedef struct Type Type;
 typedef struct Node Node;
 typedef struct Member Member;
@@ -85,10 +89,10 @@ struct Token {
   Token *origin;    // If this is expanded from a macro, the original token
 };
 
-noreturn void error(char *fmt, ...);
-noreturn void error_at(char *loc, char *fmt, ...);
-noreturn void error_tok(Token *tok, char *fmt, ...);
-void warn_tok(Token *tok, char *fmt, ...);
+noreturn void error(char *fmt, ...) __attribute__((format(printf, 1, 2)));
+noreturn void error_at(char *loc, char *fmt, ...) __attribute__((format(printf, 2, 3)));
+noreturn void error_tok(Token *tok, char *fmt, ...) __attribute__((format(printf, 2, 3)));
+void warn_tok(Token *tok, char *fmt, ...) __attribute__((format(printf, 2, 3)));
 bool equal(Token *tok, char *op);
 Token *skip(Token *tok, char *op);
 bool consume(Token **rest, Token *tok, char *str);
