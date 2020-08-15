@@ -68,6 +68,16 @@ double strtod(char *nptr, char **endptr);
 static void va_end(va_list ap) {}
 long strtoul(char *nptr, char **endptr, int base);
 void exit(int code);
+char *basename(char *path);
+char *strrchr(char *s, int c);
+int unlink(char *pathname);
+int mkstemp(char *template);
+int close(int fd);
+int fork(void);
+int execvp(char *file, char **argv);
+void _exit(int code);
+int wait(int *wstatus);
+int atexit(void (*)(void));
 """)
 
 for path in sys.argv[1:]:
