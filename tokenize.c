@@ -609,6 +609,48 @@ static void remove_backslash_newline(char *p) {
   p[j] = '\0';
 }
 
+static uint32_t read_universal_char(char *p, int len) {
+  uint32_t c = 0;
+  for (int i = 0; i < len; i++) {
+    if (!isxdigit(p[i]))
+      return 0;
+    c = (c << 4) | from_hex(p[i]);
+  }
+  return c;
+}
+
+// Replace \u or \U escape sequences with corresponding UTF-8 bytes.
+static void convert_universal_chars(char *p) {
+  char *q = p;
+
+  while (*p) {
+    if (startswith(p, "\\u")) {
+      uint32_t c = read_universal_char(p + 2, 4);
+      if (c) {
+        p += 6;
+        q += encode_utf8(q, c);
+      } else {
+        *q++ = *p++;
+      }
+    } else if (startswith(p, "\\U")) {
+      uint32_t c = read_universal_char(p + 2, 8);
+      if (c) {
+        p += 10;
+        q += encode_utf8(q, c);
+      } else {
+        *q++ = *p++;
+      }
+    } else if (p[0] == '\\') {
+      *q++ = *p++;
+      *q++ = *p++;
+    } else {
+      *q++ = *p++;
+    }
+  }
+
+  *q = '\0';
+}
+
 Token *tokenize_file(char *path) {
   char *p = read_file(path);
   if (!p)
@@ -616,6 +658,7 @@ Token *tokenize_file(char *path) {
 
   canonicalize_newline(p);
   remove_backslash_newline(p);
+  convert_universal_chars(p);
 
   // Save the filename for assembler .file directive.
   static int file_no;
