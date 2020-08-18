@@ -194,7 +194,9 @@ static void print_tokens(Token *tok) {
   for (; tok->kind != TK_EOF; tok = tok->next) {
     if (line > 1 && tok->at_bol)
       fprintf(out, "\n");
-    fprintf(out, " %.*s", tok->len, tok->loc);
+    if (tok->has_space && !tok->at_bol)
+      fprintf(out, " ");
+    fprintf(out, "%.*s", tok->len, tok->loc);
     line++;
   }
   fprintf(out, "\n");
