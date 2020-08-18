@@ -353,6 +353,12 @@ void codegen(Var *prog, FILE *out);
 int align_to(int n, int align);
 
 //
+// unicode.c
+//
+
+int encode_utf8(char *buf, uint32_t c);
+
+//
 // main.c
 //
 
