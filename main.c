@@ -11,6 +11,7 @@ static FileType opt_x;
 static StringArray opt_include;
 static bool opt_E;
 static bool opt_M;
+static bool opt_MP;
 static bool opt_S;
 static bool opt_c;
 static bool opt_cc1;
@@ -188,6 +189,11 @@ static void parse_args(int argc, char **argv) {
       continue;
     }
 
+    if (!strcmp(argv[i], "-MP")) {
+      opt_MP = true;
+      continue;
+    }
+
     if (!strcmp(argv[i], "-cc1-input")) {
       base_file = argv[++i];
       continue;
@@ -358,6 +364,10 @@ static void print_dependencies(void) {
   for (int i = 0; files[i]; i++)
     fprintf(out, " \\\n  %s", files[i]->name);
   fprintf(out, "\n\n");
+
+  if (opt_MP)
+    for (int i = 1; files[i]; i++)
+      fprintf(out, "%s:\n\n", files[i]->name);
 }
 
 static Token *must_tokenize_file(char *path) {
