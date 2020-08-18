@@ -99,4 +99,8 @@ check -D
 echo foo | $chibicc -Dfoo=bar -E - | grep -q bar
 check -D
 
+# -U
+echo foo | $chibicc -Dfoo=bar -Ufoo -E - | grep -q foo
+check -U
+
 echo OK
