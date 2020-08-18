@@ -11,6 +11,7 @@ static FileType opt_x;
 static StringArray opt_include;
 static bool opt_E;
 static bool opt_M;
+static bool opt_MD;
 static bool opt_MP;
 static bool opt_S;
 static bool opt_c;
@@ -206,6 +207,11 @@ static void parse_args(int argc, char **argv) {
       continue;
     }
 
+    if (!strcmp(argv[i], "-MD")) {
+      opt_MD = true;
+      continue;
+    }
+
     if (!strcmp(argv[i], "-cc1-input")) {
       base_file = argv[++i];
       continue;
@@ -377,6 +383,8 @@ static void print_dependencies(void) {
   char *path;
   if (opt_MF)
     path = opt_MF;
+  else if (opt_MD)
+    path = replace_extn(opt_o ? opt_o : base_file, ".d");
   else if (opt_o)
     path = opt_o;
   else
@@ -439,10 +447,11 @@ static void cc1(void) {
   tok = append_tokens(tok, tok2);
   tok = preprocess(tok);
 
-  // If -M is given, print file dependencies.
-  if (opt_M) {
+  // If -M or -MD are given, print file dependencies.
+  if (opt_M || opt_MD) {
     print_dependencies();
-    return;
+    if (opt_M)
+      return;
   }
 
   // If -E is given, print out preprocessed C code as a result.
