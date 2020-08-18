@@ -23,6 +23,18 @@ typedef struct Member Member;
 typedef struct Relocation Relocation;
 
 //
+// strings.c
+//
+
+typedef struct {
+  char **data;
+  int capacity;
+  int len;
+} StringArray;
+
+void strarray_push(StringArray *arr, char *s);
+
+//
 // tokenize.c
 //
 
