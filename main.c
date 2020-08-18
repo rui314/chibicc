@@ -15,6 +15,7 @@ static bool opt_S;
 static bool opt_c;
 static bool opt_cc1;
 static bool opt_hash_hash_hash;
+static char *opt_MF;
 static char *opt_o;
 
 static StringArray ld_extra_args;
@@ -32,7 +33,7 @@ static void usage(int status) {
 }
 
 static bool take_arg(char *arg) {
-  char *x[] = {"-o", "-I", "-idirafter", "-include", "-x"};
+  char *x[] = {"-o", "-I", "-idirafter", "-include", "-x", "-MF"};
 
   for (int i = 0; i < sizeof(x) / sizeof(*x); i++)
     if (!strcmp(arg, x[i]))
@@ -182,6 +183,11 @@ static void parse_args(int argc, char **argv) {
 
     if (!strcmp(argv[i], "-M")) {
       opt_M = true;
+      continue;
+    }
+
+    if (!strcmp(argv[i], "-MF")) {
+      opt_MF = argv[++i];
       continue;
     }
 
@@ -353,7 +359,15 @@ static void print_tokens(Token *tok) {
 // stdout in a format that "make" command can read. This feature is
 // used to automate file dependency management.
 static void print_dependencies(void) {
-  FILE *out = open_file(opt_o ? opt_o : "-");
+  char *path;
+  if (opt_MF)
+    path = opt_MF;
+  else if (opt_o)
+    path = opt_o;
+  else
+    path = "-";
+
+  FILE *out = open_file(path);
   fprintf(out, "%s:", replace_extn(base_file, ".o"));
 
   File **files = get_input_files();
