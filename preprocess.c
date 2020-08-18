@@ -760,11 +760,8 @@ static Token *preprocess2(Token *tok) {
       tok = tok->next;
       if (tok->kind != TK_IDENT)
         error_tok(tok, "macro name must be an identifier");
-      char *name = strndup(tok->loc, tok->len);
+      undef_macro(strndup(tok->loc, tok->len));
       tok = skip_line(tok->next);
-
-      Macro *m = add_macro(name, true, NULL);
-      m->deleted = true;
       continue;
     }
 
@@ -842,6 +839,11 @@ static Token *preprocess2(Token *tok) {
 void define_macro(char *name, char *buf) {
   Token *tok = tokenize(new_file("<built-in>", 1, buf));
   add_macro(name, true, tok);
+}
+
+void undef_macro(char *name) {
+  Macro *m = add_macro(name, true, NULL);
+  m->deleted = true;
 }
 
 static Macro *add_builtin(char *name, macro_handler_fn *fn) {

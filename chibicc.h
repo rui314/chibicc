@@ -99,6 +99,7 @@ Token *tokenize_file(char *filename);
 
 void init_macros(void);
 void define_macro(char *name, char *buf);
+void undef_macro(char *name);
 Token *preprocess(Token *tok);
 
 //
