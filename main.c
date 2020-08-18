@@ -113,6 +113,16 @@ static void parse_args(int argc, char **argv) {
       continue;
     }
 
+    if (!strcmp(argv[i], "-U")) {
+      undef_macro(argv[++i]);
+      continue;
+    }
+
+    if (!strncmp(argv[i], "-U", 2)) {
+      undef_macro(argv[i] + 2);
+      continue;
+    }
+
     if (!strcmp(argv[i], "-cc1-input")) {
       base_file = argv[++i];
       continue;
