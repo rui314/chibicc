@@ -68,10 +68,17 @@ void error_tok(Token *tok, char *fmt, ...);
 bool equal(Token *tok, char *op);
 Token *skip(Token *tok, char *op);
 bool consume(Token **rest, Token *tok, char *str);
+void convert_keywords(Token *tok);
 Token *tokenize_file(char *filename);
 
 #define unreachable() \
   error("internal error at %s:%d", __FILE__, __LINE__)
+
+//
+// preprocess.c
+//
+
+Token *preprocess(Token *tok);
 
 //
 // parse.c
