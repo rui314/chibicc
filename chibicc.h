@@ -397,4 +397,5 @@ int display_width(char *p, int len);
 bool file_exists(char *path);
 
 extern StringArray include_paths;
+extern bool opt_fcommon;
 extern char *base_file;
