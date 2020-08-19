@@ -170,4 +170,15 @@ check -idirafter
 echo "#include \"idirafter\"" | $chibicc -idirafter $tmp/dir1 -I$tmp/dir2 -E - | grep -q bar
 check -idirafter
 
+# -fcommon
+echo 'int foo;' | $chibicc -S -o- - | grep -q '\.comm foo'
+check '-fcommon (default)'
+
+echo 'int foo;' | $chibicc -fcommon -S -o- - | grep -q '\.comm foo'
+check '-fcommon'
+
+# -fno-common
+echo 'int foo;' | $chibicc -fno-common -S -o- - | grep -q '^foo:'
+check '-fno-common'
+
 echo OK
