@@ -393,4 +393,5 @@ int str_width(char *p, int len);
 //
 
 extern StringArray include_paths;
+extern bool opt_fcommon;
 extern char *base_file;
