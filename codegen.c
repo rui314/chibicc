@@ -461,6 +461,7 @@ static void emit_data(Var *prog) {
       continue;
 
     println("  .globl %s", var->name);
+    println("  .align %d", var->ty->align);
 
     if (var->init_data) {
       println("  .data");
