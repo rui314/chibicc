@@ -58,7 +58,12 @@ static Token *preprocess2(Token *tok) {
       if (tok->kind != TK_STR)
         error_tok(tok, "expected a filename");
 
-      char *path = format("%s/%s", dirname(strdup(tok->file->name)), tok->str);
+      char *path;
+      if (tok->str[0] == '/')
+        path = tok->str;
+      else
+        path = format("%s/%s", dirname(strdup(tok->file->name)), tok->str);
+
       Token *tok2 = tokenize_file(path);
       if (!tok2)
         error_tok(tok, "%s", strerror(errno));
