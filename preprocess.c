@@ -20,6 +20,8 @@ struct CondIncl {
 static Macro *macros;
 static CondIncl *cond_incl;
 
+static Token *preprocess2(Token *tok);
+
 static bool is_hash(Token *tok) {
   return tok->at_bol && equal(tok, "#");
 }
@@ -113,6 +115,7 @@ static Token *copy_line(Token **rest, Token *tok) {
 static long eval_const_expr(Token **rest, Token *tok) {
   Token *start = tok;
   Token *expr = copy_line(rest, tok->next);
+  expr = preprocess2(expr);
 
   if (expr->kind == TK_EOF)
     error_tok(start, "no expression");
