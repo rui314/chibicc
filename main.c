@@ -1,5 +1,6 @@
 #include "chibicc.h"
 
+static bool opt_E;
 static bool opt_S;
 static bool opt_c;
 static bool opt_cc1;
@@ -61,6 +62,11 @@ static void parse_args(int argc, char **argv) {
 
     if (!strcmp(argv[i], "-c")) {
       opt_c = true;
+      continue;
+    }
+
+    if (!strcmp(argv[i], "-E")) {
+      opt_E = true;
       continue;
     }
 
@@ -180,6 +186,20 @@ static void run_cc1(int argc, char **argv, char *input, char *output) {
   run_subprocess(args);
 }
 
+// Print tokens to stdout. Used for -E.
+static void print_tokens(Token *tok) {
+  FILE *out = open_file(opt_o ? opt_o : "-");
+
+  int line = 1;
+  for (; tok->kind != TK_EOF; tok = tok->next) {
+    if (line > 1 && tok->at_bol)
+      fprintf(out, "\n");
+    fprintf(out, " %.*s", tok->len, tok->loc);
+    line++;
+  }
+  fprintf(out, "\n");
+}
+
 static void cc1(void) {
   // Tokenize and parse.
   Token *tok = tokenize_file(base_file);
@@ -187,6 +207,13 @@ static void cc1(void) {
     error("%s: %s", base_file, strerror(errno));
 
   tok = preprocess(tok);
+
+  // If -E is given, print out preprocessed C code as a result.
+  if (opt_E) {
+    print_tokens(tok);
+    return;
+  }
+
   Obj *prog = parse(tok);
 
   // Traverse the AST to emit assembly.
@@ -245,8 +272,8 @@ int main(int argc, char **argv) {
     return 0;
   }
 
-  if (input_paths.len > 1 && opt_o && (opt_c || opt_S))
-    error("cannot specify '-o' with '-c' or '-S' with multiple files");
+  if (input_paths.len > 1 && opt_o && (opt_c || opt_S | opt_E))
+    error("cannot specify '-o' with '-c,' '-S' or '-E' with multiple files");
 
   StringArray ld_args = {};
 
@@ -278,7 +305,13 @@ int main(int argc, char **argv) {
     if (!endswith(input, ".c") && strcmp(input, "-"))
       error("unknown file extension: %s", input);
 
-    // Just compile
+    // Just preprocess
+    if (opt_E) {
+      run_cc1(argc, argv, input, NULL);
+      continue;
+    }
+
+    // Compile
     if (opt_S) {
       run_cc1(argc, argv, input, output);
       continue;
