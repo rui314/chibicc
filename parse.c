@@ -2057,6 +2057,18 @@ static void struct_members(Token **rest, Token *tok, Type *ty) {
     Type *basety = typespec(&tok, tok, &attr);
     bool first = true;
 
+    // Anonymous struct member
+    if ((basety->kind == TY_STRUCT || basety->kind == TY_UNION) &&
+        consume(&tok, tok, ";")) {
+      Member *mem = calloc(1, sizeof(Member));
+      mem->ty = basety;
+      mem->idx = idx++;
+      mem->align = attr.align ? attr.align : mem->ty->align;
+      cur = cur->next = mem;
+      continue;
+    }
+
+    // Regular struct members
     while (!consume(&tok, tok, ";")) {
       if (!first)
         tok = skip(tok, ",");
@@ -2191,21 +2203,55 @@ static Type *union_decl(Token **rest, Token *tok) {
   return ty;
 }
 
+// Find a struct member by name.
 static Member *get_struct_member(Type *ty, Token *tok) {
-  for (Member *mem = ty->members; mem; mem = mem->next)
+  for (Member *mem = ty->members; mem; mem = mem->next) {
+    // Anonymous struct member
+    if ((mem->ty->kind == TY_STRUCT || mem->ty->kind == TY_UNION) &&
+        !mem->name) {
+      if (get_struct_member(mem->ty, tok))
+        return mem;
+      continue;
+    }
+
+    // Regular struct member
     if (mem->name->len == tok->len &&
         !strncmp(mem->name->loc, tok->loc, tok->len))
       return mem;
-  error_tok(tok, "no such member");
+  }
+  return NULL;
 }
 
-static Node *struct_ref(Node *lhs, Token *tok) {
-  add_type(lhs);
-  if (lhs->ty->kind != TY_STRUCT && lhs->ty->kind != TY_UNION)
-    error_tok(lhs->tok, "not a struct nor a union");
+// Create a node representing a struct member access, such as foo.bar
+// where foo is a struct and bar is a member name.
+//
+// C has a feature called "anonymous struct" which allows a struct to
+// have another unnamed struct as a member like this:
+//
+//   struct { struct { int a; }; int b; } x;
+//
+// The members of an anonymous struct belong to the outer struct's
+// member namespace. Therefore, in the above example, you can access
+// member "a" of the anonymous struct as "x.a".
+//
+// This function takes care of anonymous structs.
+static Node *struct_ref(Node *node, Token *tok) {
+  add_type(node);
+  if (node->ty->kind != TY_STRUCT && node->ty->kind != TY_UNION)
+    error_tok(node->tok, "not a struct nor a union");
 
-  Node *node = new_unary(ND_MEMBER, lhs, tok);
-  node->member = get_struct_member(lhs->ty, tok);
+  Type *ty = node->ty;
+
+  for (;;) {
+    Member *mem = get_struct_member(ty, tok);
+    if (!mem)
+      error_tok(tok, "no such member");
+    node = new_unary(ND_MEMBER, node, tok);
+    node->member = mem;
+    if (mem->name)
+      break;
+    ty = mem->ty;
+  }
   return node;
 }
 
