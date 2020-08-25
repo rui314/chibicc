@@ -2844,8 +2844,16 @@ static Node *primary(Token **rest, Token *tok) {
   if (equal(tok, "sizeof") && equal(tok->next, "(") && is_typename(tok->next->next)) {
     Type *ty = typename(&tok, tok->next->next);
     *rest = skip(tok, ")");
-    if (ty->kind == TY_VLA)
-      return new_var_node(ty->vla_size, tok);
+
+    if (ty->kind == TY_VLA) {
+      if (ty->vla_size)
+        return new_var_node(ty->vla_size, tok);
+
+      Node *lhs = compute_vla_size(ty, tok);
+      Node *rhs = new_var_node(ty->vla_size, tok);
+      return new_binary(ND_COMMA, lhs, rhs, tok);
+    }
+
     return new_ulong(ty->size, start);
   }
 
