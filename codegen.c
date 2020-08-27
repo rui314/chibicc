@@ -628,6 +628,8 @@ static void gen_expr(Node *node) {
     gen_expr(node->rhs);
 
     if (node->lhs->kind == ND_MEMBER && node->lhs->member->is_bitfield) {
+      println("  mov %%rax, %%r8");
+
       // If the lhs is a bitfield, we need to read the current value
       // from memory and merge it with a new value.
       Member *mem = node->lhs->member;
@@ -642,6 +644,9 @@ static void gen_expr(Node *node) {
       println("  mov $%ld, %%r9", ~mask);
       println("  and %%r9, %%rax");
       println("  or %%rdi, %%rax");
+      store(node->ty);
+      println("  mov %%r8, %%rax");
+      return;
     }
 
     store(node->ty);
