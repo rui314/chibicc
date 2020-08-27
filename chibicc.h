@@ -219,6 +219,7 @@ struct Node {
   // Function call
   Type *func_ty;
   Node *args;
+  bool pass_by_stack;
 
   // Goto or labeled statement
   char *label;
