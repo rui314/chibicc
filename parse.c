@@ -1630,13 +1630,42 @@ static double eval_double(Node *node) {
   error_tok(node->tok, "not a compile-time constant");
 }
 
-// Convert `A op= B` to `tmp = &A, *tmp = *tmp op B`
-// where tmp is a fresh pointer variable.
+// Convert op= operators to expressions containing an assignment.
+//
+// In general, `A op= C` is converted to ``tmp = &A, *tmp = *tmp op B`.
+// However, if a given expression is of form `A.x op= C`, the input is
+// converted to `tmp = &A, (*tmp).x = (*tmp).x op C` to handle assignments
+// to bitfields.
 static Node *to_assign(Node *binary) {
   add_type(binary->lhs);
   add_type(binary->rhs);
   Token *tok = binary->tok;
 
+  // Convert `A.x op= C` to `tmp = &A, (*tmp).x = (*tmp).x op C`.
+  if (binary->lhs->kind == ND_MEMBER) {
+    Obj *var = new_lvar("", pointer_to(binary->lhs->lhs->ty));
+
+    Node *expr1 = new_binary(ND_ASSIGN, new_var_node(var, tok),
+                             new_unary(ND_ADDR, binary->lhs->lhs, tok), tok);
+
+    Node *expr2 = new_unary(ND_MEMBER,
+                            new_unary(ND_DEREF, new_var_node(var, tok), tok),
+                            tok);
+    expr2->member = binary->lhs->member;
+
+    Node *expr3 = new_unary(ND_MEMBER,
+                            new_unary(ND_DEREF, new_var_node(var, tok), tok),
+                            tok);
+    expr3->member = binary->lhs->member;
+
+    Node *expr4 = new_binary(ND_ASSIGN, expr2,
+                             new_binary(binary->kind, expr3, binary->rhs, tok),
+                             tok);
+
+    return new_binary(ND_COMMA, expr1, expr4, tok);
+  }
+
+  // Convert `A op= C` to ``tmp = &A, *tmp = *tmp op B`.
   Obj *var = new_lvar("", pointer_to(binary->lhs->ty));
 
   Node *expr1 = new_binary(ND_ASSIGN, new_var_node(var, tok),
