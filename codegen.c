@@ -113,7 +113,7 @@ static void gen_expr(Node *node) {
 
   switch (node->kind) {
   case ND_NUM:
-    println("  mov $%d, %%rax", node->val);
+    println("  mov $%ld, %%rax", node->val);
     return;
   case ND_VAR:
   case ND_MEMBER:
