@@ -91,4 +91,12 @@ echo foo > $tmp/dir/i-option-test
 echo "#include \"i-option-test\"" | $chibicc -I$tmp/dir -E - | grep -q foo
 check -I
 
+# -D
+echo foo | $chibicc -Dfoo -E - | grep -q 1
+check -D
+
+# -D
+echo foo | $chibicc -Dfoo=bar -E - | grep -q bar
+check -D
+
 echo OK
