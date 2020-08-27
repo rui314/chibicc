@@ -100,6 +100,14 @@ char *fmt(char *buf, char *fmt, ...) {
 double add_double(double x, double y);
 float add_float(float x, float y);
 
+float add_float3(float x, float y, float z) {
+  return x + y + z;
+}
+
+double add_double3(double x, double y, double z) {
+  return x + y + z;
+}
+
 int main() {
   ASSERT(3, ret3());
   ASSERT(8, add2(3, 5));
@@ -162,6 +170,9 @@ int main() {
 
   ASSERT(6, add_float(2.3, 3.8));
   ASSERT(6, add_double(2.3, 3.8));
+
+  ASSERT(7, add_float3(2.5, 2.5, 2.5));
+  ASSERT(7, add_double3(2.5, 2.5, 2.5));
 
   printf("OK\n");
   return 0;
