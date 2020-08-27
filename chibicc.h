@@ -220,6 +220,7 @@ struct Node {
   Type *func_ty;
   Node *args;
   bool pass_by_stack;
+  Obj *ret_buffer;
 
   // Goto or labeled statement
   char *label;
