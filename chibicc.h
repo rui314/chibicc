@@ -144,8 +144,9 @@ struct Node {
   Node *init;
   Node *inc;
 
-  // "break" label
+  // "break" and "continue" labels
   char *brk_label;
+  char *cont_label;
 
   // Block or statement expression
   Node *body;
