@@ -1415,6 +1415,22 @@ static bool is_typename(Token *tok) {
   return find_typedef(tok);
 }
 
+// asm-stmt = "asm" ("volatile" | "inline")* "(" string-literal ")"
+static Node *asm_stmt(Token **rest, Token *tok) {
+  Node *node = new_node(ND_ASM, tok);
+  tok = tok->next;
+
+  while (equal(tok, "volatile") || equal(tok, "inline"))
+    tok = tok->next;
+
+  tok = skip(tok, "(");
+  if (tok->kind != TK_STR || tok->ty->base->kind != TY_CHAR)
+    error_tok(tok, "expected string literal");
+  node->asm_str = tok->str;
+  *rest = skip(tok->next, ")");
+  return node;
+}
+
 // stmt = "return" expr? ";"
 //      | "if" "(" expr ")" stmt ("else" stmt)?
 //      | "switch" "(" expr ")" stmt
@@ -1423,6 +1439,7 @@ static bool is_typename(Token *tok) {
 //      | "for" "(" expr-stmt expr? ";" expr? ")" stmt
 //      | "while" "(" expr ")" stmt
 //      | "do" stmt "while" "(" expr ")" ";"
+//      | "asm" asm-stmt
 //      | "goto" ident ";"
 //      | "break" ";"
 //      | "continue" ";"
@@ -1577,6 +1594,9 @@ static Node *stmt(Token **rest, Token *tok) {
     *rest = skip(tok, ";");
     return node;
   }
+
+  if (equal(tok, "asm"))
+    return asm_stmt(rest, tok);
 
   if (equal(tok, "goto")) {
     Node *node = new_node(ND_GOTO, tok);
