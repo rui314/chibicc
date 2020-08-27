@@ -307,7 +307,9 @@ static Token *tokenize(char *filename, char *p) {
     // Multi-letter punctuators
     if (startswith(p, "==") || startswith(p, "!=") ||
         startswith(p, "<=") || startswith(p, ">=") ||
-        startswith(p, "->")) {
+        startswith(p, "->") || startswith(p, "+=") ||
+        startswith(p, "-=") || startswith(p, "*=") ||
+        startswith(p, "/=")) {
       cur = cur->next = new_token(TK_RESERVED, p, p + 2);
       p += 2;
       continue;
