@@ -734,6 +734,18 @@ static void emit_data(Obj *prog) {
   }
 }
 
+static void store_fp(int r, int offset, int sz) {
+  switch (sz) {
+  case 4:
+    println("  movss %%xmm%d, %d(%%rbp)", r, offset);
+    return;
+  case 8:
+    println("  movsd %%xmm%d, %d(%%rbp)", r, offset);
+    return;
+  }
+  unreachable();
+}
+
 static void store_gp(int r, int offset, int sz) {
   switch (sz) {
   case 1:
@@ -802,9 +814,13 @@ static void emit_text(Obj *prog) {
     }
 
     // Save passed-by-register arguments to the stack
-    int i = 0;
-    for (Obj *var = fn->params; var; var = var->next)
-      store_gp(i++, var->offset, var->ty->size);
+    int gp = 0, fp = 0;
+    for (Obj *var = fn->params; var; var = var->next) {
+      if (is_flonum(var->ty))
+        store_fp(fp++, var->offset, var->ty->size);
+      else
+        store_gp(gp++, var->offset, var->ty->size);
+    }
 
     // Emit code
     gen_stmt(fn->body);
