@@ -272,6 +272,15 @@ static void gen_expr(Node *node) {
     if (node->kind == ND_MOD)
       println("  mov %%rdx, %%rax");
     return;
+  case ND_BITAND:
+    println("  and %%rdi, %%rax");
+    return;
+  case ND_BITOR:
+    println("  or %%rdi, %%rax");
+    return;
+  case ND_BITXOR:
+    println("  xor %%rdi, %%rax");
+    return;
   case ND_EQ:
   case ND_NE:
   case ND_LT:

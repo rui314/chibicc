@@ -90,6 +90,9 @@ typedef enum {
   ND_DIV,       // /
   ND_NEG,       // unary -
   ND_MOD,       // %
+  ND_BITAND,    // &
+  ND_BITOR,     // |
+  ND_BITXOR,    // ^
   ND_EQ,        // ==
   ND_NE,        // !=
   ND_LT,        // <
