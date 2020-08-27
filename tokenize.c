@@ -326,7 +326,14 @@ static Token *tokenize(char *filename, char *p) {
       continue;
     }
 
-    // Multi-letter punctuators
+    // Three-letter punctuators
+    if (startswith(p, "<<=") || startswith(p, ">>=")) {
+      cur = cur->next = new_token(TK_RESERVED, p, p + 3);
+      p += 3;
+      continue;
+    }
+
+    // Two-letter punctuators
     if (startswith(p, "==") || startswith(p, "!=") ||
         startswith(p, "<=") || startswith(p, ">=") ||
         startswith(p, "->") || startswith(p, "+=") ||
@@ -335,7 +342,8 @@ static Token *tokenize(char *filename, char *p) {
         startswith(p, "--") || startswith(p, "%=") ||
         startswith(p, "&=") || startswith(p, "|=") ||
         startswith(p, "^=") || startswith(p, "&&") ||
-        startswith(p, "||")) {
+        startswith(p, "||") || startswith(p, "<<") ||
+        startswith(p, ">>")) {
       cur = cur->next = new_token(TK_RESERVED, p, p + 2);
       p += 2;
       continue;
