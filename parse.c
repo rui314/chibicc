@@ -1059,7 +1059,7 @@ static bool is_typename(Token *tok) {
   return find_typedef(tok);
 }
 
-// stmt = "return" expr ";"
+// stmt = "return" expr? ";"
 //      | "if" "(" expr ")" stmt ("else" stmt)?
 //      | "switch" "(" expr ")" stmt
 //      | "case" const-expr ":" stmt
@@ -1075,6 +1075,9 @@ static bool is_typename(Token *tok) {
 static Node *stmt(Token **rest, Token *tok) {
   if (equal(tok, "return")) {
     Node *node = new_node(ND_RETURN, tok);
+    if (consume(rest, tok->next, ";"))
+      return node;
+
     Node *exp = expr(&tok, tok->next);
     *rest = skip(tok, ";");
 
