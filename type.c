@@ -13,6 +13,9 @@ Type *ty_ushort = &(Type){TY_SHORT, 2, 2, true};
 Type *ty_uint = &(Type){TY_INT, 4, 4, true};
 Type *ty_ulong = &(Type){TY_LONG, 8, 8, true};
 
+Type *ty_float = &(Type){TY_FLOAT, 4, 4};
+Type *ty_double = &(Type){TY_DOUBLE, 8, 8};
+
 static Type *new_type(TypeKind kind, int size, int align) {
   Type *ty = calloc(1, sizeof(Type));
   ty->kind = kind;
@@ -25,6 +28,10 @@ bool is_integer(Type *ty) {
   TypeKind k = ty->kind;
   return k == TY_BOOL || k == TY_CHAR || k == TY_SHORT ||
          k == TY_INT  || k == TY_LONG || k == TY_ENUM;
+}
+
+bool is_flonum(Type *ty) {
+  return ty->kind == TY_FLOAT || ty->kind == TY_DOUBLE;
 }
 
 Type *copy_type(Type *ty) {
