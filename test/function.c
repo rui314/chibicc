@@ -31,6 +31,10 @@ int fib(int x) {
   return fib(x-1) + fib(x-2);
 }
 
+int sub_long(long a, long b, long c) {
+  return a - b - c;
+}
+
 int main() {
   ASSERT(3, ret3());
   ASSERT(8, add2(3, 5));
@@ -44,6 +48,8 @@ int main() {
   ASSERT(55, fib(9));
 
   ASSERT(1, ({ sub_char(7, 3, 3); }));
+
+  ASSERT(1, sub_long(7, 3, 3));
 
   printf("OK\n");
   return 0;
