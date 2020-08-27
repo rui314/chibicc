@@ -168,6 +168,15 @@ int struct_test15(Ty5 x, int n) {
   }
 }
 
+typedef struct { unsigned char a[10]; } Ty20;
+typedef struct { unsigned char a[20]; } Ty21;
+
+Ty4 struct_test24(void);
+Ty5 struct_test25(void);
+Ty6 struct_test26(void);
+Ty20 struct_test27(void);
+Ty21 struct_test28(void);
+
 int main() {
   ASSERT(3, ret3());
   ASSERT(8, add2(3, 5));
@@ -287,6 +296,29 @@ int main() {
   ASSERT(10, ({ Ty5 x={10,20,30}; struct_test15(x, 0); }));
   ASSERT(20, ({ Ty5 x={10,20,30}; struct_test15(x, 1); }));
   ASSERT(30, ({ Ty5 x={10,20,30}; struct_test15(x, 2); }));
+
+  ASSERT(10, struct_test24().a);
+  ASSERT(20, struct_test24().b);
+  ASSERT(30, struct_test24().c);
+  ASSERT(40, struct_test24().d);
+
+  ASSERT(10, struct_test25().a);
+  ASSERT(20, struct_test25().b);
+  ASSERT(30, struct_test25().c);
+
+  ASSERT(10, struct_test26().a[0]);
+  ASSERT(20, struct_test26().a[1]);
+  ASSERT(30, struct_test26().a[2]);
+
+  ASSERT(10, struct_test27().a[0]);
+  ASSERT(60, struct_test27().a[5]);
+  ASSERT(100, struct_test27().a[9]);
+
+  ASSERT(1, struct_test28().a[0]);
+  ASSERT(5, struct_test28().a[4]);
+  ASSERT(10, struct_test28().a[9]);
+  ASSERT(15, struct_test28().a[14]);
+  ASSERT(20, struct_test28().a[19]);
 
   printf("OK\n");
   return 0;
