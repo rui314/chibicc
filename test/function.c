@@ -141,6 +141,16 @@ int many_args3(int a, double b, int c, int d, double e, int f,
   return o / p;
 }
 
+typedef struct { int a,b; short c; char d; } Ty4;
+typedef struct { int a; float b; double c; } Ty5;
+typedef struct { unsigned char a[3]; } Ty6;
+typedef struct { long a, b, c; } Ty7;
+
+int struct_test5(Ty5 x, int n);
+int struct_test4(Ty4 x, int n);
+int struct_test6(Ty6 x, int n);
+int struct_test7(Ty7 x, int n);
+
 int main() {
   ASSERT(3, ret3());
   ASSERT(8, add2(3, 5));
@@ -234,6 +244,23 @@ int main() {
   ASSERT(4, many_args1(1,2,3,4,5,6,40,10));
   ASSERT(4, many_args2(1,2,3,4,5,6,7,8,40,10));
   ASSERT(8, many_args3(1,2,3,4,5,6,7,8,9,10,11,12,13,14,80,10));
+
+  ASSERT(10, ({ Ty4 x={10,20,30,40}; struct_test4(x, 0); }));
+  ASSERT(20, ({ Ty4 x={10,20,30,40}; struct_test4(x, 1); }));
+  ASSERT(30, ({ Ty4 x={10,20,30,40}; struct_test4(x, 2); }));
+  ASSERT(40, ({ Ty4 x={10,20,30,40}; struct_test4(x, 3); }));
+
+  ASSERT(10, ({ Ty5 x={10,20,30}; struct_test5(x, 0); }));
+  ASSERT(20, ({ Ty5 x={10,20,30}; struct_test5(x, 1); }));
+  ASSERT(30, ({ Ty5 x={10,20,30}; struct_test5(x, 2); }));
+
+  ASSERT(10, ({ Ty6 x={10,20,30}; struct_test6(x, 0); }));
+  ASSERT(20, ({ Ty6 x={10,20,30}; struct_test6(x, 1); }));
+  ASSERT(30, ({ Ty6 x={10,20,30}; struct_test6(x, 2); }));
+
+  ASSERT(10, ({ Ty7 x={10,20,30}; struct_test7(x, 0); }));
+  ASSERT(20, ({ Ty7 x={10,20,30}; struct_test7(x, 1); }));
+  ASSERT(30, ({ Ty7 x={10,20,30}; struct_test7(x, 2); }));
 
   printf("OK\n");
   return 0;
