@@ -120,6 +120,7 @@ static bool is_keyword(Token *tok) {
     "struct", "union", "short", "long", "void", "typedef", "_Bool",
     "enum", "static", "goto", "break", "continue", "switch", "case",
     "default", "extern", "_Alignof", "_Alignas", "do", "signed",
+    "unsigned",
   };
 
   for (int i = 0; i < sizeof(kw) / sizeof(*kw); i++)
@@ -234,7 +235,7 @@ static Token *read_int_literal(char *start) {
     base = 8;
   }
 
-  long val = strtoul(p, &p, base);
+  int64_t val = strtoul(p, &p, base);
   if (isalnum(*p))
     error_at(p, "invalid digit");
 
