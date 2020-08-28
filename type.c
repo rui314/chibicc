@@ -8,6 +8,11 @@ Type *ty_short = &(Type){TY_SHORT, 2, 2};
 Type *ty_int = &(Type){TY_INT, 4, 4};
 Type *ty_long = &(Type){TY_LONG, 8, 8};
 
+Type *ty_uchar = &(Type){TY_CHAR, 1, 1, true};
+Type *ty_ushort = &(Type){TY_SHORT, 2, 2, true};
+Type *ty_uint = &(Type){TY_INT, 4, 4, true};
+Type *ty_ulong = &(Type){TY_LONG, 8, 8, true};
+
 static Type *new_type(TypeKind kind, int size, int align) {
   Type *ty = calloc(1, sizeof(Type));
   ty->kind = kind;
@@ -59,9 +64,18 @@ Type *struct_type(void) {
 static Type *get_common_type(Type *ty1, Type *ty2) {
   if (ty1->base)
     return pointer_to(ty1->base);
-  if (ty1->size == 8 || ty2->size == 8)
-    return ty_long;
-  return ty_int;
+
+  if (ty1->size < 4)
+    ty1 = ty_int;
+  if (ty2->size < 4)
+    ty2 = ty_int;
+
+  if (ty1->size != ty2->size)
+    return (ty1->size < ty2->size) ? ty2 : ty1;
+
+  if (ty2->is_unsigned)
+    return ty2;
+  return ty1;
 }
 
 // For many binary operators, we implicitly promote operands so that

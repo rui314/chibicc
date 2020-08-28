@@ -70,6 +70,12 @@ _Bool false_fn();
 char char_fn();
 short short_fn();
 
+unsigned char uchar_fn();
+unsigned short ushort_fn();
+
+char schar_fn();
+short sshort_fn();
+
 int add_all(int n, ...);
 
 typedef struct {
@@ -145,6 +151,12 @@ int main() {
   ASSERT(0, ({ char buf[100]; sprintf(buf, "%d %d %s", 1, 2, "foo"); strcmp("1 2 foo", buf); }));
 
   ASSERT(0, ({ char buf[100]; fmt(buf, "%d %d %s", 1, 2, "foo"); strcmp("1 2 foo", buf); }));
+
+  ASSERT(251, uchar_fn());
+  ASSERT(65528, ushort_fn());
+  ASSERT(-5, schar_fn());
+  ASSERT(-8, sshort_fn());
+
 
   printf("OK\n");
   return 0;
