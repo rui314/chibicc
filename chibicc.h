@@ -73,7 +73,7 @@ struct Token {
   TokenKind kind;   // Token kind
   Token *next;      // Next token
   int64_t val;      // If kind is TK_NUM, its value
-  double fval;      // If kind is TK_NUM, its value
+  long double fval; // If kind is TK_NUM, its value
   char *loc;        // Token location
   int len;          // Token length
   Type *ty;         // Used if TK_NUM or TK_STR
@@ -269,7 +269,7 @@ struct Node {
 
   // Numeric literal
   int64_t val;
-  double fval;
+  long double fval;
 };
 
 Node *new_cast(Node *expr, Type *ty);
@@ -289,6 +289,7 @@ typedef enum {
   TY_LONG,
   TY_FLOAT,
   TY_DOUBLE,
+  TY_LDOUBLE,
   TY_ENUM,
   TY_PTR,
   TY_FUNC,
@@ -368,6 +369,7 @@ extern Type *ty_ulong;
 
 extern Type *ty_float;
 extern Type *ty_double;
+extern Type *ty_ldouble;
 
 bool is_integer(Type *ty);
 bool is_flonum(Type *ty);

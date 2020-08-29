@@ -402,14 +402,14 @@ static void convert_pp_number(Token *tok) {
 
   // If it's not an integer, it must be a floating point constant.
   char *end;
-  double val = strtod(tok->loc, &end);
+  long double val = strtold(tok->loc, &end);
 
   Type *ty;
   if (*end == 'f' || *end == 'F') {
     ty = ty_float;
     end++;
   } else if (*end == 'l' || *end == 'L') {
-    ty = ty_double;
+    ty = ty_ldouble;
     end++;
   } else {
     ty = ty_double;
