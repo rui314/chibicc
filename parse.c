@@ -562,8 +562,10 @@ static Type *declspec(Token **rest, Token *tok, VarAttr *attr) {
       ty = ty_float;
       break;
     case DOUBLE:
-    case LONG + DOUBLE:
       ty = ty_double;
+      break;
+    case LONG + DOUBLE:
+      ty = ty_ldouble;
       break;
     default:
       error_tok(tok, "invalid type");
