@@ -83,6 +83,8 @@ Token *skip(Token *tok, char *op);
 bool consume(Token **rest, Token *tok, char *str);
 void convert_keywords(Token *tok);
 File **get_input_files(void);
+File *new_file(char *name, int file_no, char *contents);
+Token *tokenize(File *file);
 Token *tokenize_file(char *filename);
 
 #define unreachable() \
