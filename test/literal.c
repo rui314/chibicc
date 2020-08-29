@@ -88,8 +88,8 @@ int main() {
   ASSERT(4, sizeof(0.3F));
   ASSERT(8, sizeof(0.));
   ASSERT(8, sizeof(.0));
-  ASSERT(8, sizeof(5.l));
-  ASSERT(8, sizeof(2.0L));
+  ASSERT(16, sizeof(5.l));
+  ASSERT(16, sizeof(2.0L));
 
   assert(1, size\
 of(char), \

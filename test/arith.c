@@ -134,6 +134,11 @@ int main() {
   ASSERT(5, 0?:5);
   ASSERT(4, ({ int i = 3; ++i?:10; }));
 
+  ASSERT(3, (long double)3);
+  ASSERT(5, (long double)3+2);
+  ASSERT(6, (long double)3*2);
+  ASSERT(5, (long double)3+2.0);
+
   printf("OK\n");
   return 0;
 }
