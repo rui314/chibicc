@@ -591,14 +591,19 @@ static Type *struct_decl(Token **rest, Token *tok) {
   Type *ty = calloc(1, sizeof(Type));
   ty->kind = TY_STRUCT;
   struct_members(rest, tok, ty);
+  ty->align = 1;
 
   // Assign offsets within the struct to members.
   int offset = 0;
   for (Member *mem = ty->members; mem; mem = mem->next) {
+    offset = align_to(offset, mem->ty->align);
     mem->offset = offset;
     offset += mem->ty->size;
+
+    if (ty->align < mem->ty->align)
+      ty->align = mem->ty->align;
   }
-  ty->size = offset;
+  ty->size = align_to(offset, ty->align);
 
   return ty;
 }
