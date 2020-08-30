@@ -35,7 +35,7 @@ stage2/%.o: chibicc self.py %.c
 
 stage2/test/%.exe: stage2/chibicc test/%.c
 	mkdir -p stage2/test
-	./stage2/chibicc -Itest -c -o stage2/test/$*.o test/$*.c
+	./stage2/chibicc -Iinclude -Itest -c -o stage2/test/$*.o test/$*.c
 	$(CC) -o $@ stage2/test/$*.o -xc test/common
 
 test-stage2: $(TESTS:test/%=stage2/test/%)
