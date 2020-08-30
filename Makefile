@@ -14,7 +14,7 @@ chibicc: $(OBJS)
 $(OBJS): chibicc.h
 
 test/%.exe: chibicc test/%.c
-	./chibicc -Itest -c -o test/$*.o test/$*.c
+	./chibicc -Iinclude -Itest -c -o test/$*.o test/$*.c
 	$(CC) -o $@ test/$*.o -xc test/common
 
 test: $(TESTS)
@@ -28,10 +28,9 @@ test-all: test test-stage2
 stage2/chibicc: $(OBJS:%=stage2/%)
 	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS)
 
-stage2/%.o: chibicc self.py %.c
+stage2/%.o: chibicc %.c
 	mkdir -p stage2/test
-	./self.py chibicc.h $*.c > stage2/$*.c
-	./chibicc -c -o stage2/$*.o stage2/$*.c
+	./chibicc -c -o $(@D)/$*.o $*.c
 
 stage2/test/%.exe: stage2/chibicc test/%.c
 	mkdir -p stage2/test
