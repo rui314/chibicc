@@ -1,7 +1,15 @@
 #include "chibicc.h"
 
-Type *ty_char = &(Type){TY_CHAR, 1};
-Type *ty_int = &(Type){TY_INT, 8};
+Type *ty_char = &(Type){TY_CHAR, 1, 1};
+Type *ty_int = &(Type){TY_INT, 8, 8};
+
+static Type *new_type(TypeKind kind, int size, int align) {
+  Type *ty = calloc(1, sizeof(Type));
+  ty->kind = kind;
+  ty->size = size;
+  ty->align = align;
+  return ty;
+}
 
 bool is_integer(Type *ty) {
   return ty->kind == TY_CHAR || ty->kind == TY_INT;
@@ -14,9 +22,7 @@ Type *copy_type(Type *ty) {
 }
 
 Type *pointer_to(Type *base) {
-  Type *ty = calloc(1, sizeof(Type));
-  ty->kind = TY_PTR;
-  ty->size = 8;
+  Type *ty = new_type(TY_PTR, 8, 8);
   ty->base = base;
   return ty;
 }
@@ -29,9 +35,7 @@ Type *func_type(Type *return_ty) {
 }
 
 Type *array_of(Type *base, int len) {
-  Type *ty = calloc(1, sizeof(Type));
-  ty->kind = TY_ARRAY;
-  ty->size = base->size * len;
+  Type *ty = new_type(TY_ARRAY, base->size * len, base->align);
   ty->base = base;
   ty->array_len = len;
   return ty;
