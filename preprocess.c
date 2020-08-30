@@ -37,6 +37,8 @@ struct MacroArg {
   Token *tok;
 };
 
+typedef Token *macro_handler_fn(Token *);
+
 typedef struct Macro Macro;
 struct Macro {
   Macro *next;
@@ -45,6 +47,7 @@ struct Macro {
   MacroParam *params;
   Token *body;
   bool deleted;
+  macro_handler_fn *handler;
 };
 
 // `#if` can be nested, so we use a stack to manage nested `#if`s.
@@ -562,10 +565,19 @@ static bool expand_macro(Token **rest, Token *tok) {
   if (!m)
     return false;
 
+  // Built-in dynamic macro application such as __LINE__
+  if (m->handler) {
+    *rest = m->handler(tok);
+    (*rest)->next = tok->next;
+    return true;
+  }
+
   // Object-like macro application
   if (m->is_objlike) {
     Hideset *hs = hideset_union(tok->hideset, new_hideset(m->name));
     Token *body = add_hideset(m->body, hs);
+    for (Token *t = body; t->kind != TK_EOF; t = t->next)
+      t->origin = tok;
     *rest = append(body, tok->next);
     (*rest)->at_bol = tok->at_bol;
     (*rest)->has_space = tok->has_space;
@@ -592,6 +604,8 @@ static bool expand_macro(Token **rest, Token *tok) {
 
   Token *body = subst(m->body, args);
   body = add_hideset(body, hs);
+  for (Token *t = body; t->kind != TK_EOF; t = t->next)
+    t->origin = macro_token;
   *rest = append(body, tok->next);
   (*rest)->at_bol = macro_token->at_bol;
   (*rest)->has_space = macro_token->has_space;
@@ -796,6 +810,24 @@ static void define_macro(char *name, char *buf) {
   add_macro(name, true, tok);
 }
 
+static Macro *add_builtin(char *name, macro_handler_fn *fn) {
+  Macro *m = add_macro(name, true, NULL);
+  m->handler = fn;
+  return m;
+}
+
+static Token *file_macro(Token *tmpl) {
+  while (tmpl->origin)
+    tmpl = tmpl->origin;
+  return new_str_token(tmpl->file->name, tmpl);
+}
+
+static Token *line_macro(Token *tmpl) {
+  while (tmpl->origin)
+    tmpl = tmpl->origin;
+  return new_num_token(tmpl->line_no, tmpl);
+}
+
 static void init_macros(void) {
   // Define predefined macros
   define_macro("_LP64", "1");
@@ -839,6 +871,9 @@ static void init_macros(void) {
   define_macro("__x86_64__", "1");
   define_macro("linux", "1");
   define_macro("unix", "1");
+
+  add_builtin("__FILE__", file_macro);
+  add_builtin("__LINE__", line_macro);
 }
 
 // Entry point function of the preprocessor.
