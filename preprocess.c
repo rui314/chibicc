@@ -616,6 +616,16 @@ static bool file_exists(char *path) {
   return !stat(path, &st);
 }
 
+static char *search_include_paths(char *filename) {
+  // Search a file from the include paths.
+  for (int i = 0; i < include_paths.len; i++) {
+    char *path = format("%s/%s", include_paths.data[i], filename);
+    if (file_exists(path))
+      return path;
+  }
+  return NULL;
+}
+
 // Read an #include argument.
 static char *read_include_path(Token **rest, Token *tok) {
   // Pattern 1: #include "foo.h"
@@ -625,12 +635,21 @@ static char *read_include_path(Token **rest, Token *tok) {
     // For example, "\f" in "C:\foo" is not a formfeed character but
     // just two non-control characters, backslash and f.
     // So we don't want to use token->str.
+    Token *start = tok;
     char *filename = strndup(tok->loc + 1, tok->len - 2);
     *rest = skip_line(tok->next);
 
     if (filename[0] == '/' || file_exists(filename))
       return filename;
-    return format("%s/%s", dirname(strdup(tok->file->name)), filename);
+
+    char *path = format("%s/%s", dirname(strdup(tok->file->name)), filename);
+    if (file_exists(path))
+      return path;
+
+    path = search_include_paths(filename);
+    if (!path)
+      error_tok(start, "'%s': file not found", filename);
+    return path;
   }
 
   // Pattern 2: #include <foo.h>
@@ -650,12 +669,10 @@ static char *read_include_path(Token **rest, Token *tok) {
     if (filename[0] == '/')
       return filename;
 
-    // Search a file from the include paths.
-    // TODO: implement the acutal include paths.
-    filename = format("%s/%s", dirname(strdup(tok->file->name)), filename);
-    if (!file_exists(filename))
+    char *path = search_include_paths(filename);
+    if (!path)
       error_tok(start, "'%s': file not found", filename);
-    return filename;
+    return path;
   }
 
   // Pattern 3: #include FOO
