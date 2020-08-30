@@ -40,6 +40,8 @@ int main() {
   ASSERT(2, ({ int i=0; goto e; d: i++; e: i++; f: i++; i; }));
   ASSERT(1, ({ int i=0; goto i; g: i++; h: i++; i: i++; i; }));
 
+  ASSERT(1, ({ typedef int foo; goto foo; foo:; 1; }));
+
   printf("OK\n");
   return 0;
 }
