@@ -434,10 +434,10 @@ static MacroArg *find_arg(MacroArg *args, Token *tok) {
 }
 
 // Concatenates all tokens in `tok` and returns a new string.
-static char *join_tokens(Token *tok) {
+static char *join_tokens(Token *tok, Token *end) {
   // Compute the length of the resulting token.
   int len = 1;
-  for (Token *t = tok; t && t->kind != TK_EOF; t = t->next) {
+  for (Token *t = tok; t != end && t->kind != TK_EOF; t = t->next) {
     if (t != tok && t->has_space)
       len++;
     len += t->len;
@@ -447,7 +447,7 @@ static char *join_tokens(Token *tok) {
 
   // Copy token texts.
   int pos = 0;
-  for (Token *t = tok; t && t->kind != TK_EOF; t = t->next) {
+  for (Token *t = tok; t != end && t->kind != TK_EOF; t = t->next) {
     if (t != tok && t->has_space)
       buf[pos++] = ' ';
     strncpy(buf + pos, t->loc, t->len);
@@ -463,7 +463,7 @@ static Token *stringize(Token *hash, Token *arg) {
   // Create a new string token. We need to set some value to its
   // source location for error reporting function, so we use a macro
   // name token as a template.
-  char *s = join_tokens(arg);
+  char *s = join_tokens(arg, NULL);
   return new_str_token(s, hash);
 }
 
@@ -610,6 +610,65 @@ static bool expand_macro(Token **rest, Token *tok) {
   return true;
 }
 
+// Returns true if a given file exists.
+static bool file_exists(char *path) {
+  struct stat st;
+  return !stat(path, &st);
+}
+
+// Read an #include argument.
+static char *read_include_path(Token **rest, Token *tok) {
+  // Pattern 1: #include "foo.h"
+  if (tok->kind == TK_STR) {
+    // A double-quoted filename for #include is a special kind of
+    // token, and we don't want to interpret any escape sequences in it.
+    // For example, "\f" in "C:\foo" is not a formfeed character but
+    // just two non-control characters, backslash and f.
+    // So we don't want to use token->str.
+    char *filename = strndup(tok->loc + 1, tok->len - 2);
+    *rest = skip_line(tok->next);
+
+    if (filename[0] == '/' || file_exists(filename))
+      return filename;
+    return format("%s/%s", dirname(strdup(tok->file->name)), filename);
+  }
+
+  // Pattern 2: #include <foo.h>
+  if (equal(tok, "<")) {
+    // Reconstruct a filename from a sequence of tokens between
+    // "<" and ">".
+    Token *start = tok;
+
+    // Find closing ">".
+    for (; !equal(tok, ">"); tok = tok->next)
+      if (tok->at_bol || tok->kind == TK_EOF)
+        error_tok(tok, "expected '>'");
+
+    char *filename = join_tokens(start->next, tok);
+    *rest = skip_line(tok->next);
+
+    if (filename[0] == '/')
+      return filename;
+
+    // Search a file from the include paths.
+    // TODO: implement the acutal include paths.
+    filename = format("%s/%s", dirname(strdup(tok->file->name)), filename);
+    if (!file_exists(filename))
+      error_tok(start, "'%s': file not found", filename);
+    return filename;
+  }
+
+  // Pattern 3: #include FOO
+  // In this case FOO must be macro-expanded to either
+  // a single string token or a sequence of "<" ... ">".
+  if (tok->kind == TK_IDENT) {
+    Token *tok2 = preprocess2(copy_line(rest, tok));
+    return read_include_path(&tok2, tok2);
+  }
+
+  error_tok(tok, "expected a filename");
+}
+
 // Visit all tokens in `tok` while evaluating preprocessing
 // macros and directives.
 static Token *preprocess2(Token *tok) {
@@ -632,21 +691,10 @@ static Token *preprocess2(Token *tok) {
     tok = tok->next;
 
     if (equal(tok, "include")) {
-      tok = tok->next;
-
-      if (tok->kind != TK_STR)
-        error_tok(tok, "expected a filename");
-
-      char *path;
-      if (tok->str[0] == '/')
-        path = tok->str;
-      else
-        path = format("%s/%s", dirname(strdup(tok->file->name)), tok->str);
-
+      char *path = read_include_path(&tok, tok->next);
       Token *tok2 = tokenize_file(path);
       if (!tok2)
-        error_tok(tok, "%s", strerror(errno));
-      tok = skip_line(tok->next);
+        error_tok(start, "%s: cannot open file: %s", path, strerror(errno));
       tok = append(tok2, tok);
       continue;
     }
