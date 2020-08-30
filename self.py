@@ -98,6 +98,16 @@ char *strncpy(char *dest, char *src, long n);
 int stat(char *pathname, struct stat *statbuf);
 int stat(char *pathname, struct stat *statbuf);
 char *dirname(char *path);
+char *basename(char *path);
+char *strrchr(char *s, int c);
+int unlink(char *pathname);
+int mkstemp(char *template);
+int close(int fd);
+int fork(void);
+int execvp(char *file, char **argv);
+void _exit(int code);
+int wait(int *wstatus);
+int atexit(void (*)(void));
 """)
 
 for path in sys.argv[1:]:
