@@ -73,7 +73,7 @@ static CondIncl *cond_incl;
 static Token *preprocess2(Token *tok);
 static Macro *find_macro(Token *tok);
 
-static char *format(char *fmt, ...) {
+char *format(char *fmt, ...) {
   va_list ap;
   va_start(ap, fmt);
 
