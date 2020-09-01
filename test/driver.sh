@@ -218,4 +218,7 @@ echo 'void foo(); void bar(); int main() { foo(); bar(); }' > $tmp/main.c
 $chibicc -o $tmp/foo $tmp/main.c $tmp/foo.so
 check '.so'
 
+$chibicc -hashmap-test
+check 'hashmap'
+
 echo OK
