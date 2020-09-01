@@ -42,13 +42,11 @@ typedef Token *macro_handler_fn(Token *);
 
 typedef struct Macro Macro;
 struct Macro {
-  Macro *next;
   char *name;
   bool is_objlike; // Object-like or function-like
   MacroParam *params;
   char *va_args_name;
   Token *body;
-  bool deleted;
   macro_handler_fn *handler;
 };
 
@@ -67,7 +65,7 @@ struct Hideset {
   char *name;
 };
 
-static Macro *macros;
+static HashMap macros;
 static CondIncl *cond_incl;
 
 static Token *preprocess2(Token *tok);
@@ -321,20 +319,15 @@ static CondIncl *push_cond_incl(Token *tok, bool included) {
 static Macro *find_macro(Token *tok) {
   if (tok->kind != TK_IDENT)
     return NULL;
-
-  for (Macro *m = macros; m; m = m->next)
-    if (strlen(m->name) == tok->len && !strncmp(m->name, tok->loc, tok->len))
-      return m->deleted ? NULL : m;
-  return NULL;
+  return hashmap_get2(&macros, tok->loc, tok->len);
 }
 
 static Macro *add_macro(char *name, bool is_objlike, Token *body) {
   Macro *m = calloc(1, sizeof(Macro));
-  m->next = macros;
   m->name = name;
   m->is_objlike = is_objlike;
   m->body = body;
-  macros = m;
+  hashmap_put(&macros, name, m);
   return m;
 }
 
@@ -922,8 +915,7 @@ void define_macro(char *name, char *buf) {
 }
 
 void undef_macro(char *name) {
-  Macro *m = add_macro(name, true, NULL);
-  m->deleted = true;
+  hashmap_delete(&macros, name);
 }
 
 static Macro *add_builtin(char *name, macro_handler_fn *fn) {
