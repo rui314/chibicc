@@ -20,9 +20,7 @@
 
 // Scope for local variables, global variables, typedefs
 // or enum constants
-typedef struct VarScope VarScope;
-struct VarScope {
-  VarScope *next;
+typedef struct {
   char *name;
   int depth;
 
@@ -30,16 +28,14 @@ struct VarScope {
   Type *type_def;
   Type *enum_ty;
   int enum_val;
-};
+} VarScope;
 
 // Scope for struct, union or enum tags
-typedef struct TagScope TagScope;
-struct TagScope {
-  TagScope *next;
+typedef struct {
   char *name;
   int depth;
   Type *ty;
-};
+} TagScope;
 
 typedef struct Scope Scope;
 struct Scope {
@@ -47,8 +43,8 @@ struct Scope {
 
   // C has two block scopes; one is for variables/typedefs and
   // the other is for struct/union/enum tags.
-  VarScope *vars;
-  TagScope *tags;
+  HashMap vars;
+  HashMap tags;
 };
 
 // Variable attributes such as typedef or extern.
@@ -191,18 +187,20 @@ static void leave_scope(void) {
 
 // Find a variable by name.
 static VarScope *find_var(Token *tok) {
-  for (Scope *sc = scope; sc; sc = sc->next)
-    for (VarScope *sc2 = sc->vars; sc2; sc2 = sc2->next)
-      if (equal(tok, sc2->name))
-        return sc2;
+  for (Scope *sc = scope; sc; sc = sc->next) {
+    VarScope *sc2 = hashmap_get2(&sc->vars, tok->loc, tok->len);
+    if (sc2)
+      return sc2;
+  }
   return NULL;
 }
 
 static TagScope *find_tag(Token *tok) {
-  for (Scope *sc = scope; sc; sc = sc->next)
-    for (TagScope *sc2 = sc->tags; sc2; sc2 = sc2->next)
-      if (equal(tok, sc2->name))
-        return sc2;
+  for (Scope *sc = scope; sc; sc = sc->next) {
+    TagScope *sc2 = hashmap_get2(&sc->tags, tok->loc, tok->len);
+    if (sc2)
+      return sc2;
+  }
   return NULL;
 }
 
@@ -273,9 +271,7 @@ static VarScope *push_scope(char *name) {
   VarScope *sc = calloc(1, sizeof(VarScope));
   sc->name = name;
   sc->depth = scope_depth;
-
-  sc->next = scope->vars;
-  scope->vars = sc;
+  hashmap_put(&scope->vars, name, sc);
   return sc;
 }
 
@@ -382,9 +378,7 @@ static void push_tag_scope(Token *tok, Type *ty) {
   sc->name = strndup(tok->loc, tok->len);
   sc->depth = scope_depth;
   sc->ty = ty;
-
-  sc->next = scope->tags;
-  scope->tags = sc;
+  hashmap_put2(&scope->tags, tok->loc, tok->len, sc);
 }
 
 // typespec = typename typename*
@@ -3056,9 +3050,9 @@ static Obj *find_func(char *name) {
   while (sc->next)
     sc = sc->next;
 
-  for (VarScope *sc2 = sc->vars; sc2; sc2 = sc2->next)
-    if (!strcmp(sc2->name, name) && sc2->var && sc2->var->is_function)
-      return sc2->var;
+  VarScope *sc2 = hashmap_get(&sc->vars, name);
+  if (sc2 && sc2->var && sc2->var->is_function)
+    return sc2->var;
   return NULL;
 }
 
