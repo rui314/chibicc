@@ -110,6 +110,7 @@ Token *tokenize_file(char *filename);
 // preprocess.c
 //
 
+char *format(char *fmt, ...);
 char *search_include_paths(char *filename);
 bool file_exists(char *path);
 void init_macros(void);
@@ -406,6 +407,30 @@ uint32_t decode_utf8(char **new_pos, char *p);
 bool is_ident1(uint32_t c);
 bool is_ident2(uint32_t c);
 int str_width(char *p, int len);
+
+//
+// hashmap.c
+//
+
+typedef struct {
+  char *key;
+  int keylen;
+  void *val;
+} HashEntry;
+
+typedef struct {
+  HashEntry *buckets;
+  int capacity;
+  int used;
+} HashMap;
+
+void *hashmap_get(HashMap *map, char *key);
+void *hashmap_get2(HashMap *map, char *key, int keylen);
+void hashmap_put(HashMap *map, char *key, void *val);
+void hashmap_put2(HashMap *map, char *key, int keylen, void *val);
+void hashmap_delete(HashMap *map, char *key);
+void hashmap_delete2(HashMap *map, char *key, int keylen);
+void hashmap_test(void);
 
 //
 // main.c
