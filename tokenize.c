@@ -120,7 +120,8 @@ static bool is_keyword(Token *tok) {
     "struct", "union", "short", "long", "void", "typedef", "_Bool",
     "enum", "static", "goto", "break", "continue", "switch", "case",
     "default", "extern", "_Alignof", "_Alignas", "do", "signed",
-    "unsigned",
+    "unsigned", "const", "volatile", "auto", "register", "restrict",
+    "__restrict", "__restrict__", "_Noreturn",
   };
 
   for (int i = 0; i < sizeof(kw) / sizeof(*kw); i++)
