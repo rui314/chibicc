@@ -75,6 +75,34 @@ static FileType parse_opt_x(char *s) {
   error("<command line>: unknown argument for -x: %s", s);
 }
 
+static char *quote_makefile(char *s) {
+  char *buf = calloc(1, strlen(s) * 2 + 1);
+
+  for (int i = 0, j = 0; s[i]; i++) {
+    switch (s[i]) {
+    case '$':
+      buf[j++] = '$';
+      buf[j++] = '$';
+      break;
+    case '#':
+      buf[j++] = '\\';
+      buf[j++] = '#';
+      break;
+    case ' ':
+    case '\t':
+      for (int k = i - 1; k >= 0 && s[k] == '\\'; k--)
+        buf[j++] = '\\';
+      buf[j++] = '\\';
+      buf[j++] = s[i];
+      break;
+    default:
+      buf[j++] = s[i];
+      break;
+    }
+  }
+  return buf;
+}
+
 static void parse_args(int argc, char **argv) {
   // Make sure that all command line options that take an argument
   // have an argument.
@@ -209,6 +237,14 @@ static void parse_args(int argc, char **argv) {
 
     if (!strcmp(argv[i], "-MD")) {
       opt_MD = true;
+      continue;
+    }
+
+    if (!strcmp(argv[i], "-MQ")) {
+      if (opt_MT == NULL)
+        opt_MT = quote_makefile(argv[++i]);
+      else
+        opt_MT = format("%s %s", opt_MT, quote_makefile(argv[++i]));
       continue;
     }
 
@@ -391,7 +427,10 @@ static void print_dependencies(void) {
     path = "-";
 
   FILE *out = open_file(path);
-  fprintf(out, "%s:", opt_MT ? opt_MT : replace_extn(base_file, ".o"));
+  if (opt_MT)
+    fprintf(out, "%s:", opt_MT);
+  else
+    fprintf(out, "%s:", quote_makefile(replace_extn(base_file, ".o")));
 
   File **files = get_input_files();
 
@@ -401,7 +440,7 @@ static void print_dependencies(void) {
 
   if (opt_MP)
     for (int i = 1; files[i]; i++)
-      fprintf(out, "%s:\n\n", files[i]->name);
+      fprintf(out, "%s:\n\n", quote_makefile(files[i]->name));
 }
 
 static Token *must_tokenize_file(char *path) {
