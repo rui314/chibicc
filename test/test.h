@@ -11,3 +11,4 @@ void exit(int n);
 int vsprintf();
 long strlen(char *s);
 void *memcpy(void *dest, void *src, long n);
+void *memset(void *s, int c, long n);
