@@ -143,20 +143,24 @@ static int from_hex(char c) {
 }
 
 static bool is_keyword(Token *tok) {
-  static char *kw[] = {
-    "return", "if", "else", "for", "while", "int", "sizeof", "char",
-    "struct", "union", "short", "long", "void", "typedef", "_Bool",
-    "enum", "static", "goto", "break", "continue", "switch", "case",
-    "default", "extern", "_Alignof", "_Alignas", "do", "signed",
-    "unsigned", "const", "volatile", "auto", "register", "restrict",
-    "__restrict", "__restrict__", "_Noreturn", "float", "double",
-    "typeof", "asm", "_Thread_local", "__thread",
-  };
+  static HashMap map;
 
-  for (int i = 0; i < sizeof(kw) / sizeof(*kw); i++)
-    if (equal(tok, kw[i]))
-      return true;
-  return false;
+  if (map.capacity == 0) {
+    static char *kw[] = {
+      "return", "if", "else", "for", "while", "int", "sizeof", "char",
+      "struct", "union", "short", "long", "void", "typedef", "_Bool",
+      "enum", "static", "goto", "break", "continue", "switch", "case",
+      "default", "extern", "_Alignof", "_Alignas", "do", "signed",
+      "unsigned", "const", "volatile", "auto", "register", "restrict",
+      "__restrict", "__restrict__", "_Noreturn", "float", "double",
+      "typeof", "asm", "_Thread_local", "__thread",
+    };
+
+    for (int i = 0; i < sizeof(kw) / sizeof(*kw); i++)
+      hashmap_put(&map, kw[i], (void *)1);
+  }
+
+  return hashmap_get2(&map, tok->loc, tok->len);
 }
 
 static int read_escaped_char(char **new_pos, char *p) {
