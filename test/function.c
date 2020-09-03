@@ -108,6 +108,10 @@ double add_double3(double x, double y, double z) {
   return x + y + z;
 }
 
+int (*fnptr(int (*fn)(int n, ...)))(int, ...) {
+  return fn;
+}
+
 int main() {
   ASSERT(3, ret3());
   ASSERT(8, add2(3, 5));
@@ -177,6 +181,11 @@ int main() {
   ASSERT(0, ({ char buf[100]; sprintf(buf, "%.1f", (float)3.5); strcmp(buf, "3.5"); }));
 
   ASSERT(0, ({ char buf[100]; fmt(buf, "%.1f", (float)3.5); strcmp(buf, "3.5"); }));
+
+  ASSERT(5, (add2)(2,3));
+  ASSERT(5, (&add2)(2,3));
+  ASSERT(7, ({ int (*fn)(int,int) = add2; fn(2,5); }));
+  ASSERT(6, fnptr(add_all)(3, 1, 2, 3));
 
   printf("OK\n");
   return 0;
