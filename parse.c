@@ -1492,18 +1492,22 @@ static void gvar_initializer(Token **rest, Token *tok, Obj *var) {
 
 // Returns true if a given token represents a type.
 static bool is_typename(Token *tok) {
-  static char *kw[] = {
-    "void", "_Bool", "char", "short", "int", "long", "struct", "union",
-    "typedef", "enum", "static", "extern", "_Alignas", "signed", "unsigned",
-    "const", "volatile", "auto", "register", "restrict", "__restrict",
-    "__restrict__", "_Noreturn", "float", "double", "typeof", "inline",
-    "_Thread_local", "__thread",
-  };
+  static HashMap map;
 
-  for (int i = 0; i < sizeof(kw) / sizeof(*kw); i++)
-    if (equal(tok, kw[i]))
-      return true;
-  return find_typedef(tok);
+  if (map.capacity == 0) {
+    static char *kw[] = {
+      "void", "_Bool", "char", "short", "int", "long", "struct", "union",
+      "typedef", "enum", "static", "extern", "_Alignas", "signed", "unsigned",
+      "const", "volatile", "auto", "register", "restrict", "__restrict",
+      "__restrict__", "_Noreturn", "float", "double", "typeof", "inline",
+      "_Thread_local", "__thread",
+    };
+
+    for (int i = 0; i < sizeof(kw) / sizeof(*kw); i++)
+      hashmap_put(&map, kw[i], (void *)1);
+  }
+
+  return hashmap_get2(&map, tok->loc, tok->len) || find_typedef(tok);
 }
 
 // asm-stmt = "asm" ("volatile" | "inline")* "(" string-literal ")"
