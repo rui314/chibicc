@@ -56,13 +56,46 @@ int align_to(int n, int align) {
 static void gen_addr(Node *node) {
   switch (node->kind) {
   case ND_VAR:
+    // Local variable
     if (node->var->is_local) {
-      // Local variable
       println("  lea %d(%%rbp), %%rax", node->var->offset);
-    } else {
-      // Global variable
-      println("  lea %s(%%rip), %%rax", node->var->name);
+      return;
     }
+
+    // Here, we generate an absolute address of a function or a global
+    // variable. Even though they exist at a certain address at runtime,
+    // their addresses are not known at link-time for the following
+    // two reasons.
+    //
+    //  - Address randomization: Executables are loaded to memory as a
+    //    whole but it is not known what address they are loaded to.
+    //    Therefore, at link-time, relative address in the same
+    //    exectuable (i.e. the distance between two functions in the
+    //    same executable) is known, but the absolute address is not
+    //    known.
+    //
+    //  - Dynamic linking: Dynamic shared objects (DSOs) or .so files
+    //    are loaded to memory alongside an executable at runtime and
+    //    linked by the runtime loader in memory. We know nothing
+    //    about addresses of global stuff that may be defined by DSOs
+    //    until the runtime relocation is complete.
+    //
+    // In order to deal with the former case, we use RIP-relative
+    // addressing, denoted by `(%rip)`. For the latter, we obtain an
+    // address of a stuff that may be in a shared object file from the
+    // Global Offset Table using `@GOTPCREL(%rip)` notation.
+
+    // Function
+    if (node->ty->kind == TY_FUNC) {
+      if (node->var->is_definition)
+        println("  lea %s(%%rip), %%rax", node->var->name);
+      else
+        println("  mov %s@GOTPCREL(%%rip), %%rax", node->var->name);
+      return;
+    }
+
+    // Global variable
+    println("  lea %s(%%rip), %%rax", node->var->name);
     return;
   case ND_DEREF:
     gen_expr(node->lhs);
@@ -86,6 +119,7 @@ static void load(Type *ty) {
   case TY_ARRAY:
   case TY_STRUCT:
   case TY_UNION:
+  case TY_FUNC:
     // If it is an array, do not attempt to load a value to the
     // register because in general we can't load an entire array to a
     // register. As a result, the result of an evaluation of an array
@@ -410,6 +444,7 @@ static void gen_expr(Node *node) {
   }
   case ND_FUNCALL: {
     push_args(node->args);
+    gen_expr(node->lhs);
 
     int gp = 0, fp = 0;
     for (Node *arg = node->args; arg; arg = arg->next) {
@@ -420,10 +455,10 @@ static void gen_expr(Node *node) {
     }
 
     if (depth % 2 == 0) {
-      println("  call %s", node->funcname);
+      println("  call *%%rax");
     } else {
       println("  sub $8, %%rsp");
-      println("  call %s", node->funcname);
+      println("  call *%%rax");
       println("  add $8, %%rsp");
     }
 
