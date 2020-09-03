@@ -33,6 +33,7 @@ typedef struct {
 } StringArray;
 
 void strarray_push(StringArray *arr, char *s);
+char *format(char *fmt, ...);
 
 //
 // tokenize.c
@@ -47,6 +48,12 @@ typedef enum {
   TK_EOF,      // End-of-file markers
 } TokenKind;
 
+typedef struct {
+  char *name;
+  int file_no;
+  char *contents;
+} File;
+
 // Token type
 typedef struct Token Token;
 struct Token {
@@ -59,6 +66,7 @@ struct Token {
   Type *ty;       // Used if TK_NUM or TK_STR
   char *str;      // String literal contents including terminating '\0'
 
+  File *file;     // Source location
   int line_no;    // Line number
   bool at_bol;    // True if this token is at beginning of line
 };
@@ -70,6 +78,7 @@ bool equal(Token *tok, char *op);
 Token *skip(Token *tok, char *op);
 bool consume(Token **rest, Token *tok, char *str);
 void convert_keywords(Token *tok);
+File **get_input_files(void);
 Token *tokenize_file(char *filename);
 
 #define unreachable() \
@@ -322,3 +331,9 @@ void add_type(Node *node);
 
 void codegen(Obj *prog, FILE *out);
 int align_to(int n, int align);
+
+//
+// main.c
+//
+
+extern char *base_file;
