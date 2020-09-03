@@ -310,7 +310,7 @@ static void push_args(Node *args) {
 
 // Generate code for a given node.
 static void gen_expr(Node *node) {
-  println("  .loc 1 %d", node->tok->line_no);
+  println("  .loc %d %d", node->tok->file->file_no, node->tok->line_no);
 
   switch (node->kind) {
   case ND_NULL_EXPR:
@@ -629,7 +629,7 @@ static void gen_expr(Node *node) {
 }
 
 static void gen_stmt(Node *node) {
-  println("  .loc 1 %d", node->tok->line_no);
+  println("  .loc %d %d", node->tok->file->file_no, node->tok->line_no);
 
   switch (node->kind) {
   case ND_IF: {
@@ -877,6 +877,10 @@ static void emit_text(Obj *prog) {
 
 void codegen(Obj *prog, FILE *out) {
   output_file = out;
+
+  File **files = get_input_files();
+  for (int i = 0; files[i]; i++)
+    println("  .file %d \"%s\"", files[i]->file_no, files[i]->name);
 
   assign_lvar_offsets(prog);
   emit_data(prog);
