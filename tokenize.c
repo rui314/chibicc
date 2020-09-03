@@ -72,6 +72,12 @@ static bool is_ident2(char c) {
   return is_ident1(c) || ('0' <= c && c <= '9');
 }
 
+static void convert_keywords(Token *tok) {
+  for (Token *t = tok; t->kind != TK_EOF; t = t->next)
+    if (equal(t, "return"))
+      t->kind = TK_RESERVED;
+}
+
 // Tokenize a given string and returns new tokens.
 Token *tokenize(char *p) {
   current_input = p;
@@ -94,7 +100,7 @@ Token *tokenize(char *p) {
       continue;
     }
 
-    // Identifier
+    // Identifier or keyword
     if (is_ident1(*p)) {
       char *q = p++;
       while (is_ident2(*p))
@@ -121,5 +127,6 @@ Token *tokenize(char *p) {
   }
 
   new_token(TK_EOF, cur, p, 0);
+  convert_keywords(head.next);
   return head.next;
 }
