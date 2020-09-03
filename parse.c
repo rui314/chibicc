@@ -153,6 +153,7 @@ static Node *cast(Token **rest, Token *tok);
 static Type *struct_decl(Token **rest, Token *tok);
 static Type *union_decl(Token **rest, Token *tok);
 static Node *postfix(Token **rest, Token *tok);
+static Node *funcall(Token **rest, Token *tok, Node *node);
 static Node *unary(Token **rest, Token *tok);
 static Node *primary(Token **rest, Token *tok);
 static Token *parse_typedef(Token *tok, Type *basety);
@@ -2113,7 +2114,15 @@ static Node *new_inc_dec(Node *node, Token *tok, int addend) {
 }
 
 // postfix = "(" type-name ")" "{" initializer-list "}"
-//         | primary ("[" expr "]" | "." ident | "->" ident | "++" | "--")*
+//         = ident "(" func-args ")" postfix-tail*
+//         | primary postfix-tail*
+//
+// postfix-tail = "[" expr "]"
+//              | "(" func-args ")"
+//              | "." ident
+//              | "->" ident
+//              | "++"
+//              | "--"
 static Node *postfix(Token **rest, Token *tok) {
   if (equal(tok, "(") && is_typename(tok->next)) {
     // Compound literal
@@ -2136,6 +2145,11 @@ static Node *postfix(Token **rest, Token *tok) {
   Node *node = primary(&tok, tok);
 
   for (;;) {
+    if (equal(tok, "(")) {
+      node = funcall(&tok, tok->next, node);
+      continue;
+    }
+
     if (equal(tok, "[")) {
       // x[y] is short for *(x+y)
       Token *start = tok;
@@ -2176,18 +2190,15 @@ static Node *postfix(Token **rest, Token *tok) {
   }
 }
 
-// funcall = ident "(" (assign ("," assign)*)? ")"
-static Node *funcall(Token **rest, Token *tok) {
-  Token *start = tok;
-  tok = tok->next->next;
+// funcall = (assign ("," assign)*)? ")"
+static Node *funcall(Token **rest, Token *tok, Node *fn) {
+  add_type(fn);
 
-  VarScope *sc = find_var(start);
-  if (!sc)
-    error_tok(start, "implicit declaration of a function");
-  if (!sc->var || sc->var->ty->kind != TY_FUNC)
-    error_tok(start, "not a function");
+  if (fn->ty->kind != TY_FUNC &&
+      (fn->ty->kind != TY_PTR || fn->ty->base->kind != TY_FUNC))
+    error_tok(fn->tok, "not a function");
 
-  Type *ty = sc->var->ty;
+  Type *ty = (fn->ty->kind == TY_FUNC) ? fn->ty : fn->ty->base;
   Type *param_ty = ty->params;
 
   Node head = {};
@@ -2222,8 +2233,7 @@ static Node *funcall(Token **rest, Token *tok) {
 
   *rest = skip(tok, ")");
 
-  Node *node = new_node(ND_FUNCALL, start);
-  node->funcname = strndup(start->loc, start->len);
+  Node *node = new_unary(ND_FUNCALL, fn, tok);
   node->func_ty = ty;
   node->ty = ty->return_ty;
   node->args = head.next;
@@ -2236,7 +2246,7 @@ static Node *funcall(Token **rest, Token *tok) {
 //         | "sizeof" unary
 //         | "_Alignof" "(" type-name ")"
 //         | "_Alignof" unary
-//         | ident func-args?
+//         | ident
 //         | str
 //         | num
 static Node *primary(Token **rest, Token *tok) {
@@ -2281,23 +2291,20 @@ static Node *primary(Token **rest, Token *tok) {
   }
 
   if (tok->kind == TK_IDENT) {
-    // Function call
-    if (equal(tok->next, "("))
-      return funcall(rest, tok);
-
     // Variable or enum constant
     VarScope *sc = find_var(tok);
-    if (!sc || (!sc->var && !sc->enum_ty))
-      error_tok(tok, "undefined variable");
-
-    Node *node;
-    if (sc->var)
-      node = new_var_node(sc->var, tok);
-    else
-      node = new_num(sc->enum_val, tok);
-
     *rest = tok->next;
-    return node;
+
+    if (sc) {
+      if (sc->var)
+        return new_var_node(sc->var, tok);
+      if (sc->enum_ty)
+        return new_num(sc->enum_val, tok);
+    }
+
+    if (equal(tok->next, "("))
+      error_tok(tok, "implicit declaration of a function");
+    error_tok(tok, "undefined variable");
   }
 
   if (tok->kind == TK_STR) {
