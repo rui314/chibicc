@@ -313,7 +313,7 @@ static void store_gp(int r, int offset, int sz) {
 
 static void emit_text(Obj *prog) {
   for (Obj *fn = prog; fn; fn = fn->next) {
-    if (!fn->is_function)
+    if (!fn->is_function || !fn->is_definition)
       continue;
 
     println("  .globl %s", fn->name);
