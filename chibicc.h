@@ -149,6 +149,7 @@ struct Var {
   Node *body;
   Var *locals;
   Var *va_area;
+  Var *alloca_bottom;
   int stack_size;
 
   // Static inline function
