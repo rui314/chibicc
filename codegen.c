@@ -924,6 +924,9 @@ static void gen_expr(Node *node) {
 
     return;
   }
+  case ND_LABEL_VAL:
+    println("  lea %s(%%rip), %%rax", node->unique_label);
+    return;
   }
 
   switch (node->lhs->ty->kind) {
@@ -1192,6 +1195,10 @@ static void gen_stmt(Node *node) {
     return;
   case ND_GOTO:
     println("  jmp %s", node->unique_label);
+    return;
+  case ND_GOTO_EXPR:
+    gen_expr(node->lhs);
+    println("  jmp *%%rax");
     return;
   case ND_LABEL:
     println("%s:", node->unique_label);
