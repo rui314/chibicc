@@ -2403,6 +2403,13 @@ static Token *function(Token *tok, Type *basety, VarAttr *attr) {
     fn->va_area = new_lvar("__va_area__", array_of(ty_char, 136));
 
   tok = skip(tok, "{");
+
+  // [https://www.sigbus.info/n1570#6.4.2.2p1] "__func__" is
+  // automatically defined as a local variable containing the
+  // current function name.
+  push_scope("__func__")->var =
+    new_string_literal(fn->name, array_of(ty_char, strlen(fn->name) + 1));
+
   fn->body = compound_stmt(&tok, tok);
   fn->locals = locals;
   leave_scope();
