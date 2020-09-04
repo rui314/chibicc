@@ -116,10 +116,12 @@ static Node *declaration(Token **rest, Token *tok, Type *basety);
 static void initializer2(Token **rest, Token *tok, Initializer *init);
 static Initializer *initializer(Token **rest, Token *tok, Type *ty, Type **new_ty);
 static Node *lvar_initializer(Token **rest, Token *tok, Obj *var);
+static void gvar_initializer(Token **rest, Token *tok, Obj *var);
 static Node *compound_stmt(Token **rest, Token *tok);
 static Node *stmt(Token **rest, Token *tok);
 static Node *expr_stmt(Token **rest, Token *tok);
 static Node *expr(Token **rest, Token *tok);
+static int64_t eval(Node *node);
 static Node *assign(Token **rest, Token *tok);
 static Node *logor(Token **rest, Token *tok);
 static int64_t const_expr(Token **rest, Token *tok);
@@ -827,6 +829,43 @@ static Node *lvar_initializer(Token **rest, Token *tok, Obj *var) {
 
   Node *rhs = create_lvar_init(init, var->ty, &desg, tok);
   return new_binary(ND_COMMA, lhs, rhs, tok);
+}
+
+static void write_buf(char *buf, uint64_t val, int sz) {
+  if (sz == 1)
+    *buf = val;
+  else if (sz == 2)
+    *(uint16_t *)buf = val;
+  else if (sz == 4)
+    *(uint32_t *)buf = val;
+  else if (sz == 8)
+    *(uint64_t *)buf = val;
+  else
+    unreachable();
+}
+
+static void write_gvar_data(Initializer *init, Type *ty, char *buf, int offset) {
+  if (ty->kind == TY_ARRAY) {
+    int sz = ty->base->size;
+    for (int i = 0; i < ty->array_len; i++)
+      write_gvar_data(init->children[i], ty->base, buf, offset + sz * i);
+    return;
+  }
+
+  if (init->expr)
+    write_buf(buf + offset, eval(init->expr), ty->size);
+}
+
+// Initializers for global variables are evaluated at compile-time and
+// embedded to .data section. This function serializes Initializer
+// objects to a flat byte array. It is a compile error if an
+// initializer list contains a non-constant expression.
+static void gvar_initializer(Token **rest, Token *tok, Obj *var) {
+  Initializer *init = initializer(rest, tok, var->ty, &var->ty);
+
+  char *buf = calloc(1, var->ty->size);
+  write_gvar_data(init, var->ty, buf, 0);
+  var->init_data = buf;
 }
 
 // Returns true if a given token represents a type.
@@ -1886,7 +1925,9 @@ static Token *global_variable(Token *tok, Type *basety) {
     first = false;
 
     Type *ty = declarator(&tok, tok, basety);
-    new_gvar(get_ident(ty->name), ty);
+    Obj *var = new_gvar(get_ident(ty->name), ty);
+    if (equal(tok, "="))
+      gvar_initializer(&tok, tok->next, var);
   }
   return tok;
 }
