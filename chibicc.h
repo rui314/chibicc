@@ -204,7 +204,9 @@ typedef enum {
   ND_CASE,      // "case"
   ND_BLOCK,     // { ... }
   ND_GOTO,      // "goto"
+  ND_GOTO_EXPR, // "goto" labels-as-values
   ND_LABEL,     // Labeled statement
+  ND_LABEL_VAL, // [GNU] Labels-as-values
   ND_FUNCALL,   // Function call
   ND_EXPR_STMT, // Expression statement
   ND_STMT_EXPR, // Statement expression
@@ -249,7 +251,7 @@ struct Node {
   bool pass_by_stack;
   Var *ret_buffer;
 
-  // Goto or labeled statement
+  // Goto or labeled statement, or labels-as-values
   char *label;
   char *unique_label;
   Node *goto_next;
