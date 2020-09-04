@@ -113,6 +113,13 @@ Type *array_of(Type *base, int len) {
   return ty;
 }
 
+Type *vla_of(Type *base, Node *len) {
+  Type *ty = new_type(TY_VLA, 8, 8);
+  ty->base = base;
+  ty->vla_len = len;
+  return ty;
+}
+
 Type *enum_type(void) {
   return new_type(TY_ENUM, 4, 4);
 }
@@ -214,7 +221,7 @@ void add_type(Node *node) {
     node->ty = ty_int;
     return;
   case ND_FUNCALL:
-    node->ty = ty_long;
+    node->ty = node->func_ty->return_ty;
     return;
   case ND_NOT:
   case ND_LOGOR:
