@@ -20,7 +20,8 @@
 
 // All local variable instances created during parsing are
 // accumulated to this list.
-Var *locals;
+static Var *locals;
+static Var *globals;
 
 static Type *typespec(Token **rest, Token *tok);
 static Type *declarator(Token **rest, Token *tok, Type *ty);
@@ -78,12 +79,25 @@ static Node *new_var_node(Var *var, Token *tok) {
   return node;
 }
 
-static Var *new_lvar(char *name, Type *ty) {
+static Var *new_var(char *name, Type *ty) {
   Var *var = calloc(1, sizeof(Var));
   var->name = name;
   var->ty = ty;
+  return var;
+}
+
+static Var *new_lvar(char *name, Type *ty) {
+  Var *var = new_var(name, ty);
+  var->is_local = true;
   var->next = locals;
   locals = var;
+  return var;
+}
+
+static Var *new_gvar(char *name, Type *ty) {
+  Var *var = new_var(name, ty);
+  var->next = globals;
+  globals = var;
   return var;
 }
 
@@ -544,29 +558,29 @@ static void create_param_lvars(Type *param) {
   }
 }
 
-static Function *function(Token **rest, Token *tok) {
-  Type *ty = typespec(&tok, tok);
-  ty = declarator(&tok, tok, ty);
+static Token *function(Token *tok, Type *basety) {
+  Type *ty = declarator(&tok, tok, basety);
+
+  Var *fn = new_gvar(get_ident(ty->name), ty);
+  fn->is_function = true;
 
   locals = NULL;
-
-  Function *fn = calloc(1, sizeof(Function));
-  fn->name = get_ident(ty->name);
   create_param_lvars(ty->params);
   fn->params = locals;
 
   tok = skip(tok, "{");
-  fn->body = compound_stmt(rest, tok);
+  fn->body = compound_stmt(&tok, tok);
   fn->locals = locals;
-  return fn;
+  return tok;
 }
 
-// program = function-definition*
-Function *parse(Token *tok) {
-  Function head = {};
-  Function *cur = &head;
+// program = (function-definition | global-variable)*
+Var *parse(Token *tok) {
+  globals = NULL;
 
-  while (tok->kind != TK_EOF)
-    cur = cur->next = function(&tok, tok);
-  return head.next;
+  while (tok->kind != TK_EOF) {
+    Type *basety = typespec(&tok, tok);
+    tok = function(tok, basety);
+  }
+  return globals;
 }
