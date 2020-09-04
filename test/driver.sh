@@ -113,4 +113,16 @@ check 'ignored options'
 printf '\xef\xbb\xbfxyz\n' | $chibicc -E -o- - | grep -q '^xyz'
 check 'BOM marker'
 
+# Inline functions
+echo 'inline void foo() {}' > $tmp/inline1.c
+echo 'inline void foo() {}' > $tmp/inline2.c
+echo 'int main() { return 0; }' > $tmp/inline3.c
+$chibicc -o /dev/null $tmp/inline1.c $tmp/inline2.c $tmp/inline3.c
+check inline
+
+echo 'extern inline void foo() {}' > $tmp/inline1.c
+echo 'int foo(); int main() { foo(); }' > $tmp/inline2.c
+$chibicc -o /dev/null $tmp/inline1.c $tmp/inline2.c
+check inline
+
 echo OK
