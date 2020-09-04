@@ -1177,9 +1177,11 @@ static void emit_text(Obj *prog) {
       int off = fn->va_area->offset;
 
       // va_elem
-      println("  movl $%d, %d(%%rbp)", gp * 8, off);
-      println("  movl $%d, %d(%%rbp)", fp * 8 + 48, off + 4);
-      println("  movq %%rbp, %d(%%rbp)", off + 16);
+      println("  movl $%d, %d(%%rbp)", gp * 8, off);          // gp_offset
+      println("  movl $%d, %d(%%rbp)", fp * 8 + 48, off + 4); // fp_offset
+      println("  movq %%rbp, %d(%%rbp)", off + 8);            // overflow_arg_area
+      println("  addq $16, %d(%%rbp)", off + 8);
+      println("  movq %%rbp, %d(%%rbp)", off + 16);           // reg_save_area
       println("  addq $%d, %d(%%rbp)", off + 24, off + 16);
 
       // __reg_save_area__
