@@ -201,6 +201,11 @@ void codegen(Function *prog) {
     printf("  mov %%rsp, %%rbp\n");
     printf("  sub $%d, %%rsp\n", fn->stack_size);
 
+    // Save passed-by-register arguments to the stack
+    int i = 0;
+    for (Obj *var = fn->params; var; var = var->next)
+      printf("  mov %s, %d(%%rbp)\n", argreg[i++], var->offset);
+
     // Emit code
     gen_stmt(fn->body);
     assert(depth == 0);
