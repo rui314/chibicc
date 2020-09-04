@@ -136,6 +136,7 @@ struct Var {
   Relocation *rel;
 
   // Function
+  bool is_inline;
   Var *params;
   Node *body;
   Var *locals;

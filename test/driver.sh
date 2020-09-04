@@ -109,4 +109,16 @@ $chibicc -c -O -Wall -g -std=c11 -ffreestanding -fno-builtin \
          -m64 -mno-red-zone -w -o /dev/null $tmp/empty.c
 check 'ignored options'
 
+# Inline functions
+echo 'inline void foo() {}' > $tmp/inline1.c
+echo 'inline void foo() {}' > $tmp/inline2.c
+echo 'int main() { return 0; }' > $tmp/inline3.c
+$chibicc -o /dev/null $tmp/inline1.c $tmp/inline2.c $tmp/inline3.c
+check inline
+
+echo 'extern inline void foo() {}' > $tmp/inline1.c
+echo 'int foo(); int main() { foo(); }' > $tmp/inline2.c
+$chibicc -o /dev/null $tmp/inline1.c $tmp/inline2.c
+check inline
+
 echo OK
