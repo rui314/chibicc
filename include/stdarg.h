@@ -49,6 +49,8 @@ static void *__va_arg_fp(__va_elem *ap, int sz, int align) {
             __va_arg_mem(ap, sizeof(ty), _Alignof(ty)));                \
   })
 
+#define va_copy(dest, src) ((dest)[0] = (src)[0])
+
 #define __GNUC_VA_LIST 1
 typedef va_list __gnuc_va_list;
 
