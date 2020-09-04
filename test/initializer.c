@@ -1,5 +1,10 @@
 #include "test.h"
 
+char g3 = 3;
+short g4 = 4;
+int g5 = 5;
+long g6 = 6;
+
 int main() {
   ASSERT(1, ({ int x[3]={1,2,3}; x[0]; }));
   ASSERT(2, ({ int x[3]={1,2,3}; x[1]; }));
@@ -61,6 +66,11 @@ int main() {
   ASSERT(3, ({ union { int a; char b[4]; } x={0x01020304}; x.b[1]; }));
 
   ASSERT(0x01020304, ({ union { struct { char a,b,c,d; } e; int f; } x={{4,3,2,1}}; x.f; }));
+
+  ASSERT(3, g3);
+  ASSERT(4, g4);
+  ASSERT(5, g5);
+  ASSERT(6, g6);
 
   printf("OK\n");
   return 0;
