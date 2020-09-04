@@ -197,6 +197,10 @@ Ty21 struct_test38(void) {
   return (Ty21){1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20};
 }
 
+inline int inline_fn(void) {
+  return 3;
+}
+
 int main() {
   ASSERT(3, ret3());
   ASSERT(8, add2(3, 5));
@@ -364,6 +368,8 @@ int main() {
   ASSERT(20, struct_test38().a[19]);
 
   ASSERT(5, (***add2)(2,3));
+
+  ASSERT(3, inline_fn());
 
   printf("OK\n");
 }

@@ -137,6 +137,7 @@ struct Obj {
   Relocation *rel;
 
   // Function
+  bool is_inline;
   Obj *params;
   Node *body;
   Obj *locals;
