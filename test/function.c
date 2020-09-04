@@ -177,6 +177,26 @@ Ty6 struct_test26(void);
 Ty20 struct_test27(void);
 Ty21 struct_test28(void);
 
+Ty4 struct_test34(void) {
+  return (Ty4){10, 20, 30, 40};
+}
+
+Ty5 struct_test35(void) {
+  return (Ty5){10, 20, 30};
+}
+
+Ty6 struct_test36(void) {
+  return (Ty6){10, 20, 30};
+}
+
+Ty20 struct_test37(void) {
+  return (Ty20){10, 20, 30, 40, 50, 60, 70, 80, 90, 100};
+}
+
+Ty21 struct_test38(void) {
+  return (Ty21){1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20};
+}
+
 int main() {
   ASSERT(3, ret3());
   ASSERT(8, add2(3, 5));
@@ -319,6 +339,29 @@ int main() {
   ASSERT(10, struct_test28().a[9]);
   ASSERT(15, struct_test28().a[14]);
   ASSERT(20, struct_test28().a[19]);
+
+  ASSERT(10, struct_test34().a);
+  ASSERT(20, struct_test34().b);
+  ASSERT(30, struct_test34().c);
+  ASSERT(40, struct_test34().d);
+
+  ASSERT(10, struct_test35().a);
+  ASSERT(20, struct_test35().b);
+  ASSERT(30, struct_test35().c);
+
+  ASSERT(10, struct_test36().a[0]);
+  ASSERT(20, struct_test36().a[1]);
+  ASSERT(30, struct_test36().a[2]);
+
+  ASSERT(10, struct_test37().a[0]);
+  ASSERT(60, struct_test37().a[5]);
+  ASSERT(100, struct_test37().a[9]);
+
+  ASSERT(1, struct_test38().a[0]);
+  ASSERT(5, struct_test38().a[4]);
+  ASSERT(10, struct_test38().a[9]);
+  ASSERT(15, struct_test38().a[14]);
+  ASSERT(20, struct_test38().a[19]);
 
   printf("OK\n");
   return 0;
