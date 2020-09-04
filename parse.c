@@ -2915,8 +2915,10 @@ static Token *function(Token *tok, Type *basety, VarAttr *attr) {
     new_lvar("", pointer_to(rty));
 
   fn->params = locals;
+
   if (ty->is_variadic)
     fn->va_area = new_lvar("__va_area__", array_of(ty_char, 136));
+  fn->alloca_bottom = new_lvar("__alloca_size__", pointer_to(ty_char));
 
   tok = skip(tok, "{");
 
@@ -3002,8 +3004,16 @@ static void scan_globals(void) {
   globals = head.next;
 }
 
+static void declare_builtin_functions(void) {
+  Type *ty = func_type(pointer_to(ty_void));
+  ty->params = copy_type(ty_int);
+  Obj *builtin = new_gvar("alloca", ty);
+  builtin->is_definition = false;
+}
+
 // program = (typedef | function-definition | global-variable)*
 Obj *parse(Token *tok) {
+  declare_builtin_functions();
   globals = NULL;
 
   while (tok->kind != TK_EOF) {
