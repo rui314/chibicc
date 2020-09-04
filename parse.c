@@ -153,6 +153,9 @@ static Node *postfix(Token **rest, Token *tok);
 static Node *unary(Token **rest, Token *tok);
 static Node *primary(Token **rest, Token *tok);
 static Token *parse_typedef(Token *tok, Type *basety);
+static bool is_function(Token *tok);
+static Token *function(Token *tok, Type *basety, VarAttr *attr);
+static Token *global_variable(Token *tok, Type *basety, VarAttr *attr);
 
 static void enter_scope(void) {
   Scope *sc = calloc(1, sizeof(Scope));
@@ -1220,6 +1223,16 @@ static Node *compound_stmt(Token **rest, Token *tok) {
 
       if (attr.is_typedef) {
         tok = parse_typedef(tok, basety);
+        continue;
+      }
+
+      if (is_function(tok)) {
+        tok = function(tok, basety, &attr);
+        continue;
+      }
+
+      if (attr.is_extern) {
+        tok = global_variable(tok, basety, &attr);
         continue;
       }
 
