@@ -55,6 +55,7 @@ struct Scope {
 typedef struct {
   bool is_typedef;
   bool is_static;
+  bool is_extern;
 } VarAttr;
 
 // This struct represents a variable initializer. Since initializers
@@ -294,6 +295,7 @@ static Var *new_lvar(char *name, Type *ty) {
 static Var *new_gvar(char *name, Type *ty) {
   Var *var = new_var(name, ty);
   var->next = globals;
+  var->is_definition = true;
   globals = var;
   return var;
 }
@@ -375,17 +377,19 @@ static Type *typespec(Token **rest, Token *tok, VarAttr *attr) {
 
   while (is_typename(tok)) {
     // Handle storage class specifiers.
-    if (equal(tok, "typedef") || equal(tok, "static")) {
+    if (equal(tok, "typedef") || equal(tok, "static") || equal(tok, "extern")) {
       if (!attr)
         error_tok(tok, "storage class specifier is not allowed in this context");
 
       if (equal(tok, "typedef"))
         attr->is_typedef = true;
-      else
+      else if (equal(tok, "static"))
         attr->is_static = true;
+      else
+        attr->is_extern = true;
 
-      if (attr->is_typedef + attr->is_static > 1)
-        error_tok(tok, "typedef and static may not be used together");
+      if (attr->is_typedef && attr->is_static + attr->is_extern > 1)
+        error_tok(tok, "typedef may not be used together with static or extern");
       tok = tok->next;
       continue;
     }
@@ -1008,7 +1012,7 @@ static void gvar_initializer(Token **rest, Token *tok, Var *var) {
 static bool is_typename(Token *tok) {
   static char *kw[] = {
     "void", "_Bool", "char", "short", "int", "long", "struct", "union",
-    "typedef", "enum", "static",
+    "typedef", "enum", "static", "extern",
   };
 
   for (int i = 0; i < sizeof(kw) / sizeof(*kw); i++)
@@ -2099,7 +2103,7 @@ static Token *function(Token *tok, Type *basety, VarAttr *attr) {
   return tok;
 }
 
-static Token *global_variable(Token *tok, Type *basety) {
+static Token *global_variable(Token *tok, Type *basety, VarAttr *attr) {
   bool first = true;
 
   while (!consume(&tok, tok, ";")) {
@@ -2109,6 +2113,8 @@ static Token *global_variable(Token *tok, Type *basety) {
 
     Type *ty = declarator(&tok, tok, basety);
     Var *var = new_gvar(get_ident(ty->name), ty);
+    var->is_definition = !attr->is_extern;
+
     if (equal(tok, "="))
       gvar_initializer(&tok, tok->next, var);
   }
@@ -2147,8 +2153,7 @@ Var *parse(Token *tok) {
     }
 
     // Global variable
-    tok = global_variable(tok, basety);
-
+    tok = global_variable(tok, basety, &attr);
   }
   return globals;
 }
