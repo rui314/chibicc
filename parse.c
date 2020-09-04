@@ -301,6 +301,7 @@ static Var *new_lvar(char *name, Type *ty) {
 static Var *new_gvar(char *name, Type *ty) {
   Var *var = new_var(name, ty);
   var->next = globals;
+  var->is_static = true;
   var->is_definition = true;
   globals = var;
   return var;
@@ -2190,6 +2191,7 @@ static Token *global_variable(Token *tok, Type *basety, VarAttr *attr) {
     Type *ty = declarator(&tok, tok, basety);
     Var *var = new_gvar(get_ident(ty->name), ty);
     var->is_definition = !attr->is_extern;
+    var->is_static = attr->is_static;
     if (attr->align)
       var->align = attr->align;
 
