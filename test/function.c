@@ -55,6 +55,12 @@ static int static_fn(void) { return 3; }
 
 int param_decay(int x[]) { return x[0]; }
 
+int counter() {
+  static int i;
+  static int j = 1+1;
+  return i++ + j++;
+}
+
 int main() {
   ASSERT(3, ret3());
   ASSERT(8, add2(3, 5));
@@ -89,6 +95,10 @@ int main() {
   ASSERT(3, static_fn());
 
   ASSERT(3, ({ int x[2]; x[0]=3; param_decay(x); }));
+
+  ASSERT(2, counter());
+  ASSERT(4, counter());
+  ASSERT(6, counter());
 
   printf("OK\n");
   return 0;
