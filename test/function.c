@@ -35,6 +35,10 @@ int sub_long(long a, long b, long c) {
   return a - b - c;
 }
 
+int sub_short(short a, short b, short c) {
+  return a - b - c;
+}
+
 int main() {
   ASSERT(3, ret3());
   ASSERT(8, add2(3, 5));
@@ -50,6 +54,7 @@ int main() {
   ASSERT(1, ({ sub_char(7, 3, 3); }));
 
   ASSERT(1, sub_long(7, 3, 3));
+  ASSERT(1, sub_short(7, 3, 3));
 
   printf("OK\n");
   return 0;
