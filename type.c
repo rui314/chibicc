@@ -38,9 +38,56 @@ bool is_numeric(Type *ty) {
   return is_integer(ty) || is_flonum(ty);
 }
 
+bool is_compatible(Type *t1, Type *t2) {
+  if (t1 == t2)
+    return true;
+
+  if (t1->origin)
+    return is_compatible(t1->origin, t2);
+
+  if (t2->origin)
+    return is_compatible(t1, t2->origin);
+
+  if (t1->kind != t2->kind)
+    return false;
+
+  switch (t1->kind) {
+  case TY_CHAR:
+  case TY_SHORT:
+  case TY_INT:
+  case TY_LONG:
+    return t1->is_unsigned == t2->is_unsigned;
+  case TY_FLOAT:
+  case TY_DOUBLE:
+    return true;
+  case TY_PTR:
+    return is_compatible(t1->base, t2->base);
+  case TY_FUNC: {
+    if (!is_compatible(t1->return_ty, t2->return_ty))
+      return false;
+    if (t1->is_variadic != t2->is_variadic)
+      return false;
+
+    Type *p1 = t1->params;
+    Type *p2 = t2->params;
+    for (; p1 && p2; p1 = p1->next, p2 = p2->next)
+      if (!is_compatible(p1, p2))
+        return false;
+    return p1 == NULL && p2 == NULL;
+  }
+  case TY_ARRAY:
+    if (!is_compatible(t1->base, t2->base))
+      return false;
+    return t1->array_len < 0 && t2->array_len < 0 &&
+           t1->array_len == t2->array_len;
+  }
+  return false;
+}
+
 Type *copy_type(Type *ty) {
   Type *ret = calloc(1, sizeof(Type));
   *ret = *ty;
+  ret->origin = ty;
   return ret;
 }
 
