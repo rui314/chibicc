@@ -1084,6 +1084,18 @@ static Node *lvar_initializer(Token **rest, Token *tok, Obj *var) {
   return new_binary(ND_COMMA, lhs, rhs, tok);
 }
 
+static uint64_t read_buf(char *buf, int sz) {
+  if (sz == 1)
+    return *buf;
+  if (sz == 2)
+    return *(uint16_t *)buf;
+  if (sz == 4)
+    return *(uint32_t *)buf;
+  if (sz == 8)
+    return *(uint64_t *)buf;
+  unreachable();
+}
+
 static void write_buf(char *buf, uint64_t val, int sz) {
   if (sz == 1)
     *buf = val;
@@ -1107,9 +1119,23 @@ write_gvar_data(Relocation *cur, Initializer *init, Type *ty, char *buf, int off
   }
 
   if (ty->kind == TY_STRUCT) {
-    for (Member *mem = ty->members; mem; mem = mem->next)
-      cur = write_gvar_data(cur, init->children[mem->idx], mem->ty, buf,
-                            offset + mem->offset);
+    for (Member *mem = ty->members; mem; mem = mem->next) {
+      if (mem->is_bitfield) {
+        Node *expr = init->children[mem->idx]->expr;
+        if (!expr)
+          break;
+
+        char *loc = buf + offset + mem->offset;
+        uint64_t oldval = read_buf(loc, mem->ty->size);
+        uint64_t newval = eval(expr);
+        uint64_t mask = (1L << mem->bit_width) - 1;
+        uint64_t combined = oldval | ((newval & mask) << mem->bit_offset);
+        write_buf(loc, combined, mem->ty->size);
+      } else {
+        cur = write_gvar_data(cur, init->children[mem->idx], mem->ty, buf,
+                              offset + mem->offset);
+      }
+    }
     return cur;
   }
 
