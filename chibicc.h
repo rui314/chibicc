@@ -282,6 +282,7 @@ struct Type {
   int size;           // sizeof() value
   int align;          // alignment
   bool is_unsigned;   // unsigned or signed
+  Type *origin;       // for type compatibility check
 
   // Pointer-to or array-of type. We intentionally use the same member
   // to represent pointer/array duality in C.
@@ -346,6 +347,7 @@ extern Type *ty_double;
 bool is_integer(Type *ty);
 bool is_flonum(Type *ty);
 bool is_numeric(Type *ty);
+bool is_compatible(Type *t1, Type *t2);
 Type *copy_type(Type *ty);
 Type *pointer_to(Type *base);
 Type *func_type(Type *return_ty);
