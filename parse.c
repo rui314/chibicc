@@ -2590,6 +2590,7 @@ static Node *funcall(Token **rest, Token *tok, Node *fn) {
 //         | "sizeof" "(" type-name ")"
 //         | "sizeof" unary
 //         | "_Alignof" "(" type-name ")"
+//         | "__builtin_types_compatible_p" "(" type-name, type-name, ")"
 //         | "__builtin_reg_class" "(" type-name ")"
 //         | ident
 //         | str
@@ -2628,6 +2629,15 @@ static Node *primary(Token **rest, Token *tok) {
     Type *ty = typename(&tok, tok);
     *rest = skip(tok, ")");
     return new_ulong(ty->align, tok);
+  }
+
+  if (equal(tok, "__builtin_types_compatible_p")) {
+    tok = skip(tok->next, "(");
+    Type *t1 = typename(&tok, tok);
+    tok = skip(tok, ",");
+    Type *t2 = typename(&tok, tok);
+    *rest = skip(tok, ")");
+    return new_num(is_compatible(t1, t2), start);
   }
 
   if (equal(tok, "__builtin_reg_class")) {
