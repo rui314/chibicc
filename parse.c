@@ -57,6 +57,7 @@ typedef struct {
   bool is_static;
   bool is_extern;
   bool is_inline;
+  bool is_tls;
   int align;
 } VarAttr;
 
@@ -417,7 +418,7 @@ static Type *typespec(Token **rest, Token *tok, VarAttr *attr) {
   while (is_typename(tok)) {
     // Handle storage class specifiers.
     if (equal(tok, "typedef") || equal(tok, "static") || equal(tok, "extern") ||
-        equal(tok, "inline")) {
+        equal(tok, "inline") || equal(tok, "_Thread_local") || equal(tok, "__thread")) {
       if (!attr)
         error_tok(tok, "storage class specifier is not allowed in this context");
 
@@ -427,11 +428,15 @@ static Type *typespec(Token **rest, Token *tok, VarAttr *attr) {
         attr->is_static = true;
       else if (equal(tok, "extern"))
         attr->is_extern = true;
-      else
+      else if (equal(tok, "inline"))
         attr->is_inline = true;
+      else
+        attr->is_tls = true;
 
-      if (attr->is_typedef && attr->is_static + attr->is_extern + attr->is_inline > 1)
-        error_tok(tok, "typedef may not be used together with static, extern or inline");
+      if (attr->is_typedef &&
+          attr->is_static + attr->is_extern + attr->is_inline + attr->is_tls > 1)
+        error_tok(tok, "typedef may not be used together with static,"
+                  " extern, inline, __thread or _Thread_local");
       tok = tok->next;
       continue;
     }
@@ -1411,6 +1416,7 @@ static bool is_typename(Token *tok) {
     "typedef", "enum", "static", "extern", "_Alignas", "signed", "unsigned",
     "const", "volatile", "auto", "register", "restrict", "__restrict",
     "__restrict__", "_Noreturn", "float", "double", "typeof", "inline",
+    "_Thread_local", "__thread",
   };
 
   for (int i = 0; i < sizeof(kw) / sizeof(*kw); i++)
@@ -2946,6 +2952,7 @@ static Token *global_variable(Token *tok, Type *basety, VarAttr *attr) {
     Obj *var = new_gvar(get_ident(ty->name), ty);
     var->is_definition = !attr->is_extern;
     var->is_static = attr->is_static;
+    var->is_tls = attr->is_tls;
     if (attr->align)
       var->align = attr->align;
 

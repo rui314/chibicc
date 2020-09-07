@@ -66,6 +66,13 @@ static void gen_addr(Node *node) {
       return;
     }
 
+    // Thread-local variable
+    if (node->var->is_tls) {
+      println("  mov %%fs:0, %%rax");
+      println("  add $%s@tpoff, %%rax", node->var->name);
+      return;
+    }
+
     // Here, we generate an absolute address of a function or a global
     // variable. Even though they exist at a certain address at runtime,
     // their addresses are not known at link-time for the following
@@ -1135,13 +1142,19 @@ static void emit_data(Obj *prog) {
       ? MAX(16, var->align) : var->align;
     println("  .align %d", align);
 
-    if (opt_fcommon && var->is_tentative) {
+    // Common symbol
+    if (opt_fcommon && var->is_tentative && !var->is_tls) {
       println("  .comm %s, %d, %d", var->name, var->ty->size, align);
       continue;
     }
 
+    // .data or .tdata
     if (var->init_data) {
-      println("  .data");
+      if (var->is_tls)
+        println("  .section .tdata,\"awT\",@progbits");
+      else
+        println("  .data");
+
       println("%s:", var->name);
 
       Relocation *rel = var->rel;
@@ -1158,7 +1171,12 @@ static void emit_data(Obj *prog) {
       continue;
     }
 
-    println("  .bss");
+    // .bss or .tbss
+    if (var->is_tls)
+      println("  .section .tbss,\"awT\",@nobits");
+    else
+      println("  .bss");
+
     println("%s:", var->name);
     println("  .zero %d", var->ty->size);
   }
