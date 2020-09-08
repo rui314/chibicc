@@ -6,6 +6,7 @@ typedef enum {
 
 StringArray include_paths;
 bool opt_fcommon = true;
+bool opt_fpic;
 
 static FileType opt_x;
 static StringArray opt_include;
@@ -256,6 +257,11 @@ static void parse_args(int argc, char **argv) {
 
     if (!strcmp(argv[i], "-MMD")) {
       opt_MD = opt_MMD = true;
+      continue;
+    }
+
+    if (!strcmp(argv[i], "-fpic") || !strcmp(argv[i], "-fPIC")) {
+      opt_fpic = true;
       continue;
     }
 
