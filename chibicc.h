@@ -436,5 +436,6 @@ void hashmap_test(void);
 //
 
 extern StringArray include_paths;
+extern bool opt_fpic;
 extern bool opt_fcommon;
 extern char *base_file;
