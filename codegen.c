@@ -1165,7 +1165,6 @@ static void emit_data(Var *prog) {
 
     int align = (var->ty->kind == TY_ARRAY && var->ty->size >= 16)
       ? MAX(16, var->align) : var->align;
-    println("  .align %d", align);
 
     // Common symbol
     if (opt_fcommon && var->is_tentative && !var->is_tls) {
@@ -1180,6 +1179,9 @@ static void emit_data(Var *prog) {
       else
         println("  .data");
 
+      println("  .type %s, @object", var->name);
+      println("  .size %s, %d", var->name, var->ty->size);
+      println("  .align %d", align);
       println("%s:", var->name);
 
       Relocation *rel = var->rel;
@@ -1202,6 +1204,7 @@ static void emit_data(Var *prog) {
     else
       println("  .bss");
 
+    println("  .align %d", align);
     println("%s:", var->name);
     println("  .zero %d", var->ty->size);
   }
@@ -1258,6 +1261,7 @@ static void emit_text(Var *prog) {
       println("  .globl %s", fn->name);
 
     println("  .text");
+    println("  .type %s, @function", fn->name);
     println("%s:", fn->name);
     current_fn = fn;
 
