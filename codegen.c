@@ -70,13 +70,22 @@ static void gen_addr(Node *node) {
 
 // Load a value from where %rax is pointing to.
 static void load(Type *ty) {
-  if (ty->kind == TY_ARRAY || ty->kind == TY_STRUCT || ty->kind == TY_UNION) {
+  switch (ty->kind) {
+  case TY_ARRAY:
+  case TY_STRUCT:
+  case TY_UNION:
     // If it is an array, do not attempt to load a value to the
     // register because in general we can't load an entire array to a
     // register. As a result, the result of an evaluation of an array
     // becomes not the array itself but the address of the array.
     // This is where "array is automatically converted to a pointer to
     // the first element of the array in C" occurs.
+    return;
+  case TY_FLOAT:
+    println("  movss (%%rax), %%xmm0");
+    return;
+  case TY_DOUBLE:
+    println("  movsd (%%rax), %%xmm0");
     return;
   }
 
@@ -101,11 +110,19 @@ static void load(Type *ty) {
 static void store(Type *ty) {
   pop("%rdi");
 
-  if (ty->kind == TY_STRUCT || ty->kind == TY_UNION) {
+  switch (ty->kind) {
+  case TY_STRUCT:
+  case TY_UNION:
     for (int i = 0; i < ty->size; i++) {
       println("  mov %d(%%rax), %%r8b", i);
       println("  mov %%r8b, %d(%%rdi)", i);
     }
+    return;
+  case TY_FLOAT:
+    println("  movss %%xmm0, (%%rdi)");
+    return;
+  case TY_DOUBLE:
+    println("  movsd %%xmm0, (%%rdi)");
     return;
   }
 
@@ -126,7 +143,7 @@ static void cmp_zero(Type *ty) {
     println("  cmp $0, %%rax");
 }
 
-enum { I8, I16, I32, I64, U8, U16, U32, U64 };
+enum { I8, I16, I32, I64, U8, U16, U32, U64, F32, F64 };
 
 static int getTypeId(Type *ty) {
   switch (ty->kind) {
@@ -138,6 +155,10 @@ static int getTypeId(Type *ty) {
     return ty->is_unsigned ? U32 : I32;
   case TY_LONG:
     return ty->is_unsigned ? U64 : I64;
+  case TY_FLOAT:
+    return F32;
+  case TY_DOUBLE:
+    return F64;
   }
   return U64;
 }
@@ -147,19 +168,57 @@ static char i32i8[] = "movsbl %al, %eax";
 static char i32u8[] = "movzbl %al, %eax";
 static char i32i16[] = "movswl %ax, %eax";
 static char i32u16[] = "movzwl %ax, %eax";
+static char i32f32[] = "cvtsi2ssl %eax, %xmm0";
 static char i32i64[] = "movsxd %eax, %rax";
+static char i32f64[] = "cvtsi2sdl %eax, %xmm0";
+
+static char u32f32[] = "mov %eax, %eax; cvtsi2ssq %rax, %xmm0";
 static char u32i64[] = "mov %eax, %eax";
+static char u32f64[] = "mov %eax, %eax; cvtsi2sdq %rax, %xmm0";
+
+static char i64f32[] = "cvtsi2ssq %rax, %xmm0";
+static char i64f64[] = "cvtsi2sdq %rax, %xmm0";
+
+static char u64f32[] = "cvtsi2ssq %rax, %xmm0";
+static char u64f64[] =
+  "test %rax,%rax; js 1f; pxor %xmm0,%xmm0; cvtsi2sd %rax,%xmm0; jmp 2f; "
+  "1: mov %rax,%rdi; and $1,%eax; pxor %xmm0,%xmm0; shr %rdi; "
+  "or %rax,%rdi; cvtsi2sd %rdi,%xmm0; addsd %xmm0,%xmm0; 2:";
+
+static char f32i8[] = "cvttss2sil %xmm0, %eax; movsbl %al, %eax";
+static char f32u8[] = "cvttss2sil %xmm0, %eax; movzbl %al, %eax";
+static char f32i16[] = "cvttss2sil %xmm0, %eax; movswl %ax, %eax";
+static char f32u16[] = "cvttss2sil %xmm0, %eax; movzwl %ax, %eax";
+static char f32i32[] = "cvttss2sil %xmm0, %eax";
+static char f32u32[] = "cvttss2siq %xmm0, %rax";
+static char f32i64[] = "cvttss2siq %xmm0, %rax";
+static char f32u64[] = "cvttss2siq %xmm0, %rax";
+static char f32f64[] = "cvtss2sd %xmm0, %xmm0";
+
+static char f64i8[] = "cvttsd2sil %xmm0, %eax; movsbl %al, %eax";
+static char f64u8[] = "cvttsd2sil %xmm0, %eax; movzbl %al, %eax";
+static char f64i16[] = "cvttsd2sil %xmm0, %eax; movswl %ax, %eax";
+static char f64u16[] = "cvttsd2sil %xmm0, %eax; movzwl %ax, %eax";
+static char f64i32[] = "cvttsd2sil %xmm0, %eax";
+static char f64u32[] = "cvttsd2siq %xmm0, %rax";
+static char f64f32[] = "cvtsd2ss %xmm0, %xmm0";
+static char f64i64[] = "cvttsd2siq %xmm0, %rax";
+static char f64u64[] = "cvttsd2siq %xmm0, %rax";
 
 static char *cast_table[][10] = {
-  // i8   i16     i32   i64     u8     u16     u32   u64
-  {NULL,  NULL,   NULL, i32i64, i32u8, i32u16, NULL, i32i64}, // i8
-  {i32i8, NULL,   NULL, i32i64, i32u8, i32u16, NULL, i32i64}, // i16
-  {i32i8, i32i16, NULL, i32i64, i32u8, i32u16, NULL, i32i64}, // i32
-  {i32i8, i32i16, NULL, NULL,   i32u8, i32u16, NULL, NULL},   // i64
-  {i32i8, NULL,   NULL, i32i64, NULL,  NULL,   NULL, i32i64}, // u8
-  {i32i8, i32i16, NULL, i32i64, i32u8, NULL,   NULL, i32i64}, // u16
-  {i32i8, i32i16, NULL, u32i64, i32u8, i32u16, NULL, u32i64}, // u32
-  {i32i8, i32i16, NULL, NULL,   i32u8, i32u16, NULL, NULL},   // u64
+  // i8   i16     i32     i64     u8     u16     u32     u64     f32     f64
+  {NULL,  NULL,   NULL,   i32i64, i32u8, i32u16, NULL,   i32i64, i32f32, i32f64}, // i8
+  {i32i8, NULL,   NULL,   i32i64, i32u8, i32u16, NULL,   i32i64, i32f32, i32f64}, // i16
+  {i32i8, i32i16, NULL,   i32i64, i32u8, i32u16, NULL,   i32i64, i32f32, i32f64}, // i32
+  {i32i8, i32i16, NULL,   NULL,   i32u8, i32u16, NULL,   NULL,   i64f32, i64f64}, // i64
+
+  {i32i8, NULL,   NULL,   i32i64, NULL,  NULL,   NULL,   i32i64, i32f32, i32f64}, // u8
+  {i32i8, i32i16, NULL,   i32i64, i32u8, NULL,   NULL,   i32i64, i32f32, i32f64}, // u16
+  {i32i8, i32i16, NULL,   u32i64, i32u8, i32u16, NULL,   u32i64, u32f32, u32f64}, // u32
+  {i32i8, i32i16, NULL,   NULL,   i32u8, i32u16, NULL,   NULL,   u64f32, u64f64}, // u64
+
+  {f32i8, f32i16, f32i32, f32i64, f32u8, f32u16, f32u32, f32u64, NULL,   f32f64}, // f32
+  {f64i8, f64i16, f64i32, f64i64, f64u8, f64u16, f64u32, f64u64, f64f32, NULL},   // f64
 };
 
 static void cast(Type *from, Type *to) {
