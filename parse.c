@@ -390,9 +390,11 @@ static Type *typespec(Token **rest, Token *tok, VarAttr *attr) {
     SHORT    = 1 << 6,
     INT      = 1 << 8,
     LONG     = 1 << 10,
-    OTHER    = 1 << 12,
-    SIGNED   = 1 << 13,
-    UNSIGNED = 1 << 14,
+    FLOAT    = 1 << 12,
+    DOUBLE   = 1 << 14,
+    OTHER    = 1 << 16,
+    SIGNED   = 1 << 17,
+    UNSIGNED = 1 << 18,
   };
 
   Type *ty = ty_int;
@@ -471,6 +473,10 @@ static Type *typespec(Token **rest, Token *tok, VarAttr *attr) {
       counter += INT;
     else if (equal(tok, "long"))
       counter += LONG;
+    else if (equal(tok, "float"))
+      counter += FLOAT;
+    else if (equal(tok, "double"))
+      counter += DOUBLE;
     else if (equal(tok, "signed"))
       counter |= SIGNED;
     else if (equal(tok, "unsigned"))
@@ -526,6 +532,12 @@ static Type *typespec(Token **rest, Token *tok, VarAttr *attr) {
     case UNSIGNED + LONG + LONG:
     case UNSIGNED + LONG + LONG + INT:
       ty = ty_ulong;
+      break;
+    case FLOAT:
+      ty = ty_float;
+      break;
+    case DOUBLE:
+      ty = ty_double;
       break;
     default:
       error_tok(tok, "invalid type");
@@ -1131,7 +1143,7 @@ static bool is_typename(Token *tok) {
     "void", "_Bool", "char", "short", "int", "long", "struct", "union",
     "typedef", "enum", "static", "extern", "_Alignas", "signed", "unsigned",
     "const", "volatile", "auto", "register", "restrict", "__restrict",
-    "__restrict__", "_Noreturn",
+    "__restrict__", "_Noreturn", "float", "double",
   };
 
   for (int i = 0; i < sizeof(kw) / sizeof(*kw); i++)
