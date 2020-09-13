@@ -282,7 +282,14 @@ static void gen_expr(Node *node) {
       pop(argreg64[i]);
 
     println("  mov $0, %%rax");
-    println("  call %s", node->funcname);
+
+    if (depth % 2 == 0) {
+      println("  call %s", node->funcname);
+    } else {
+      println("  sub $8, %%rsp");
+      println("  call %s", node->funcname);
+      println("  add $8, %%rsp");
+    }
     return;
   }
   }
