@@ -144,6 +144,11 @@ struct Obj {
   Obj *locals;
   Obj *va_area;
   int stack_size;
+
+  // Static inline function
+  bool is_live;
+  bool is_root;
+  StringArray refs;
 };
 
 // Global variable can be initialized either by a constant expression
