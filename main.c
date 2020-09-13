@@ -294,6 +294,18 @@ static void parse_args(int argc, char **argv) {
       continue;
     }
 
+    if (!strcmp(argv[i], "-L")) {
+      strarray_push(&ld_extra_args, "-L");
+      strarray_push(&ld_extra_args, argv[++i]);
+      continue;
+    }
+
+    if (!strncmp(argv[i], "-L", 2)) {
+      strarray_push(&ld_extra_args, "-L");
+      strarray_push(&ld_extra_args, argv[i] + 2);
+      continue;
+    }
+
     if (!strcmp(argv[i], "-hashmap-test")) {
       hashmap_test();
       exit(0);
