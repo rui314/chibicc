@@ -68,6 +68,21 @@ int main() {
   ASSERT(7, ({ int i=0; int j=0; do { j++; } while (i++ < 6); j; }));
   ASSERT(4, ({ int i=0; int j=0; int k=0; do { if (++j > 3) break; continue; k++; } while (1); j; }));
 
+  ASSERT(0, 0.0 && 0.0);
+  ASSERT(0, 0.0 && 0.1);
+  ASSERT(0, 0.3 && 0.0);
+  ASSERT(1, 0.3 && 0.5);
+  ASSERT(0, 0.0 || 0.0);
+  ASSERT(1, 0.0 || 0.1);
+  ASSERT(1, 0.3 || 0.0);
+  ASSERT(1, 0.3 || 0.5);
+  ASSERT(5, ({ int x; if (0.0) x=3; else x=5; x; }));
+  ASSERT(3, ({ int x; if (0.1) x=3; else x=5; x; }));
+  ASSERT(5, ({ int x=5; if (0.0) x=3; x; }));
+  ASSERT(3, ({ int x=5; if (0.1) x=3; x; }));
+  ASSERT(10, ({ double i=10.0; int j=0; for (; i; i--, j++); j; }));
+  ASSERT(10, ({ double i=10.0; int j=0; do j++; while(--i); j; }));
+
   printf("OK\n");
   return 0;
 }
