@@ -121,4 +121,40 @@ echo 'int foo(); int main() { foo(); }' > $tmp/inline2.c
 $chibicc -o /dev/null $tmp/inline1.c $tmp/inline2.c
 check inline
 
+echo 'static inline void f1() {}' | $chibicc -o- -S - | grep -v -q f1:
+check inline
+
+echo 'static inline void f1() {} void foo() { f1(); }' | $chibicc -o- -S - | grep -q f1:
+check inline
+
+echo 'static inline void f1() {} static inline void f2() { f1(); } void foo() { f1(); }' | $chibicc -o- -S - | grep -q f1:
+check inline
+
+echo 'static inline void f1() {} static inline void f2() { f1(); } void foo() { f1(); }' | $chibicc -o- -S - | grep -v -q f2:
+check inline
+
+echo 'static inline void f1() {} static inline void f2() { f1(); } void foo() { f2(); }' | $chibicc -o- -S - | grep -q f1:
+check inline
+
+echo 'static inline void f1() {} static inline void f2() { f1(); } void foo() { f2(); }' | $chibicc -o- -S - | grep -q f2:
+check inline
+
+echo 'static inline void f2(); static inline void f1() { f2(); } static inline void f2() { f1(); } void foo() {}' | $chibicc -o- -S - | grep -v -q f1:
+check inline
+
+echo 'static inline void f2(); static inline void f1() { f2(); } static inline void f2() { f1(); } void foo() {}' | $chibicc -o- -S - | grep -v -q f2:
+check inline
+
+echo 'static inline void f2(); static inline void f1() { f2(); } static inline void f2() { f1(); } void foo() { f1(); }' | $chibicc -o- -S - | grep -q f1:
+check inline
+
+echo 'static inline void f2(); static inline void f1() { f2(); } static inline void f2() { f1(); } void foo() { f1(); }' | $chibicc -o- -S - | grep -q f2:
+check inline
+
+echo 'static inline void f2(); static inline void f1() { f2(); } static inline void f2() { f1(); } void foo() { f2(); }' | $chibicc -o- -S - | grep -q f1:
+check inline
+
+echo 'static inline void f2(); static inline void f1() { f2(); } static inline void f2() { f1(); } void foo() { f2(); }' | $chibicc -o- -S - | grep -q f2:
+check inline
+
 echo OK
