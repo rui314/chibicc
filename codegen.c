@@ -982,6 +982,16 @@ static void gen_expr(Node *node) {
     println("  movzbl %%cl, %%eax");
     return;
   }
+  case ND_EXCH: {
+    gen_expr(node->lhs);
+    push();
+    gen_expr(node->rhs);
+    pop("%rdi");
+
+    int sz = node->lhs->ty->base->size;
+    println("  xchg %s, (%%rdi)", reg_ax(sz));
+    return;
+  }
   }
 
   switch (node->lhs->ty->kind) {
