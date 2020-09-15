@@ -2955,6 +2955,18 @@ static Node *primary(Token **rest, Token *tok) {
     return new_num(2, start);
   }
 
+  if (equal(tok, "__builtin_compare_and_swap")) {
+    Node *node = new_node(ND_CAS, tok);
+    tok = skip(tok->next, "(");
+    node->cas_addr = assign(&tok, tok);
+    tok = skip(tok, ",");
+    node->cas_old = assign(&tok, tok);
+    tok = skip(tok, ",");
+    node->cas_new = assign(&tok, tok);
+    *rest = skip(tok, ")");
+    return node;
+  }
+
   if (tok->kind == TK_IDENT) {
     // Variable or enum constant
     VarScope *sc = find_var(tok);

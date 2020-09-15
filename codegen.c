@@ -55,6 +55,26 @@ int align_to(int n, int align) {
   return (n + align - 1) / align * align;
 }
 
+static char *reg_dx(int sz) {
+  switch (sz) {
+  case 1: return "%dl";
+  case 2: return "%dx";
+  case 4: return "%edx";
+  case 8: return "%rdx";
+  }
+  unreachable();
+}
+
+static char *reg_ax(int sz) {
+  switch (sz) {
+  case 1: return "%al";
+  case 2: return "%ax";
+  case 4: return "%eax";
+  case 8: return "%rax";
+  }
+  unreachable();
+}
+
 // Compute the absolute address of a given node.
 // It's an error if a given node does not reside in memory.
 static void gen_addr(Node *node) {
@@ -942,6 +962,26 @@ static void gen_expr(Node *node) {
   case ND_LABEL_VAL:
     println("  lea %s(%%rip), %%rax", node->unique_label);
     return;
+  case ND_CAS: {
+    gen_expr(node->cas_addr);
+    push();
+    gen_expr(node->cas_new);
+    push();
+    gen_expr(node->cas_old);
+    println("  mov %%rax, %%r8");
+    load(node->cas_old->ty->base);
+    pop("%rdx"); // new
+    pop("%rdi"); // addr
+
+    int sz = node->cas_addr->ty->base->size;
+    println("  lock cmpxchg %s, (%%rdi)", reg_dx(sz));
+    println("  sete %%cl");
+    println("  je 1f");
+    println("  mov %s, (%%r8)", reg_ax(sz));
+    println("1:");
+    println("  movzbl %%cl, %%eax");
+    return;
+  }
   }
 
   switch (node->lhs->ty->kind) {
