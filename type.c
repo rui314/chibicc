@@ -298,5 +298,10 @@ void add_type(Node *node) {
     if (node->cas_old->ty->kind != TY_PTR)
       error_tok(node->cas_old->tok, "pointer expected");
     return;
+  case ND_EXCH:
+    if (node->lhs->ty->kind != TY_PTR)
+      error_tok(node->cas_addr->tok, "pointer expected");
+    node->ty = node->lhs->ty->base;
+    return;
   }
 }
