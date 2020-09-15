@@ -277,6 +277,10 @@ struct Node {
   Node *cas_old;
   Node *cas_new;
 
+  // Atomic op= operators
+  Obj *atomic_addr;
+  Node *atomic_expr;
+
   // Variable
   Obj *var;
 
@@ -317,6 +321,7 @@ struct Type {
   int size;           // sizeof() value
   int align;          // alignment
   bool is_unsigned;   // unsigned or signed
+  bool is_atomic;     // true if _Atomic
   Type *origin;       // for type compatibility check
 
   // Pointer-to or array-of type. We intentionally use the same member
