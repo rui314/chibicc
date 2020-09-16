@@ -1358,7 +1358,7 @@ static long eval2(Node *node, Var **var) {
   case ND_BITOR:
     return eval(node->lhs) | eval(node->rhs);
   case ND_BITXOR:
-    return eval(node->lhs) | eval(node->rhs);
+    return eval(node->lhs) ^ eval(node->rhs);
   case ND_SHL:
     return eval(node->lhs) << eval(node->rhs);
   case ND_SHR:
