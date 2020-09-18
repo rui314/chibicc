@@ -122,6 +122,7 @@ static Type *enum_specifier(Token **rest, Token *tok);
 static Type *type_suffix(Token **rest, Token *tok, Type *ty);
 static Type *declarator(Token **rest, Token *tok, Type *ty);
 static Node *declaration(Token **rest, Token *tok, Type *basety, VarAttr *attr);
+static void array_initializer2(Token **rest, Token *tok, Initializer *init, int i);
 static void initializer2(Token **rest, Token *tok, Initializer *init);
 static Initializer *initializer(Token **rest, Token *tok, Type *ty, Type **new_ty);
 static Node *lvar_initializer(Token **rest, Token *tok, Obj *var);
@@ -856,6 +857,49 @@ static void string_initializer(Token **rest, Token *tok, Initializer *init) {
   *rest = tok->next;
 }
 
+// array-designator = "[" const-expr "]"
+//
+// C99 added the designated initializer to the language, which allows
+// programmers to move the "cursor" of an initializer to any element.
+// The syntax looks like this:
+//
+//   int x[10] = { 1, 2, [5]=3, 4, 5, 6, 7 };
+//
+// `[5]` moves the cursor to the 5th element, so the 5th element of x
+// is set to 3. Initialization then continues forward in order, so
+// 6th, 7th, 8th and 9th elements are initialized with 4, 5, 6 and 7,
+// respectively. Unspecified elements (in this case, 3rd and 4th
+// elements) are initialized with zero.
+//
+// Nesting is allowed, so the following initializer is valid:
+//
+//   int x[5][10] = { [5][8]=1, 2, 3 };
+//
+// It sets x[5][8], x[5][9] and x[6][0] to 1, 2 and 3, respectively.
+static int array_designator(Token **rest, Token *tok, Type *ty) {
+  Token *start = tok;
+  int i = const_expr(&tok, tok->next);
+  if (i >= ty->array_len)
+    error_tok(start, "array designator index exceeds array bounds");
+  *rest = skip(tok, "]");
+  return i;
+}
+
+// designation = ("[" const-expr "]")* "=" initializer
+static void designation(Token **rest, Token *tok, Initializer *init) {
+  if (equal(tok, "[")) {
+    if (init->ty->kind != TY_ARRAY)
+      error_tok(tok, "array index in non-array initializer");
+    int i = array_designator(&tok, tok, init->ty);
+    designation(&tok, tok, init->children[i]);
+    array_initializer2(rest, tok, init, i + 1);
+    return;
+  }
+
+  tok = skip(tok, "=");
+  initializer2(rest, tok, init);
+}
+
 static int count_array_init_elements(Token *tok, Type *ty) {
   Initializer *dummy = new_initializer(ty->base, false);
   int i = 0;
@@ -871,6 +915,7 @@ static int count_array_init_elements(Token *tok, Type *ty) {
 // array-initializer1 = "{" initializer ("," initializer)* ","? "}"
 static void array_initializer1(Token **rest, Token *tok, Initializer *init) {
   tok = skip(tok, "{");
+  bool first = true;
 
   if (init->is_flexible) {
     int len = count_array_init_elements(tok, init->ty);
@@ -878,8 +923,15 @@ static void array_initializer1(Token **rest, Token *tok, Initializer *init) {
   }
 
   for (int i = 0; !consume_end(rest, tok); i++) {
-    if (i > 0)
+    if (!first)
       tok = skip(tok, ",");
+    first = false;
+
+    if (equal(tok, "[")) {
+      i = array_designator(&tok, tok, init->ty);
+      designation(&tok, tok, init->children[i]);
+      continue;
+    }
 
     if (i < init->ty->array_len)
       initializer2(&tok, tok, init->children[i]);
@@ -889,15 +941,22 @@ static void array_initializer1(Token **rest, Token *tok, Initializer *init) {
 }
 
 // array-initializer2 = initializer ("," initializer)*
-static void array_initializer2(Token **rest, Token *tok, Initializer *init) {
+static void array_initializer2(Token **rest, Token *tok, Initializer *init, int i) {
   if (init->is_flexible) {
     int len = count_array_init_elements(tok, init->ty);
     *init = *new_initializer(array_of(init->ty->base, len), false);
   }
 
-  for (int i = 0; i < init->ty->array_len && !is_end(tok); i++) {
+  for (; i < init->ty->array_len && !is_end(tok); i++) {
+    Token *start = tok;
     if (i > 0)
       tok = skip(tok, ",");
+
+    if (equal(tok, "[")) {
+      *rest = start;
+      return;
+    }
+
     initializer2(&tok, tok, init->children[i]);
   }
   *rest = tok;
@@ -956,7 +1015,7 @@ static void initializer2(Token **rest, Token *tok, Initializer *init) {
     if (equal(tok, "{"))
       array_initializer1(rest, tok, init);
     else
-      array_initializer2(rest, tok, init);
+      array_initializer2(rest, tok, init, 0);
     return;
   }
 
