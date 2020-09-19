@@ -14,6 +14,8 @@ static bool opt_cc1;
 static bool opt_hash_hash_hash;
 static char *opt_o;
 
+static StringArray ld_extra_args;
+
 char *base_file;
 static char *output_file;
 
@@ -167,6 +169,11 @@ static void parse_args(int argc, char **argv) {
 
     if (!strncmp(argv[i], "-l", 2)) {
       strarray_push(&input_paths, argv[i]);
+      continue;
+    }
+
+    if (!strcmp(argv[i], "-s")) {
+      strarray_push(&ld_extra_args, "-s");
       continue;
     }
 
@@ -421,6 +428,9 @@ static void run_linker(StringArray *inputs, char *output) {
   strarray_push(&arr, "-L/usr/lib/x86_64-linux-gnu");
   strarray_push(&arr, "-L/usr/lib");
   strarray_push(&arr, "-L/lib");
+
+  for (int i = 0; i < ld_extra_args.len; i++)
+    strarray_push(&arr, ld_extra_args.data[i]);
 
   for (int i = 0; i < inputs->len; i++)
     strarray_push(&arr, inputs->data[i]);
