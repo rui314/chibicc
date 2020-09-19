@@ -16,7 +16,7 @@ check() {
 
 # -o
 rm -f $tmp/out
-./chibicc -o $tmp/out $tmp/empty.c
+./chibicc -c -o $tmp/out $tmp/empty.c
 [ -f $tmp/out ]
 check -o
 
@@ -31,11 +31,11 @@ check -S
 # Default output file
 rm -f $tmp/out.o $tmp/out.s
 echo 'int main() {}' > $tmp/out.c
-(cd $tmp; $OLDPWD/$chibicc out.c)
+(cd $tmp; $OLDPWD/$chibicc -c out.c)
 [ -f $tmp/out.o ]
 check 'default output file'
 
-(cd $tmp; $OLDPWD/$chibicc -S out.c)
+(cd $tmp; $OLDPWD/$chibicc -c -S out.c)
 [ -f $tmp/out.s ]
 check 'default output file'
 
@@ -43,15 +43,36 @@ check 'default output file'
 rm -f $tmp/foo.o $tmp/bar.o
 echo 'int x;' > $tmp/foo.c
 echo 'int y;' > $tmp/bar.c
-(cd $tmp; $OLDPWD/$chibicc $tmp/foo.c $tmp/bar.c)
+(cd $tmp; $OLDPWD/$chibicc -c $tmp/foo.c $tmp/bar.c)
 [ -f $tmp/foo.o ] && [ -f $tmp/bar.o ]
 check 'multiple input files'
 
 rm -f $tmp/foo.s $tmp/bar.s
 echo 'int x;' > $tmp/foo.c
 echo 'int y;' > $tmp/bar.c
-(cd $tmp; $OLDPWD/$chibicc -S $tmp/foo.c $tmp/bar.c)
+(cd $tmp; $OLDPWD/$chibicc -c -S $tmp/foo.c $tmp/bar.c)
 [ -f $tmp/foo.s ] && [ -f $tmp/bar.s ]
 check 'multiple input files'
+
+# Run linker
+rm -f $tmp/foo
+echo 'int main() { return 0; }' | $chibicc -o $tmp/foo -
+$tmp/foo
+check linker
+
+rm -f $tmp/foo
+echo 'int bar(); int main() { return bar(); }' > $tmp/foo.c
+echo 'int bar() { return 42; }' > $tmp/bar.c
+$chibicc -o $tmp/foo $tmp/foo.c $tmp/bar.c
+$tmp/foo
+[ "$?" = 42 ]
+check linker
+
+# a.out
+rm -f $tmp/a.out
+echo 'int main() {}' > $tmp/foo.c
+(cd $tmp; $OLDPWD/$chibicc foo.c)
+[ -f $tmp/a.out ]
+check a.out
 
 echo OK
