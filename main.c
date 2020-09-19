@@ -20,6 +20,7 @@ static bool opt_c;
 static bool opt_cc1;
 static bool opt_hash_hash_hash;
 static bool opt_static;
+static bool opt_shared;
 static char *opt_MF;
 static char *opt_MT;
 static char *opt_o;
@@ -284,6 +285,12 @@ static void parse_args(int argc, char **argv) {
     if (!strcmp(argv[i], "-static")) {
       opt_static = true;
       strarray_push(&ld_extra_args, "-static");
+      continue;
+    }
+
+    if (!strcmp(argv[i], "-shared")) {
+      opt_shared = true;
+      strarray_push(&ld_extra_args, "-shared");
       continue;
     }
 
@@ -571,9 +578,16 @@ static void run_linker(StringArray *inputs, char *output) {
   strarray_push(&arr, output);
   strarray_push(&arr, "-m");
   strarray_push(&arr, "elf_x86_64");
-  strarray_push(&arr, "/usr/lib/x86_64-linux-gnu/crt1.o");
-  strarray_push(&arr, "/usr/lib/x86_64-linux-gnu/crti.o");
-  strarray_push(&arr, "/usr/lib/gcc/x86_64-linux-gnu/9/crtbegin.o");
+
+  if (opt_shared) {
+    strarray_push(&arr, "/usr/lib/x86_64-linux-gnu/crti.o");
+    strarray_push(&arr, "/usr/lib/gcc/x86_64-linux-gnu/9/crtbeginS.o");
+  } else {
+    strarray_push(&arr, "/usr/lib/x86_64-linux-gnu/crt1.o");
+    strarray_push(&arr, "/usr/lib/x86_64-linux-gnu/crti.o");
+    strarray_push(&arr, "/usr/lib/gcc/x86_64-linux-gnu/9/crtbegin.o");
+  }
+
   strarray_push(&arr, "-L/usr/lib/gcc/x86_64-linux-gnu/9");
   strarray_push(&arr, "-L/usr/lib/x86_64-linux-gnu");
   strarray_push(&arr, "-L/usr/lib64");
@@ -608,7 +622,11 @@ static void run_linker(StringArray *inputs, char *output) {
     strarray_push(&arr, "--no-as-needed");
   }
 
-  strarray_push(&arr, "/usr/lib/gcc/x86_64-linux-gnu/9/crtend.o");
+  if (opt_shared)
+    strarray_push(&arr, "/usr/lib/gcc/x86_64-linux-gnu/9/crtendS.o");
+  else
+    strarray_push(&arr, "/usr/lib/gcc/x86_64-linux-gnu/9/crtend.o");
+
   strarray_push(&arr, "/usr/lib/x86_64-linux-gnu/crtn.o");
   strarray_push(&arr, NULL);
 
