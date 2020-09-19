@@ -257,4 +257,12 @@ echo 'int foo(); int bar=3; int main() { foo(); }' > $tmp/main.c
 $chibicc -o $tmp/foo $tmp/main.c $tmp/foo.so
 check -fPIC
 
+# -static
+echo 'extern int bar; int foo() { return bar; }' > $tmp/foo.c
+echo 'int foo(); int bar=3; int main() { foo(); }' > $tmp/bar.c
+$chibicc -static -o $tmp/foo $tmp/foo.c $tmp/bar.c
+check -static
+file $tmp/foo | grep -q 'statically linked'
+check -static
+
 echo OK
