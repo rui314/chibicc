@@ -701,11 +701,18 @@ bool file_exists(char *path) {
 }
 
 char *search_include_paths(char *filename) {
+  static HashMap cache;
+  char *cached = hashmap_get(&cache, filename);
+  if (cached)
+    return cached;
+
   // Search a file from the include paths.
   for (int i = 0; i < include_paths.len; i++) {
     char *path = format("%s/%s", include_paths.data[i], filename);
-    if (file_exists(path))
+    if (file_exists(path)) {
+      hashmap_put(&cache, filename, path);
       return path;
+    }
   }
   return NULL;
 }
