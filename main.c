@@ -22,7 +22,7 @@ static void usage(int status) {
 }
 
 static bool take_arg(char *arg) {
-  char *x[] = {"-o", "-I"};
+  char *x[] = {"-o", "-I", "-idirafter"};
 
   for (int i = 0; i < sizeof(x) / sizeof(*x); i++)
     if (!strcmp(arg, x[i]))
@@ -58,6 +58,8 @@ static void parse_args(int argc, char **argv) {
     if (take_arg(argv[i]))
       if (!argv[++i])
         usage(1);
+
+  StringArray idirafter = {};
 
   for (int i = 1; i < argc; i++) {
     if (!strcmp(argv[i], "-###")) {
@@ -133,6 +135,11 @@ static void parse_args(int argc, char **argv) {
       continue;
     }
 
+    if (!strcmp(argv[i], "-idirafter")) {
+      strarray_push(&idirafter, argv[i++]);
+      continue;
+    }
+
     // These options are ignored for now.
     if (!strncmp(argv[i], "-O", 2) ||
         !strncmp(argv[i], "-W", 2) ||
@@ -153,6 +160,9 @@ static void parse_args(int argc, char **argv) {
 
     strarray_push(&input_paths, argv[i]);
   }
+
+  for (int i = 0; i < idirafter.len; i++)
+    strarray_push(&include_paths, idirafter.data[i]);
 
   if (input_paths.len == 0)
     error("no input files");
