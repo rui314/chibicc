@@ -690,12 +690,12 @@ static bool expand_macro(Token **rest, Token *tok) {
 }
 
 // Returns true if a given file exists.
-static bool file_exists(char *path) {
+bool file_exists(char *path) {
   struct stat st;
   return !stat(path, &st);
 }
 
-static char *search_include_paths(char *filename) {
+char *search_include_paths(char *filename) {
   if (filename[0] == '/')
     return filename;
 
