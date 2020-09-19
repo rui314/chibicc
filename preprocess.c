@@ -886,6 +886,13 @@ static Token *preprocess2(Token *tok) {
       continue;
     }
 
+    if (equal(tok, "pragma")) {
+      do {
+        tok = tok->next;
+      } while (!tok->at_bol);
+      continue;
+    }
+
     if (equal(tok, "error"))
       error_tok(tok, "error");
 
