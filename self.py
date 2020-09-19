@@ -54,6 +54,7 @@ int strncmp(char *p, char *q);
 void *memcpy(char *dst, char *src, long n);
 char *strdup(char *p);
 char *strndup(char *p, long n);
+char *strdup(char *p);
 int isspace(int c);
 int ispunct(int c);
 int isdigit(int c);
