@@ -3,6 +3,7 @@
 StringArray include_paths;
 bool opt_fcommon = true;
 
+static StringArray opt_include;
 static bool opt_E;
 static bool opt_S;
 static bool opt_c;
@@ -23,7 +24,7 @@ static void usage(int status) {
 }
 
 static bool take_arg(char *arg) {
-  char *x[] = {"-o", "-I", "-idirafter"};
+  char *x[] = {"-o", "-I", "-idirafter", "-include"};
 
   for (int i = 0; i < sizeof(x) / sizeof(*x); i++)
     if (!strcmp(arg, x[i]))
@@ -133,6 +134,11 @@ static void parse_args(int argc, char **argv) {
 
     if (!strncmp(argv[i], "-U", 2)) {
       undef_macro(argv[i] + 2);
+      continue;
+    }
+
+    if (!strcmp(argv[i], "-include")) {
+      strarray_push(&opt_include, argv[++i]);
       continue;
     }
 
@@ -291,12 +297,47 @@ static void print_tokens(Token *tok) {
   fprintf(out, "\n");
 }
 
-static void cc1(void) {
-  // Tokenize and parse.
-  Token *tok = tokenize_file(base_file);
+static Token *must_tokenize_file(char *path) {
+  Token *tok = tokenize_file(path);
   if (!tok)
-    error("%s: %s", base_file, strerror(errno));
+    error("%s: %s", path, strerror(errno));
+  return tok;
+}
 
+static Token *append_tokens(Token *tok1, Token *tok2) {
+  if (!tok1 || tok1->kind == TK_EOF)
+    return tok2;
+
+  Token *t = tok1;
+  while (t->next->kind != TK_EOF)
+    t = t->next;
+  t->next = tok2;
+  return tok1;
+}
+
+static void cc1(void) {
+  Token *tok = NULL;
+
+  // Process -include option
+  for (int i = 0; i < opt_include.len; i++) {
+    char *incl = opt_include.data[i];
+
+    char *path;
+    if (file_exists(incl)) {
+      path = incl;
+    } else {
+      path = search_include_paths(incl);
+      if (!path)
+        error("-include: %s: %s", incl, strerror(errno));
+    }
+
+    Token *tok2 = must_tokenize_file(path);
+    tok = append_tokens(tok, tok2);
+  }
+
+  // Tokenize and parse.
+  Token *tok2 = must_tokenize_file(base_file);
+  tok = append_tokens(tok, tok2);
   tok = preprocess(tok);
 
   // If -E is given, print out preprocessed C code as a result.
