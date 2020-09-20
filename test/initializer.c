@@ -258,6 +258,9 @@ int main() {
   ASSERT(4, ({ struct { struct { int a; struct { int b; }; }; int c; } x={1,2,3,.b=4,5}; x.b; }));
   ASSERT(5, ({ struct { struct { int a; struct { int b; }; }; int c; } x={1,2,3,.b=4,5}; x.c; }));
 
+  ASSERT(16, ({ char x[]={[2 ... 10]='a', [7]='b', [15 ... 15]='c', [3 ... 5]='d'}; sizeof(x); }));
+  ASSERT(0, ({ char x[]={[2 ... 10]='a', [7]='b', [15 ... 15]='c', [3 ... 5]='d'}; memcmp(x, "\0\0adddabaaa\0\0\0\0c", 16); }));
+
   printf("OK\n");
   return 0;
 }
