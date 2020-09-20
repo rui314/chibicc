@@ -900,21 +900,45 @@ static void designation(Token **rest, Token *tok, Initializer *init) {
   initializer2(rest, tok, init);
 }
 
+// An array length can be omitted if an array has an initializer
+// (e.g. `int x[] = {1,2,3}`). If it's omitted, count the number
+// of initializer elements.
 static int count_array_init_elements(Token *tok, Type *ty) {
-  Initializer *dummy = new_initializer(ty->base, false);
-  int i = 0;
+  bool first = true;
+  Initializer *dummy = new_initializer(ty->base, true);
 
-  for (; !consume_end(&tok, tok); i++) {
-    if (i > 0)
+  int i = 0, max = 0;
+
+  while (!consume_end(&tok, tok)) {
+    if (!first)
       tok = skip(tok, ",");
-    initializer2(&tok, tok, dummy);
+    first = false;
+
+    if (equal(tok, "[")) {
+      i = const_expr(&tok, tok->next);
+      if (equal(tok, "..."))
+        i = const_expr(&tok, tok->next);
+      tok = skip(tok, "]");
+      designation(&tok, tok, dummy);
+    } else {
+      initializer2(&tok, tok, dummy);
+    }
+
+    i++;
+    max = MAX(max, i);
   }
-  return i;
+  return max;
 }
 
 // array-initializer1 = "{" initializer ("," initializer)* ","? "}"
 static void array_initializer1(Token **rest, Token *tok, Initializer *init) {
   tok = skip(tok, "{");
+
+  if (init->is_flexible) {
+    int len = count_array_init_elements(tok, init->ty);
+    *init = *new_initializer(array_of(init->ty->base, len), false);
+  }
+
   bool first = true;
 
   if (init->is_flexible) {
