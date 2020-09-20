@@ -166,7 +166,7 @@ typedef struct Relocation Relocation;
 struct Relocation {
   Relocation *next;
   int offset;
-  char *label;
+  char **label;
   long addend;
 };
 
