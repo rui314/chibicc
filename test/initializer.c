@@ -201,6 +201,17 @@ int main() {
   ASSERT(7, ((int[10]){ [3]=7 })[3]);
   ASSERT(0, ((int[10]){ [3]=7 })[4]);
 
+  ASSERT(10, ({ char x[]={[10-3]=1,2,3}; sizeof(x); }));
+  ASSERT(20, ({ char x[][2]={[8][1]=1,2}; sizeof(x); }));
+
+  ASSERT(3, sizeof(g60));
+  ASSERT(6, sizeof(g61));
+
+  ASSERT(4, sizeof(g65));
+  ASSERT(7, sizeof(g66));
+  ASSERT(0, strcmp(g65.b, "oo"));
+  ASSERT(0, strcmp(g66.b, "oobar"));
+
   printf("OK\n");
   return 0;
 }
