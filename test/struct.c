@@ -52,6 +52,11 @@ int main() {
   ASSERT(16, ({ struct {char a; long b;} x; sizeof(x); }));
   ASSERT(4, ({ struct {char a; short b;} x; sizeof(x); }));
 
+  ASSERT(8, ({ struct foo *bar; sizeof(bar); }));
+  ASSERT(4, ({ struct T *foo; struct T {int x;}; sizeof(struct T); }));
+  ASSERT(1, ({ struct T { struct T *next; int x; } a; struct T b; b.x=1; a.next=&b; a.next->x; }));
+  ASSERT(4, ({ typedef struct T T; struct T { int x; }; sizeof(T); }));
+
   printf("OK\n");
   return 0;
 }
