@@ -41,7 +41,9 @@ static void usage(int status) {
 }
 
 static bool take_arg(char *arg) {
-  char *x[] = {"-o", "-I", "-idirafter", "-include", "-x", "-MF", "-MT"};
+  char *x[] = {
+    "-o", "-I", "-idirafter", "-include", "-x", "-MF", "-MT", "-Xlinker",
+  };
 
   for (int i = 0; i < sizeof(x) / sizeof(*x); i++)
     if (!strcmp(arg, x[i]))
@@ -213,6 +215,11 @@ static void parse_args(int argc, char **argv) {
 
     if (!strncmp(argv[i], "-l", 2) || !strncmp(argv[i], "-Wl,", 4)) {
       strarray_push(&input_paths, argv[i]);
+      continue;
+    }
+
+    if (!strcmp(argv[i], "-Xlinker")) {
+      strarray_push(&ld_extra_args, argv[++i]);
       continue;
     }
 
