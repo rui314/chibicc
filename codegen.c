@@ -1337,7 +1337,7 @@ static void emit_data(Obj *prog) {
       int pos = 0;
       while (pos < var->ty->size) {
         if (rel && rel->offset == pos) {
-          println("  .quad %s%+ld", rel->label, rel->addend);
+          println("  .quad %s%+ld", *rel->label, rel->addend);
           rel = rel->next;
           pos += 8;
         } else {
