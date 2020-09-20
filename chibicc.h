@@ -237,6 +237,7 @@ struct Type {
 
   // Struct
   Member *members;
+  bool is_flexible;
 
   // Function type
   Type *return_ty;
