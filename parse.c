@@ -633,6 +633,9 @@ static Type *func_params(Token **rest, Token *tok, Type *ty) {
     cur = cur->next = copy_type(ty2);
   }
 
+  if (cur == &head)
+    is_variadic = true;
+
   ty = func_type(ty);
   ty->params = head.next;
   ty->is_variadic = is_variadic;
@@ -2848,6 +2851,9 @@ static Node *funcall(Token **rest, Token *tok, Node *fn) {
 
     Node *arg = assign(&tok, tok);
     add_type(arg);
+
+    if (!param_ty && !ty->is_variadic)
+      error_tok(tok, "too many arguments to function call");
 
     if (param_ty) {
       if (param_ty->kind != TY_STRUCT && param_ty->kind != TY_UNION)
