@@ -34,6 +34,10 @@ bool is_flonum(Type *ty) {
   return ty->kind == TY_FLOAT || ty->kind == TY_DOUBLE;
 }
 
+bool is_numeric(Type *ty) {
+  return is_integer(ty) || is_flonum(ty);
+}
+
 Type *copy_type(Type *ty) {
   Type *ret = calloc(1, sizeof(Type));
   *ret = *ty;

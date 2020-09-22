@@ -419,6 +419,18 @@ static void gen_expr(Node *node) {
     char *sz = (node->lhs->ty->kind == TY_FLOAT) ? "ss" : "sd";
 
     switch (node->kind) {
+    case ND_ADD:
+      println("  add%s %%xmm1, %%xmm0", sz);
+      return;
+    case ND_SUB:
+      println("  sub%s %%xmm1, %%xmm0", sz);
+      return;
+    case ND_MUL:
+      println("  mul%s %%xmm1, %%xmm0", sz);
+      return;
+    case ND_DIV:
+      println("  div%s %%xmm1, %%xmm0", sz);
+      return;
     case ND_EQ:
     case ND_NE:
     case ND_LT:
@@ -491,13 +503,13 @@ static void gen_expr(Node *node) {
       println("  mov %%rdx, %%rax");
     return;
   case ND_BITAND:
-    println("  and %%rdi, %%rax");
+    println("  and %s, %s", di, ax);
     return;
   case ND_BITOR:
-    println("  or %%rdi, %%rax");
+    println("  or %s, %s", di, ax);
     return;
   case ND_BITXOR:
-    println("  xor %%rdi, %%rax");
+    println("  xor %s, %s", di, ax);
     return;
   case ND_EQ:
   case ND_NE:

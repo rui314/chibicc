@@ -284,6 +284,7 @@ extern Type *ty_double;
 
 bool is_integer(Type *ty);
 bool is_flonum(Type *ty);
+bool is_numeric(Type *ty);
 Type *copy_type(Type *ty);
 Type *pointer_to(Type *base);
 Type *func_type(Type *return_ty);
