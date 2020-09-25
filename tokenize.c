@@ -83,6 +83,12 @@ Token *tokenize(char *p) {
       continue;
     }
 
+    // Identifier
+    if ('a' <= *p && *p <= 'z') {
+      cur = cur->next = new_token(TK_IDENT, p++, 1);
+      continue;
+    }
+
     // Multi-letter punctuators
     if (startswith(p, "==") || startswith(p, "!=") ||
         startswith(p, "<=") || startswith(p, ">=")) {
