@@ -67,6 +67,7 @@ struct Hideset {
 
 static HashMap macros;
 static CondIncl *cond_incl;
+static HashMap pragma_once;
 
 static Token *preprocess2(Token *tok);
 static Macro *find_macro(Token *tok);
@@ -789,6 +790,10 @@ static char *detect_include_guard(Token *tok) {
 }
 
 static Token *include_file(Token *tok, char *path) {
+  // Check for "#pragma once"
+  if (hashmap_get(&pragma_once, path))
+    return tok;
+
   // If we read the same file before, and if the file was guarded
   // by the usual #ifndef ... #endif pattern, we may be able to
   // skip the file without opening it.
@@ -944,6 +949,12 @@ static Token *preprocess2(Token *tok) {
 
     if (tok->kind == TK_PP_NUM) {
       read_line_marker(&tok, tok);
+      continue;
+    }
+
+    if (equal(tok, "pragma") && equal(tok->next, "once")) {
+      hashmap_put(&pragma_once, tok->file->name, (void *)1);
+      tok = skip_line(tok->next->next);
       continue;
     }
 
