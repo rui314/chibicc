@@ -2608,25 +2608,44 @@ static void struct_members(Token **rest, Token *tok, Type *ty) {
   ty->members = head.next;
 }
 
-// attribute = ("__attribute__" "(" "(" "packed" ")" ")")?
-static Token *attribute(Token *tok, Type *ty) {
-  if (!equal(tok, "__attribute__"))
-    return tok;
+// attribute = ("__attribute__" "(" "(" "packed" ")" ")")*
+static Token *attribute_list(Token *tok, Type *ty) {
+  while (consume(&tok, tok, "__attribute__")) {
+    tok = skip(tok, "(");
+    tok = skip(tok, "(");
 
-  tok = tok->next;
-  tok = skip(tok, "(");
-  tok = skip(tok, "(");
-  tok = skip(tok, "packed");
-  tok = skip(tok, ")");
-  tok = skip(tok, ")");
-  ty->is_packed = true;
+    bool first = true;
+
+    while (!consume(&tok, tok, ")")) {
+      if (!first)
+        tok = skip(tok, ",");
+      first = false;
+
+      if (consume(&tok, tok, "packed")) {
+        ty->is_packed = true;
+        continue;
+      }
+
+      if (consume(&tok, tok, "aligned")) {
+        tok = skip(tok, "(");
+        ty->align = const_expr(&tok, tok);
+        tok = skip(tok, ")");
+        continue;
+      }
+
+      error_tok(tok, "unknown attribute");
+    }
+
+    tok = skip(tok, ")");
+  }
+
   return tok;
 }
 
 // struct-union-decl = attribute? ident? ("{" struct-members)?
 static Type *struct_union_decl(Token **rest, Token *tok) {
   Type *ty = struct_type();
-  tok = attribute(tok, ty);
+  tok = attribute_list(tok, ty);
 
   // Read a tag.
   Token *tag = NULL;
@@ -2651,7 +2670,7 @@ static Type *struct_union_decl(Token **rest, Token *tok) {
 
   // Construct a struct object.
   struct_members(&tok, tok, ty);
-  *rest = attribute(tok, ty);
+  *rest = attribute_list(tok, ty);
 
   if (tag) {
     // If this is a redefinition, overwrite a previous type.
