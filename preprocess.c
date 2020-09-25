@@ -68,6 +68,7 @@ struct Hideset {
 static HashMap macros;
 static CondIncl *cond_incl;
 static HashMap pragma_once;
+static int include_next_idx;
 
 static Token *preprocess2(Token *tok);
 static Macro *find_macro(Token *tok);
@@ -696,7 +697,17 @@ char *search_include_paths(char *filename) {
     if (!file_exists(path))
       continue;
     hashmap_put(&cache, filename, path);
+    include_next_idx = i + 1;
     return path;
+  }
+  return NULL;
+}
+
+static char *search_include_next(char *filename) {
+  for (; include_next_idx < include_paths.len; include_next_idx++) {
+    char *path = format("%s/%s", include_paths.data[include_next_idx], filename);
+    if (file_exists(path))
+      return path;
   }
   return NULL;
 }
@@ -859,6 +870,14 @@ static Token *preprocess2(Token *tok) {
       }
 
       char *path = search_include_paths(filename);
+      tok = include_file(tok, path ? path : filename, start->next->next);
+      continue;
+    }
+
+    if (equal(tok, "include_next")) {
+      bool ignore;
+      char *filename = read_include_filename(&tok, tok->next, &ignore);
+      char *path = search_include_next(filename);
       tok = include_file(tok, path ? path : filename, start->next->next);
       continue;
     }
