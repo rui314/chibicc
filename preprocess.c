@@ -596,6 +596,19 @@ static bool expand_macro(Token **rest, Token *tok) {
   return true;
 }
 
+static char *search_include_paths(char *filename) {
+  if (filename[0] == '/')
+    return filename;
+
+  // Search a file from the include paths.
+  for (int i = 0; i < include_paths.len; i++) {
+    char *path = format("%s/%s", include_paths.data[i], filename);
+    if (file_exists(path))
+      return path;
+  }
+  return NULL;
+}
+
 // Read an #include argument.
 static char *read_include_filename(Token **rest, Token *tok, bool *is_dquote) {
   // Pattern 1: #include "foo.h"
@@ -669,7 +682,7 @@ static Token *preprocess2(Token *tok) {
       bool is_dquote;
       char *filename = read_include_filename(&tok, tok->next, &is_dquote);
 
-      if (filename[0] != '/') {
+      if (filename[0] != '/' && is_dquote) {
         char *path = format("%s/%s", dirname(strdup(start->file->name)), filename);
         if (file_exists(path)) {
           tok = include_file(tok, path, start->next->next);
@@ -677,8 +690,8 @@ static Token *preprocess2(Token *tok) {
         }
       }
 
-      // TODO: Search a file from the include paths.
-      tok = include_file(tok, filename, start->next->next);
+      char *path = search_include_paths(filename);
+      tok = include_file(tok, path ? path : filename, start->next->next);
       continue;
     }
 
