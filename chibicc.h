@@ -344,4 +344,5 @@ int align_to(int n, int align);
 // main.c
 //
 
+extern StringArray include_paths;
 extern char *base_file;
