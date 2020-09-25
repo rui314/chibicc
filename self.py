@@ -95,6 +95,8 @@ FILE *open_memstream(char **ptr, size_t *sizeloc);
 char *dirname(char *path);
 char *strncpy(char *dest, char *src, long n);
 int stat(char *pathname, struct stat *statbuf);
+int stat(char *pathname, struct stat *statbuf);
+char *dirname(char *path);
 """)
 
 for path in sys.argv[1:]:
