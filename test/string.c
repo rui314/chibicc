@@ -41,6 +41,32 @@ int main() {
   ASSERT(0, !strcmp("abc" "d", "abcd\nefgh"));
   ASSERT(0, strcmp("\x9" "0", "\t0"));
 
+  ASSERT(16, sizeof(L"abc" ""));
+
+  ASSERT(28, sizeof(L"abc" "def"));
+  ASSERT(28, sizeof(L"abc" L"def"));
+  ASSERT(14, sizeof(u"abc" "def"));
+  ASSERT(14, sizeof(u"abc" u"def"));
+
+  ASSERT(L'a', (L"abc" "def")[0]);
+  ASSERT(L'd', (L"abc" "def")[3]);
+  ASSERT(L'\0', (L"abc" "def")[6]);
+
+  ASSERT(u'a', (u"abc" "def")[0]);
+  ASSERT(u'd', (u"abc" "def")[3]);
+  ASSERT(u'\0', (u"abc" "def")[6]);
+
+  ASSERT(L'あ', ("あ" L"")[0]);
+  ASSERT(0343, ("\343\201\202" L"")[0]);
+  ASSERT(0201, ("\343\201\202" L"")[1]);
+  ASSERT(0202, ("\343\201\202" L"")[2]);
+  ASSERT(0, ("\343\201\202" L"")[3]);
+
+  ASSERT(L'a', ("a" "b" L"c")[0]);
+  ASSERT(L'b', ("a" "b" L"c")[1]);
+  ASSERT(L'c', ("a" "b" L"c")[2]);
+  ASSERT(0, ("a" "b" L"c")[3]);
+
   printf("OK\n");
   return 0;
 }
