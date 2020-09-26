@@ -51,6 +51,19 @@ int main() {
 
   ASSERT(0, strcmp(STR(u"a"), "u\"a\""));
 
+  ASSERT(4, sizeof(U""));
+  ASSERT(20, sizeof(U"\xffzzz"));
+  ASSERT(0, memcmp(U"", "\0\0\0\0", 4));
+  ASSERT(0, memcmp(U"abc", "a\0\0\0b\0\0\0c\0\0\0\0\0\0\0", 16));
+  ASSERT(0, memcmp(U"日本語", "\345e\0\0,g\0\0\236\212\0\0\0\0\0\0", 16));
+  ASSERT(0, memcmp(U"🍣", "c\363\001\0\0\0\0\0", 8));
+  ASSERT(u'β', U"βb"[0]);
+  ASSERT(u'b', U"βb"[1]);
+  ASSERT(0, U"βb"[2]);
+  ASSERT(1, U"\xffffffff"[0] >> 31);
+
+  ASSERT(0, strcmp(STR(U"a"), "U\"a\""));
+
   printf("OK\n");
   return 0;
 }
