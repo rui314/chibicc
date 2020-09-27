@@ -203,12 +203,12 @@ static char *string_literal_end(char *p) {
   return p;
 }
 
-static Token *read_string_literal(char *start) {
-  char *end = string_literal_end(start + 1);
-  char *buf = calloc(1, end - start);
+static Token *read_string_literal(char *start, char *quote) {
+  char *end = string_literal_end(quote + 1);
+  char *buf = calloc(1, end - quote);
   int len = 0;
 
-  for (char *p = start + 1; p < end;) {
+  for (char *p = quote + 1; p < end;) {
     if (*p == '\\')
       buf[len++] = read_escaped_char(&p, p + 1);
     else
@@ -442,7 +442,14 @@ Token *tokenize(File *file) {
 
     // String literal
     if (*p == '"') {
-      cur = cur->next = read_string_literal(p);
+      cur = cur->next = read_string_literal(p, p);
+      p += cur->len;
+      continue;
+    }
+
+    // UTF-8 string literal
+    if (startswith(p, "u8\"")) {
+      cur = cur->next = read_string_literal(p, p + 2);
       p += cur->len;
       continue;
     }
