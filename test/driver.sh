@@ -198,4 +198,8 @@ echo 'int x;' > $tmp/foo.c
 $chibicc -c -x assembler -x none -o $tmp/foo.o $tmp/foo.c
 check '-x none'
 
+# -E
+echo foo | $chibicc -E - | grep -q foo
+check -E
+
 echo OK
