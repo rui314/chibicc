@@ -55,7 +55,7 @@ Features that are often missing in a small compiler but supported by
 chibicc include (but not limited to):
 
 - Preprocessor
-- long double (x87 80-bit floting point numbers)
+- long double (x87 80-bit floating point numbers)
 - Bit-field
 - alloca()
 - Variable-length array
