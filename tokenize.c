@@ -445,6 +445,16 @@ static void add_line_numbers(Token *tok) {
   } while (*p++);
 }
 
+Token *tokenize_string_literal(Token *tok, Type *basety) {
+  Token *t;
+  if (basety->size == 2)
+    t = read_utf16_string_literal(tok->loc, tok->loc);
+  else
+    t = read_utf32_string_literal(tok->loc, tok->loc, basety);
+  t->next = tok->next;
+  return t;
+}
+
 // Tokenize a given string and returns new tokens.
 Token *tokenize(File *file) {
   current_file = file;
