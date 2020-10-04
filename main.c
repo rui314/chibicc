@@ -62,6 +62,10 @@ static void add_default_include_paths(char *argv0) {
   strarray_push(&include_paths, "/usr/local/include");
   strarray_push(&include_paths, "/usr/include/x86_64-linux-gnu");
   strarray_push(&include_paths, "/usr/include");
+#if defined(__APPLE__) && defined(__MACH__)
+  strarray_push(&include_paths, "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include");
+  define_macro("__GNUC__", "5"); // for MacOS SDK compatibility
+#endif
 
   // Keep a copy of the standard include paths for -MMD option.
   for (int i = 0; i < include_paths.len; i++)
