@@ -216,6 +216,36 @@ int main() {
   ASSERT(7, ((int[10]){ [3] 7 })[3]);
   ASSERT(0, ((int[10]){ [3] 7 })[4]);
 
+  ASSERT(4, ({ struct { int a,b; } x={1,2,.b=3,.a=4}; x.a; }));
+  ASSERT(3, ({ struct { int a,b; } x={1,2,.b=3,.a=4}; x.b; }));
+
+  ASSERT(1, ({ struct { struct { int a,b; } c; } x={.c=1,2}; x.c.a; }));
+  ASSERT(2, ({ struct { struct { int a,b; } c; } x={.c=1,2}; x.c.b; }));
+
+  ASSERT(0, ({ struct { struct { int a,b; } c; } x={.c.b=1}; x.c.a; }));
+  ASSERT(1, ({ struct { struct { int a,b; } c; } x={.c.b=1}; x.c.b; }));
+
+  ASSERT(1, ({ struct { int a[2]; } x={.a=1,2}; x.a[0]; }));
+  ASSERT(2, ({ struct { int a[2]; } x={.a=1,2}; x.a[1]; }));
+
+  ASSERT(0, ({ struct { int a[2]; } x={.a[1]=1}; x.a[0]; }));
+  ASSERT(1, ({ struct { int a[2]; } x={.a[1]=1}; x.a[1]; }));
+
+  ASSERT(3, ({ struct { int a,b; } x[]={[1].b=1,2,[0]=3,4,}; x[0].a; }));
+  ASSERT(4, ({ struct { int a,b; } x[]={[1].b=1,2,[0]=3,4,}; x[0].b; }));
+  ASSERT(0, ({ struct { int a,b; } x[]={[1].b=1,2,[0]=3,4,}; x[1].a; }));
+  ASSERT(1, ({ struct { int a,b; } x[]={[1].b=1,2,[0]=3,4,}; x[1].b; }));
+  ASSERT(2, ({ struct { int a,b; } x[]={[1].b=1,2,[0]=3,4,}; x[2].a; }));
+  ASSERT(0, ({ struct { int a,b; } x[]={[1].b=1,2,[0]=3,4,}; x[2].b; }));
+
+  ASSERT(1, ({ typedef struct { int a,b; } T; T x={1,2}; T y[]={x}; y[0].a; }));
+  ASSERT(2, ({ typedef struct { int a,b; } T; T x={1,2}; T y[]={x}; y[0].b; }));
+  ASSERT(0, ({ typedef struct { int a,b; } T; T x={1,2}; T y[]={x, [0].b=3}; y[0].a; }));
+  ASSERT(3, ({ typedef struct { int a,b; } T; T x={1,2}; T y[]={x, [0].b=3}; y[0].b; }));
+
+  ASSERT(5, ((struct { int a,b,c; }){ .c=5 }).c);
+  ASSERT(0, ((struct { int a,b,c; }){ .c=5 }).a);
+
   printf("OK\n");
   return 0;
 }
