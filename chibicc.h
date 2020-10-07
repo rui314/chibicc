@@ -350,6 +350,7 @@ struct Type {
   // Struct
   Member *members;
   bool is_flexible;
+  bool is_packed;
 
   // Function type
   Type *return_ty;
