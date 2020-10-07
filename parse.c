@@ -1054,22 +1054,37 @@ static Type *struct_union_decl(Token **rest, Token *tok) {
   }
 
   if (tag && !equal(tok, "{")) {
-    Type *ty = find_tag(tag);
-    if (!ty)
-      error_tok(tag, "unknown struct type");
     *rest = tok;
+
+    Type *ty = find_tag(tag);
+    if (ty)
+      return ty;
+
+    ty = struct_type();
+    ty->size = -1;
+    push_tag_scope(tag, ty);
     return ty;
   }
 
-  // Construct a struct object.
-  Type *ty = calloc(1, sizeof(Type));
-  ty->kind = TY_STRUCT;
-  struct_members(rest, tok->next, ty);
-  ty->align = 1;
+  tok = skip(tok, "{");
 
-  // Register the struct type if a name was given.
-  if (tag)
+  // Construct a struct object.
+  Type *ty = struct_type();
+  struct_members(rest, tok, ty);
+
+  if (tag) {
+    // If this is a redefinition, overwrite a previous type.
+    // Otherwise, register the struct type.
+    for (TagScope *sc = scope->tags; sc; sc = sc->next) {
+      if (equal(tag, sc->name)) {
+        *sc->ty = *ty;
+        return sc->ty;
+      }
+    }
+
     push_tag_scope(tag, ty);
+  }
+
   return ty;
 }
 
@@ -1077,6 +1092,9 @@ static Type *struct_union_decl(Token **rest, Token *tok) {
 static Type *struct_decl(Token **rest, Token *tok) {
   Type *ty = struct_union_decl(rest, tok);
   ty->kind = TY_STRUCT;
+
+  if (ty->size < 0)
+    return ty;
 
   // Assign offsets within the struct to members.
   int offset = 0;
@@ -1096,6 +1114,9 @@ static Type *struct_decl(Token **rest, Token *tok) {
 static Type *union_decl(Token **rest, Token *tok) {
   Type *ty = struct_union_decl(rest, tok);
   ty->kind = TY_UNION;
+
+  if (ty->size < 0)
+    return ty;
 
   // If union, we don't have to assign offsets because they
   // are already initialized to zero. We need to compute the
