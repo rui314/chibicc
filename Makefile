@@ -14,8 +14,8 @@ chibicc: $(OBJS)
 $(OBJS): chibicc.h
 
 test/%.exe: chibicc test/%.c
-	$(CC) -o- -E -P -C test/$*.c | ./chibicc -o test/$*.s -
-	$(CC) -o $@ test/$*.s -xc test/common
+	$(CC) -o- -E -P -C test/$*.c | ./chibicc -o test/$*.o -
+	$(CC) -o $@ test/$*.o -xc test/common
 
 test: $(TESTS)
 	for i in $^; do echo $$i; ./$$i || exit 1; echo; done
@@ -28,15 +28,15 @@ test-all: test test-stage2
 stage2/chibicc: $(OBJS:%=stage2/%)
 	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS)
 
-stage2/%.s: chibicc self.py %.c
+stage2/%.o: chibicc self.py %.c
 	mkdir -p stage2/test
 	./self.py chibicc.h $*.c > stage2/$*.c
-	./chibicc -o stage2/$*.s stage2/$*.c
+	./chibicc -o stage2/$*.o stage2/$*.c
 
 stage2/test/%.exe: stage2/chibicc test/%.c
 	mkdir -p stage2/test
-	$(CC) -o- -E -P -C test/$*.c | ./stage2/chibicc -o stage2/test/$*.s -
-	$(CC) -o $@ stage2/test/$*.s -xc test/common
+	$(CC) -o- -E -P -C test/$*.c | ./stage2/chibicc -o stage2/test/$*.o -
+	$(CC) -o $@ stage2/test/$*.o -xc test/common
 
 test-stage2: $(TESTS:test/%=stage2/test/%)
 	for i in $^; do echo $$i; ./$$i || exit 1; echo; done
