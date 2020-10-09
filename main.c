@@ -20,6 +20,7 @@ static bool opt_c;
 static bool opt_cc1;
 static bool opt_hash_hash_hash;
 static bool opt_static;
+static bool opt_shared;
 static char *opt_MF;
 static char *opt_MT;
 static char *opt_o;
@@ -281,6 +282,12 @@ static void parse_args(int argc, char **argv) {
     if (!strcmp(argv[i], "-static")) {
       opt_static = true;
       strarray_push(&ld_extra_args, "-static");
+      continue;
+    }
+
+    if (!strcmp(argv[i], "-shared")) {
+      opt_shared = true;
+      strarray_push(&ld_extra_args, "-shared");
       continue;
     }
 
@@ -598,9 +605,15 @@ static void run_linker(StringArray *inputs, char *output) {
   char *libpath = find_libpath();
   char *gcc_libpath = find_gcc_libpath();
 
-  strarray_push(&arr, format("%s/crt1.o", libpath));
-  strarray_push(&arr, format("%s/crti.o", libpath));
-  strarray_push(&arr, format("%s/crtbegin.o", gcc_libpath));
+  if (opt_shared) {
+    strarray_push(&arr, format("%s/crti.o", libpath));
+    strarray_push(&arr, format("%s/crtbeginS.o", gcc_libpath));
+  } else {
+    strarray_push(&arr, format("%s/crt1.o", libpath));
+    strarray_push(&arr, format("%s/crti.o", libpath));
+    strarray_push(&arr, format("%s/crtbegin.o", gcc_libpath));
+  }
+
   strarray_push(&arr, format("-L%s", gcc_libpath));
   strarray_push(&arr, "-L/usr/lib/x86_64-linux-gnu");
   strarray_push(&arr, "-L/usr/lib64");
@@ -636,7 +649,11 @@ static void run_linker(StringArray *inputs, char *output) {
     strarray_push(&arr, "--no-as-needed");
   }
 
-  strarray_push(&arr, format("%s/crtend.o", gcc_libpath));
+  if (opt_shared)
+    strarray_push(&arr, format("%s/crtendS.o", gcc_libpath));
+  else
+    strarray_push(&arr, format("%s/crtend.o", gcc_libpath));
+
   strarray_push(&arr, format("%s/crtn.o", libpath));
   strarray_push(&arr, NULL);
 

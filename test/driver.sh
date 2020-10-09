@@ -282,4 +282,10 @@ check -static
 file $tmp/foo | grep -q 'statically linked'
 check -static
 
+# -shared
+echo 'extern int bar; int foo() { return bar; }' > $tmp/foo.c
+echo 'int foo(); int bar=3; int main() { foo(); }' > $tmp/bar.c
+$chibicc -fPIC -shared -o $tmp/foo.so $tmp/foo.c $tmp/bar.c
+check -shared
+
 echo OK
