@@ -274,4 +274,12 @@ echo 'foo' > $tmp/next3/file2.h
 $chibicc -I$tmp/next1 -I$tmp/next2 -I$tmp/next3 -E $tmp/file.c | grep -q foo
 check '#include_next'
 
+# -static
+echo 'extern int bar; int foo() { return bar; }' > $tmp/foo.c
+echo 'int foo(); int bar=3; int main() { foo(); }' > $tmp/bar.c
+$chibicc -static -o $tmp/foo $tmp/foo.c $tmp/bar.c
+check -static
+file $tmp/foo | grep -q 'statically linked'
+check -static
+
 echo OK

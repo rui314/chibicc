@@ -19,6 +19,7 @@ static bool opt_S;
 static bool opt_c;
 static bool opt_cc1;
 static bool opt_hash_hash_hash;
+static bool opt_static;
 static char *opt_MF;
 static char *opt_MT;
 static char *opt_o;
@@ -274,6 +275,12 @@ static void parse_args(int argc, char **argv) {
 
     if (!strcmp(argv[i], "-idirafter")) {
       strarray_push(&idirafter, argv[i++]);
+      continue;
+    }
+
+    if (!strcmp(argv[i], "-static")) {
+      opt_static = true;
+      strarray_push(&ld_extra_args, "-static");
       continue;
     }
 
@@ -587,8 +594,6 @@ static void run_linker(StringArray *inputs, char *output) {
   strarray_push(&arr, output);
   strarray_push(&arr, "-m");
   strarray_push(&arr, "elf_x86_64");
-  strarray_push(&arr, "-dynamic-linker");
-  strarray_push(&arr, "/lib64/ld-linux-x86-64.so.2");
 
   char *libpath = find_libpath();
   char *gcc_libpath = find_gcc_libpath();
@@ -597,8 +602,7 @@ static void run_linker(StringArray *inputs, char *output) {
   strarray_push(&arr, format("%s/crti.o", libpath));
   strarray_push(&arr, format("%s/crtbegin.o", gcc_libpath));
   strarray_push(&arr, format("-L%s", gcc_libpath));
-  strarray_push(&arr, format("-L%s", libpath));
-  strarray_push(&arr, format("-L%s/..", libpath));
+  strarray_push(&arr, "-L/usr/lib/x86_64-linux-gnu");
   strarray_push(&arr, "-L/usr/lib64");
   strarray_push(&arr, "-L/lib64");
   strarray_push(&arr, "-L/usr/lib/x86_64-linux-gnu");
@@ -607,17 +611,31 @@ static void run_linker(StringArray *inputs, char *output) {
   strarray_push(&arr, "-L/usr/lib");
   strarray_push(&arr, "-L/lib");
 
+  if (!opt_static) {
+    strarray_push(&arr, "-dynamic-linker");
+    strarray_push(&arr, "/lib64/ld-linux-x86-64.so.2");
+  }
+
   for (int i = 0; i < ld_extra_args.len; i++)
     strarray_push(&arr, ld_extra_args.data[i]);
 
   for (int i = 0; i < inputs->len; i++)
     strarray_push(&arr, inputs->data[i]);
 
-  strarray_push(&arr, "-lc");
-  strarray_push(&arr, "-lgcc");
-  strarray_push(&arr, "--as-needed");
-  strarray_push(&arr, "-lgcc_s");
-  strarray_push(&arr, "--no-as-needed");
+  if (opt_static) {
+    strarray_push(&arr, "--start-group");
+    strarray_push(&arr, "-lgcc");
+    strarray_push(&arr, "-lgcc_eh");
+    strarray_push(&arr, "-lc");
+    strarray_push(&arr, "--end-group");
+  } else {
+    strarray_push(&arr, "-lc");
+    strarray_push(&arr, "-lgcc");
+    strarray_push(&arr, "--as-needed");
+    strarray_push(&arr, "-lgcc_s");
+    strarray_push(&arr, "--no-as-needed");
+  }
+
   strarray_push(&arr, format("%s/crtend.o", gcc_libpath));
   strarray_push(&arr, format("%s/crtn.o", libpath));
   strarray_push(&arr, NULL);
