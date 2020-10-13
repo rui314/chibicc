@@ -42,7 +42,7 @@ commit](https://github.com/rui314/chibicc/commit/0522e2d77e3ab82d3b80a5be8dbbdc8
 
 If you like this project, please consider purchasing a copy of the book
 when it becomes available! 😀 I publish the source code here to give people
-early access to it, because I was planing to do that anyway with a
+early access to it, because I was planning to do that anyway with a
 permissive open-source license after publishing the book. If I don't charge
 for the source code, it doesn't make much sense to me to keep it private. I
 hope to publish the book in 2021.
