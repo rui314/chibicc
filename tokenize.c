@@ -772,6 +772,13 @@ Token *tokenize_file(char *path) {
   if (!p)
     return NULL;
 
+  // UTF-8 texts may start with a 3-byte "BOM" marker sequence.
+  // If exists, just skip them because they are useless bytes.
+  // (It is actually not recommended to add BOM markers to UTF-8
+  // texts, but it's not uncommon particularly on Windows.)
+  if (!memcmp(p, "\xef\xbb\xbf", 3))
+    p += 3;
+
   canonicalize_newline(p);
   remove_backslash_newline(p);
   convert_universal_chars(p);
