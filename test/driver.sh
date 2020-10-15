@@ -109,4 +109,8 @@ $chibicc -c -O -Wall -g -std=c11 -ffreestanding -fno-builtin \
          -m64 -mno-red-zone -w -o /dev/null $tmp/empty.c
 check 'ignored options'
 
+# BOM marker
+printf '\xef\xbb\xbfxyz\n' | $chibicc -E -o- - | grep -q '^xyz'
+check 'BOM marker'
+
 echo OK
