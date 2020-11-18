@@ -1580,7 +1580,7 @@ void codegen(Obj *prog, FILE *out) {
 
   File **files = get_input_files();
   for (int i = 0; files[i]; i++)
-    println("  .file %d \"%s\"", files[i]->file_no, files[i]->name);
+    println("  .file \"%s\"", files[i]->name);
 
   assign_lvar_offsets(prog);
   emit_data(prog);
