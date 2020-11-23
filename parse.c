@@ -1832,7 +1832,7 @@ static int64_t eval(Node *node) {
 // Evaluate a given node as a constant expression.
 //
 // A constant expression is either just a number or ptr+n where ptr
-// is a pointer to a global variable and n is a postiive/negative
+// is a pointer to a global variable and n is a positive/negative
 // number. The latter form is accepted only as an initialization
 // expression for a global variable.
 static int64_t eval2(Node *node, char ***label) {
