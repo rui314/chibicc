@@ -1,5 +1,5 @@
 #!/bin/bash
-repo='git@github.com:python/cpython.git'
+repo='https://github.com/python/cpython.git'
 . test/thirdparty/common
 git reset --hard c75330605d4795850ec74fdc4d69aa5d92f76c00
 
