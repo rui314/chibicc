@@ -1,5 +1,5 @@
 #!/bin/bash
-repo='git@github.com:rui314/libpng.git'
+repo='https://github.com/rui314/libpng.git'
 . test/thirdparty/common
 git reset --hard dbe3e0c43e549a1602286144d94b0666549b18e6
 
