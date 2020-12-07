@@ -167,6 +167,13 @@ static void gen_addr(Node *node) {
       return;
     }
     break;
+  case ND_ASSIGN:
+  case ND_COND:
+    if (node->ty->kind == TY_STRUCT || node->ty->kind == TY_UNION) {
+      gen_expr(node);
+      return;
+    }
+    break;
   case ND_VLA_PTR:
     println("  lea %d(%%rbp), %%rax", node->var->offset);
     return;
