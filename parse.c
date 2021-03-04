@@ -200,6 +200,11 @@ static Node *new_binary(NodeKind kind, Node *lhs, Node *rhs, Token *tok) {
   Node *node = new_node(kind, tok);
   node->lhs = lhs;
   node->rhs = rhs;
+  add_type(node->rhs);
+  if (kind == ND_ASSIGN && node->rhs->ty->kind == TY_VOID) {
+    error_tok(node->rhs->tok, "Cannot assign void type expression");
+  }
+  // TODO type check other binary expressions, e.g., ND_ADD
   return node;
 }
 
@@ -1546,18 +1551,28 @@ static Node *asm_stmt(Token **rest, Token *tok) {
 //      | expr-stmt
 static Node *stmt(Token **rest, Token *tok) {
   if (equal(tok, "return")) {
+    Type *ret_ty = current_fn->ty->return_ty;
     Node *node = new_node(ND_RETURN, tok);
-    if (consume(rest, tok->next, ";"))
+    if (consume(rest, tok->next, ";")) {
+      if (ret_ty->kind != TY_VOID) {
+        error_tok(tok, "Non-void function must return something");
+      }
       return node;
+    }
 
     Node *exp = expr(&tok, tok->next);
     *rest = skip(tok, ";");
 
     add_type(exp);
-    Type *ty = current_fn->ty->return_ty;
-    if (ty->kind != TY_STRUCT && ty->kind != TY_UNION)
-      exp = new_cast(exp, current_fn->ty->return_ty);
-
+    if (ret_ty->kind == TY_VOID && exp->ty->kind != TY_VOID) {
+      error_tok(exp->tok, "Void function must return void type expression");
+    }
+    if (ret_ty->kind != TY_VOID && exp->ty->kind == TY_VOID) {
+      error_tok(exp->tok,
+          "Non-void function cannot return void type expression");
+    }
+    if (ret_ty->kind != TY_STRUCT && ret_ty->kind != TY_UNION)
+      exp = new_cast(exp, ret_ty);
     node->lhs = exp;
     return node;
   }
