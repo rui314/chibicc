@@ -632,7 +632,7 @@ static void copy_struct_reg(void) {
   if (ty->size > 8) {
     if (has_flonum(ty, 8, 16, 0)) {
       assert(ty->size == 12 || ty->size == 16);
-      if (ty->size == 4)
+      if (ty->size == 12)
         println("  movss 8(%%rdi), %%xmm%d", fp);
       else
         println("  movsd 8(%%rdi), %%xmm%d", fp);
