@@ -17,7 +17,7 @@ and is able to compile hundreds of thousands of lines of real-world C
 code correctly.
 
 chibicc is developed as the reference implementation for a book I'm
-currently writing about the C compiler and the low-level programming.
+currently writing about C compilers and low-level programming.
 The book covers the vast topic with an incremental approach; in the first
 chapter, readers will implement a "compiler" that accepts just a single
 number as a "language", which will then gain one feature at a time in each
@@ -75,7 +75,7 @@ chibicc include (but not limited to):
   x86-64 SystemV ABI
 
 chibicc does not support complex numbers, K&R-style function prototypes
-and GCC-style inline assembly. Digraphs and trigraphs are intentionally
+or GCC-style inline assembly. Digraphs and trigraphs are intentionally
 left out.
 
 chibicc outputs a simple but nice error message when it finds an error in
@@ -94,18 +94,18 @@ may not work on systems other than Ubuntu 20.04.
 
 chibicc consists of the following stages:
 
-- Tokenize: A tokenizer takes a string as an input, breaks it into a list
+- Tokenize: A tokenizer takes a string as input, breaks it into a list
   of tokens and returns them.
 
-- Preprocess: A preprocessor takes as an input a list of tokens and output
+- Preprocess: A preprocessor takes as input a list of tokens and outputs
   a new list of macro-expanded tokens. It interprets preprocessor
   directives while expanding macros.
 
-- Parse: A recursive descendent parser constructs abstract syntax trees
+- Parse: A recursive descent parser constructs abstract syntax trees
   from the output of the preprocessor. It also adds a type to each AST
   node.
 
-- Codegen: A code generator emits an assembly text for given AST nodes.
+- Codegen: A code generator emits assembly text for given AST nodes.
 
 ## Contributing
 
@@ -127,14 +127,14 @@ when I force-push new commits.
 
 ## Design principles
 
-chibicc's core value is its simplicity and the reability of its source
+chibicc's core value is its simplicity and the readability of its source
 code. To achieve this goal, I was careful not to be too clever when
 writing code. Let me explain what that means.
 
 Oftentimes, as you get used to the code base, you are tempted to
 _improve_ the code using more abstractions and clever tricks.
-But that kind of _improvements_ don't always improve readability for
-first-time readers and can actually hurts it. I tried to avoid the
+But that kind of _improvements_ doesn't always improve readability for
+first-time readers and can actually hurt it. I tried to avoid the
 pitfall as much as possible. I wrote this code not for me but for
 first-time readers.
 
@@ -143,7 +143,7 @@ dumb-looking pieces of code. These are written intentionally that way
 (but at some places I might be actually missing something,
 though). Here is a few notable examples:
 
-- The recursive descendent parser contains many similar-looking functions
+- The recursive descent parser contains many similar-looking functions
   for similar-looking generative grammar rules. You might be tempted
   to _improve_ it to reduce the duplication using higher-order functions
   or macros, but I thought that that's too complicated. It's better to
@@ -168,7 +168,7 @@ though). Here is a few notable examples:
 
 - chibicc always allocates heap memory using `calloc`, which is a
   variant of `malloc` that clears memory with zero. `calloc` is
-  slightly slower than `malloc`, but that should be neligible.
+  slightly slower than `malloc`, but that should be negligible.
 
 - Last but not least, chibicc allocates memory using `calloc` but never
   calls `free`. Allocated heap memory is not freed until the process exits.
