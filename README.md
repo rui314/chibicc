@@ -134,7 +134,7 @@ writing code. Let me explain what that means.
 Oftentimes, as you get used to the code base, you are tempted to
 _improve_ the code using more abstractions and clever tricks.
 But that kind of _improvements_ don't always improve readability for
-first-time readers and can actually hurts it. I tried to avoid the
+first-time readers and can actually hurt it. I tried to avoid the
 pitfall as much as possible. I wrote this code not for me but for
 first-time readers.
 
