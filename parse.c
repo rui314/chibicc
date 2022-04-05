@@ -747,7 +747,7 @@ static bool consume_end(Token **rest, Token *tok) {
 // enum-specifier = ident? "{" enum-list? "}"
 //                | ident ("{" enum-list? "}")?
 //
-// enum-list      = ident ("=" num)? ("," ident ("=" num)?)* ","?
+// enum-list      = ident ("=" const-expr)? ("," ident ("=" const-expr)?)* ","?
 static Type *enum_specifier(Token **rest, Token *tok) {
   Type *ty = enum_type();
 
