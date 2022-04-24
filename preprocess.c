@@ -83,7 +83,7 @@ static Token *skip_line(Token *tok) {
   if (tok->at_bol)
     return tok;
   warn_tok(tok, "extra token");
-  while (tok->at_bol)
+  while (!tok->at_bol)
     tok = tok->next;
   return tok;
 }
