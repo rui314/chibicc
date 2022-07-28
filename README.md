@@ -5,7 +5,7 @@
 branch. This is a new one uploaded in September 2020.)
 
 chibicc is yet another small C compiler that implements most C11
-features. Even though it still probably falls into the "toy compilers"
+features. Even though it probably falls into the "toy compilers"
 category just like other small compilers do, chibicc can compile
 several real-world programs, including [Git](https://git-scm.com/),
 [SQLite](https://sqlite.org),
@@ -81,7 +81,7 @@ left out.
 chibicc outputs a simple but nice error message when it finds an error in
 source code.
 
-There's no optimization pass. chibicc emits terrible code which is probably
+There's no optimization pass, chibicc emits terrible code which is probably
 twice or more slower than GCC's output. I have a plan to add an
 optimization pass once the frontend is done.
 
