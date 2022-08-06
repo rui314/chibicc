@@ -282,6 +282,9 @@ struct Node {
   Obj *atomic_addr;
   Node *atomic_expr;
 
+  // Atomic fetch operation
+  bool atomic_fetch;
+
   // Variable
   Obj *var;
 
