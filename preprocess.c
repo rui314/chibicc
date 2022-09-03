@@ -90,6 +90,8 @@ static Token *skip_line(Token *tok) {
 
 static Token *copy_token(Token *tok) {
   Token *t = calloc(1, sizeof(Token));
+  if (t == NULL)
+    error("preprocess.c : in copy_token t is null");
   *t = *tok;
   t->next = NULL;
   return t;
@@ -104,6 +106,8 @@ static Token *new_eof(Token *tok) {
 
 static Hideset *new_hideset(char *name) {
   Hideset *hs = calloc(1, sizeof(Hideset));
+  if (hs == NULL)
+    error("preprocess.c : in new_hideset hs is null");  
   hs->name = name;
   return hs;
 }
@@ -206,6 +210,9 @@ static char *quote_string(char *str) {
   }
 
   char *buf = calloc(1, bufsize);
+  if (buf == NULL)
+    error("preprocess.c : in quote_string buf is null");  
+
   char *p = buf;
   *p++ = '"';
   for (int i = 0; str[i]; i++) {
@@ -309,6 +316,9 @@ static long eval_const_expr(Token **rest, Token *tok) {
 
 static CondIncl *push_cond_incl(Token *tok, bool included) {
   CondIncl *ci = calloc(1, sizeof(CondIncl));
+  if (ci == NULL)
+    error("preprocess.c : in push_cond_incl ci is null");  
+
   ci->next = cond_incl;
   ci->ctx = IN_THEN;
   ci->tok = tok;
@@ -325,6 +335,9 @@ static Macro *find_macro(Token *tok) {
 
 static Macro *add_macro(char *name, bool is_objlike, Token *body) {
   Macro *m = calloc(1, sizeof(Macro));
+  if (m == NULL)
+    error("preprocess.c : in add_macro m is null");  
+
   m->name = name;
   m->is_objlike = is_objlike;
   m->body = body;
@@ -356,6 +369,9 @@ static MacroParam *read_macro_params(Token **rest, Token *tok, char **va_args_na
     }
 
     MacroParam *m = calloc(1, sizeof(MacroParam));
+    if (m == NULL)
+      error("preprocess.c : in read_macro_params m is null");  
+
     m->name = strndup(tok->loc, tok->len);
     cur = cur->next = m;
     tok = tok->next;
@@ -411,6 +427,9 @@ static MacroArg *read_macro_arg_one(Token **rest, Token *tok, bool read_rest) {
   cur->next = new_eof(tok);
 
   MacroArg *arg = calloc(1, sizeof(MacroArg));
+  if (arg == NULL)
+    error("preprocess.c : in read_macro_arg_one arg is null");  
+
   arg->tok = head.next;
   *rest = tok;
   return arg;
@@ -436,6 +455,9 @@ read_macro_args(Token **rest, Token *tok, MacroParam *params, char *va_args_name
     MacroArg *arg;
     if (equal(tok, ")")) {
       arg = calloc(1, sizeof(MacroArg));
+      if (arg == NULL)
+        error("preprocess.c : in read_macro_args arg is null");  
+
       arg->tok = new_eof(tok);
     } else {
       if (pp != params)
@@ -472,6 +494,9 @@ static char *join_tokens(Token *tok, Token *end) {
   }
 
   char *buf = calloc(1, len);
+  if (buf == NULL)
+    error("preprocess.c : in join_tokens buf is null");  
+
 
   // Copy token texts.
   int pos = 0;
@@ -1179,6 +1204,9 @@ static void join_adjacent_string_literals(Token *tok) {
       len = len + t->ty->array_len - 1;
 
     char *buf = calloc(tok1->ty->base->size, len);
+    if (buf == NULL)
+      error("preprocess.c : in join_adjacent_string_literals buf is null");  
+
 
     int i = 0;
     for (Token *t = tok1; t != tok2; t = t->next) {

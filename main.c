@@ -85,6 +85,9 @@ static FileType parse_opt_x(char *s) {
 
 static char *quote_makefile(char *s) {
   char *buf = calloc(1, strlen(s) * 2 + 1);
+  if (buf == NULL) {
+      error("in quote_makefile buf pointer is null!");
+  }
 
   for (int i = 0, j = 0; s[i]; i++) {
     switch (s[i]) {
@@ -379,6 +382,8 @@ static void cleanup(void) {
 
 static char *create_tmpfile(void) {
   char *path = strdup("/tmp/chibicc-XXXXXX");
+  if (path == NULL)
+    error("main.c : in create_tmpfilepath path is null");
   int fd = mkstemp(path);
   if (fd == -1)
     error("mkstemp failed: %s", strerror(errno));
@@ -413,6 +418,8 @@ static void run_subprocess(char **argv) {
 
 static void run_cc1(int argc, char **argv, char *input, char *output) {
   char **args = calloc(argc + 10, sizeof(char *));
+  if (args == NULL) 
+    error("main.c : in run_cc1 args is null");
   memcpy(args, argv, argc * sizeof(char *));
   args[argc++] = "-cc1";
 

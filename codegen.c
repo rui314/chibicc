@@ -458,7 +458,8 @@ static void push_args2(Node *args, bool first_pass) {
     return;
   push_args2(args->next, first_pass);
 
-  if ((first_pass && !args->pass_by_stack) || (!first_pass && args->pass_by_stack))
+  //if ((first_pass && !args->pass_by_stack) || (!first_pass && args->pass_by_stack))
+  if (first_pass != args->pass_by_stack) 
     return;
 
   gen_expr(args);

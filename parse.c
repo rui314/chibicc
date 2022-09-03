@@ -162,6 +162,8 @@ static int align_down(int n, int align) {
 
 static void enter_scope(void) {
   Scope *sc = calloc(1, sizeof(Scope));
+  if (sc == NULL)
+    error("parse.c : in enter_scope sc pointer is null!");
   sc->next = scope;
   scope = sc;
 }
@@ -191,6 +193,8 @@ static Type *find_tag(Token *tok) {
 
 static Node *new_node(NodeKind kind, Token *tok) {
   Node *node = calloc(1, sizeof(Node));
+  if (node == NULL)
+    error("parse.c : in new_node node is null");
   node->kind = kind;
   node->tok = tok;
   return node;
@@ -245,6 +249,8 @@ Node *new_cast(Node *expr, Type *ty) {
   add_type(expr);
 
   Node *node = calloc(1, sizeof(Node));
+  if (node == NULL)
+    error("parse.c : in new_cast node is null");
   node->kind = ND_CAST;
   node->tok = expr->tok;
   node->lhs = expr;
@@ -254,12 +260,16 @@ Node *new_cast(Node *expr, Type *ty) {
 
 static VarScope *push_scope(char *name) {
   VarScope *sc = calloc(1, sizeof(VarScope));
+  if (sc == NULL)
+    error("parse.c : in push_scope sc is null!");
   hashmap_put(&scope->vars, name, sc);
   return sc;
 }
 
 static Initializer *new_initializer(Type *ty, bool is_flexible) {
   Initializer *init = calloc(1, sizeof(Initializer));
+  if (init == NULL)
+    error("parse.c : in new_initializer init is null");
   init->ty = ty;
 
   if (ty->kind == TY_ARRAY) {
@@ -269,6 +279,8 @@ static Initializer *new_initializer(Type *ty, bool is_flexible) {
     }
 
     init->children = calloc(ty->array_len, sizeof(Initializer *));
+    if (init->children == NULL)
+      error("parse.c : in new_initializer init->children is null");
     for (int i = 0; i < ty->array_len; i++)
       init->children[i] = new_initializer(ty->base, false);
     return init;
@@ -281,10 +293,13 @@ static Initializer *new_initializer(Type *ty, bool is_flexible) {
       len++;
 
     init->children = calloc(len, sizeof(Initializer *));
-
+    if (init->children == NULL)
+      error("parse.c : in new_initializer init->children is null (bis)");
     for (Member *mem = ty->members; mem; mem = mem->next) {
       if (is_flexible && ty->is_flexible && !mem->next) {
         Initializer *child = calloc(1, sizeof(Initializer));
+        if (child == NULL)
+          error("parse.c : in new_initializer child is null");
         child->ty = mem->ty;
         child->is_flexible = true;
         init->children[mem->idx] = child;
@@ -300,6 +315,8 @@ static Initializer *new_initializer(Type *ty, bool is_flexible) {
 
 static Obj *new_var(char *name, Type *ty) {
   Obj *var = calloc(1, sizeof(Obj));
+  if (var == NULL)
+    error("parse.c : in new_var var is null");
   var->name = name;
   var->ty = ty;
   var->align = ty->align;
@@ -1284,6 +1301,8 @@ static Type *copy_struct_type(Type *ty) {
   Member *cur = &head;
   for (Member *mem = ty->members; mem; mem = mem->next) {
     Member *m = calloc(1, sizeof(Member));
+    if (m == NULL)
+      error("parse.c : in copy_struct_type m is null");
     *m = *mem;
     cur = cur->next = m;
   }
@@ -1472,6 +1491,8 @@ write_gvar_data(Relocation *cur, Initializer *init, Type *ty, char *buf, int off
   }
 
   Relocation *rel = calloc(1, sizeof(Relocation));
+  if (rel == NULL)
+    error("parse.c : in write_gvar_data rel is null");
   rel->offset = offset;
   rel->label = label;
   rel->addend = val;
@@ -1488,6 +1509,8 @@ static void gvar_initializer(Token **rest, Token *tok, Obj *var) {
 
   Relocation head = {};
   char *buf = calloc(1, var->ty->size);
+  if (buf == NULL)
+    error("parse.c : in gvar_initializer buf is null!");
   write_gvar_data(&head, init, var->ty, buf, 0);
   var->init_data = buf;
   var->rel = head.next;
@@ -2555,6 +2578,8 @@ static void struct_members(Token **rest, Token *tok, Type *ty) {
     if ((basety->kind == TY_STRUCT || basety->kind == TY_UNION) &&
         consume(&tok, tok, ";")) {
       Member *mem = calloc(1, sizeof(Member));
+      if (mem == NULL)
+        error("parse.c : in struct_members mem is null");
       mem->ty = basety;
       mem->idx = idx++;
       mem->align = attr.align ? attr.align : mem->ty->align;
@@ -2569,6 +2594,8 @@ static void struct_members(Token **rest, Token *tok, Type *ty) {
       first = false;
 
       Member *mem = calloc(1, sizeof(Member));
+      if (mem == NULL)
+        error("parse.c : in struct_members mem is null (bis)");      
       mem->ty = declarator(&tok, tok, basety);
       mem->name = mem->ty->name;
       mem->idx = idx++;

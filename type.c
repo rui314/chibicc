@@ -19,6 +19,8 @@ Type *ty_ldouble = &(Type){TY_LDOUBLE, 16, 16};
 
 static Type *new_type(TypeKind kind, int size, int align) {
   Type *ty = calloc(1, sizeof(Type));
+  if (ty == NULL)
+    error("type.c : in new_type ty is null!");
   ty->kind = kind;
   ty->size = size;
   ty->align = align;
@@ -89,6 +91,8 @@ bool is_compatible(Type *t1, Type *t2) {
 
 Type *copy_type(Type *ty) {
   Type *ret = calloc(1, sizeof(Type));
+  if (ret == NULL)
+    error("type.c : in copy_type ret is null!");  
   *ret = *ty;
   ret->origin = ty;
   return ret;
