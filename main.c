@@ -35,7 +35,8 @@ static StringArray input_paths;
 static StringArray tmpfiles;
 
 static void usage(int status) {
-  fprintf(stderr, "chibicc [ -o <path> ] <file>\n");
+  fprintf(stderr, HELP);
+  fprintf(stderr, USAGE);
   exit(status);
 }
 
@@ -135,7 +136,7 @@ static void parse_args(int argc, char **argv) {
       continue;
     }
 
-    if (!strcmp(argv[i], "--help"))
+    if (!strcmp(argv[i], "--help") || !strcmp(argv[i], "-h"))
       usage(0);
 
     if (!strcmp(argv[i], "-o")) {
