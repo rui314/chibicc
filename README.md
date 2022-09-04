@@ -20,8 +20,16 @@ or
     --version or -v print the version of chibicc
     -cc1 run the cc1 function needs -cc1-input and -cc1-output parameters
     -fuse-ld to specify other linker than ld used by default
-    -x followed by one of the following values c, assembler, none
+    -x Specify the language of the following input files.
+        Specify the language of the following input files.
+        Permissible languages include: c assembler none
+        'none' means revert to the default behavior of
+        guessing the language based on the file's extension.
     -S generate assembly file
+    -o path to output executable if omitted a.out generated
+    -c path to source to compile
+    -Xlinker <arg> Pass <arg> on to the linker.
+    -Wl,<options> Pass comma-separated <options> on to the linker.
     chibicc [ -o <path> ] <file>
 
 ## Examples
@@ -50,6 +58,10 @@ generating assembly file
 
     ./chibicc -S ./test/hello.c
 
+generating a.out file if no parameter -o provided
+
+    ./chibicc ./test/hello.c
+
 ## options always passed to the linker
 
 it means that if you don't use the ld linker or ld.lld probably some options should be conditionned depending your linker
@@ -71,6 +83,22 @@ lld-link: warning: ignoring unknown argument '-lgcc'
 lld-link: warning: ignoring unknown argument '--as-needed'
 lld-link: warning: ignoring unknown argument '-lgcc_s'
 lld-link: warning: ignoring unknown argument '--no-as-needed'
+
+## options ignored
+
+List of options ignored :
+
+    "-W"
+    "-g"
+    "-std="
+    "-ffreestanding"
+    "-fno-builtin"
+    "-fno-omit-frame-pointer"
+    "-fno-stack-protector"
+    "-fno-strict-aliasing"
+    "-m64"
+    "-mno-red-zone"
+    "-w"
 
 ## TODO
 

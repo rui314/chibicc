@@ -38,8 +38,16 @@ this " PRODUCT " contains only some differences for now like new parameters\n"
 --version or -v print the version of " PRODUCT "\n \
 -cc1 run the cc1 function needs -cc1-input and -cc1-output parameters \n \
 -fuse-ld to specify other linker than ld used by default \n \
--x followed by one of the following values c, assembler, none \n \
+-x Specify the language of the following input files.\n \
+   Specify the language of the following input files.\n \
+    Permissible languages include: c assembler none\n \
+      'none' means revert to the default behavior of\n \
+      guessing the language based on the file's extension.\n \
 -S generate assembly file \n \
+-o path to output executable if omitted a.out generated\n \
+-c path to source to compile \n \
+-Xlinker <arg> Pass <arg> on to the linker.\n \
+-Wl,<options> Pass comma-separated <options> on to the linker.\n \
 chibicc [ -o <path> ] <file>\n"
 
 
