@@ -1,6 +1,6 @@
 # chibicc: A Small C Compiler from Rui Ueyama
 
-This project has forked from https://github.com/rui314/chibicc
+This project has been forked from https://github.com/rui314/chibicc
 
 I want to play with it and to add some other options like choosing other linker than default ld.
 It's for learning purposes too, to try to understand existing code and to extend it.
