@@ -26,7 +26,7 @@
 #endif
 
 #define PRODUCT "chibicc"
-#define VERSION "1.0.0"
+#define VERSION "1.0.1"
 
 #define HELP PRODUCT " is a C compiler based on " PRODUCT " created by Rui Ueyama.\n \
 See original project https://github.com/rui314/chibicc for more information\n \
@@ -35,6 +35,7 @@ this " PRODUCT " contains only some differences for now like new parameters\n"
 #define USAGE PRODUCT " usage :\n \
 --help or -h print the help\n \
 --version or -v print the version of " PRODUCT "\n \
+-cc1 run the cc1 function needs -cc1-input and -cc1-output parameters \n \
 chibicc [ -o <path> ] <file>\n"
 
 

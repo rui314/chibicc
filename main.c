@@ -21,6 +21,8 @@ static bool opt_cc1;
 static bool opt_hash_hash_hash;
 static bool opt_static;
 static bool opt_shared;
+static bool isCc1input = false;
+static bool isCc1output = false;
 static char *opt_MF;
 static char *opt_MT;
 static char *opt_o;
@@ -40,9 +42,15 @@ static void usage(int status) {
   exit(status);
 }
 
+//print the version of the command
+static void printVersion(int status) {
+    printf("%s version : %s\n", PRODUCT, VERSION);
+    exit(status);
+}
+
 static bool take_arg(char *arg) {
   char *x[] = {
-    "-o", "-I", "-idirafter", "-include", "-x", "-MF", "-MT", "-Xlinker",
+    "-o", "-I", "-idirafter", "-include", "-x", "-MF", "-MT", "-Xlinker", "-cc1-input", "-cc1-output" 
   };
 
   for (int i = 0; i < sizeof(x) / sizeof(*x); i++)
@@ -120,8 +128,11 @@ static void parse_args(int argc, char **argv) {
   // have an argument.
   for (int i = 1; i < argc; i++)
     if (take_arg(argv[i]))
-      if (!argv[++i])
+      if (!argv[++i]) {
+        printf("parameter without value! the following parameters need to be followed by a value :\n");
+        printf("-o, -I, -idirafter, -include, -x, -MF, -MT, -Xlinker, -cc1-input, -cc1-output \n");
         usage(1);
+      }
 
   StringArray idirafter = {};
 
@@ -136,8 +147,15 @@ static void parse_args(int argc, char **argv) {
       continue;
     }
 
-    if (!strcmp(argv[i], "--help") || !strcmp(argv[i], "-h"))
+    if (!strcmp(argv[i], "--help") || !strcmp(argv[i], "-h")) {
       usage(0);
+      continue;
+    }
+
+    if (!strcmp(argv[i], "--version") || !strcmp(argv[i], "-v")) {
+      printVersion(0);
+      continue;
+    }
 
     if (!strcmp(argv[i], "-o")) {
       opt_o = argv[++i];
@@ -277,10 +295,12 @@ static void parse_args(int argc, char **argv) {
 
     if (!strcmp(argv[i], "-cc1-input")) {
       base_file = argv[++i];
+      isCc1input = true;
       continue;
     }
 
     if (!strcmp(argv[i], "-cc1-output")) {
+      isCc1output = true;
       output_file = argv[++i];
       continue;
     }
@@ -710,6 +730,11 @@ int main(int argc, char **argv) {
   init_macros();
   parse_args(argc, argv);
 
+  if (opt_cc1 && (!isCc1input || !isCc1output)) {
+      error("with -cc1 parameter -cc1-input and -cc1-input mandatory!");
+      usage(1);
+  }
+
   if (opt_cc1) {
     add_default_include_paths(argv[0]);
     cc1();
@@ -797,3 +822,4 @@ int main(int argc, char **argv) {
     run_linker(&ld_args, opt_o ? opt_o : "a.out");
   return 0;
 }
+
