@@ -27,6 +27,7 @@
 
 #define PRODUCT "chibicc"
 #define VERSION "1.0.1"
+#define MAXLEN 101
 
 #define HELP PRODUCT " is a C compiler based on " PRODUCT " created by Rui Ueyama.\n \
 See original project https://github.com/rui314/chibicc for more information\n \
@@ -36,6 +37,9 @@ this " PRODUCT " contains only some differences for now like new parameters\n"
 --help or -h print the help\n \
 --version or -v print the version of " PRODUCT "\n \
 -cc1 run the cc1 function needs -cc1-input and -cc1-output parameters \n \
+-fuse-ld to specify other linker than ld used by default \n \
+-x followed by one of the following values c, assembler, none \n \
+-S generate assembly file \n \
 chibicc [ -o <path> ] <file>\n"
 
 

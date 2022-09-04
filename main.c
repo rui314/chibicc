@@ -26,6 +26,7 @@ static bool isCc1output = false;
 static char *opt_MF;
 static char *opt_MT;
 static char *opt_o;
+static char *opt_linker;
 
 static StringArray ld_extra_args;
 static StringArray std_include_paths;
@@ -48,14 +49,24 @@ static void printVersion(int status) {
     exit(status);
 }
 
+//check the length and validity of parameter to avoid non valid input values
+static void check_parms_length(char *arg) {
+      if (strlen(arg) > MAXLEN) {
+      error("maximum length parameter overpassed");
+      exit(EXIT_FAILURE);
+      }
+
+}
+
 static bool take_arg(char *arg) {
   char *x[] = {
-    "-o", "-I", "-idirafter", "-include", "-x", "-MF", "-MT", "-Xlinker", "-cc1-input", "-cc1-output" 
+    "-o", "-I", "-idirafter", "-include", "-x", "-MF", "-MT", "-Xlinker", "-cc1-input", "-cc1-output", "-fuse-ld" 
   };
 
-  for (int i = 0; i < sizeof(x) / sizeof(*x); i++)
+  for (int i = 0; i < sizeof(x) / sizeof(*x); i++) {
     if (!strcmp(arg, x[i]))
       return true;
+  }
   return false;
 }
 
@@ -137,6 +148,8 @@ static void parse_args(int argc, char **argv) {
   StringArray idirafter = {};
 
   for (int i = 1; i < argc; i++) {
+
+
     if (!strcmp(argv[i], "-###")) {
       opt_hash_hash_hash = true;
       continue;
@@ -157,8 +170,14 @@ static void parse_args(int argc, char **argv) {
       continue;
     }
 
+    if (!strcmp(argv[i], "-fuse-ld")) {
+      opt_linker = argv[++i];
+      check_parms_length(opt_linker);
+      continue;
+    }
     if (!strcmp(argv[i], "-o")) {
       opt_o = argv[++i];
+      check_parms_length(opt_o);
       continue;
     }
 
@@ -197,48 +216,74 @@ static void parse_args(int argc, char **argv) {
       continue;
     }
 
+    //seems to be used to define macros ?
     if (!strcmp(argv[i], "-D")) {
-      define(argv[++i]);
+      char *tmp = argv[++i];
+      //define(argv[++i]);
+      check_parms_length(tmp);
+      define(tmp);
       continue;
     }
 
     if (!strncmp(argv[i], "-D", 2)) {
-      define(argv[i] + 2);
+      char *tmp = argv[i] + 2;
+      check_parms_length(tmp);
+      define(tmp);      
+      //define(argv[i] + 2);
       continue;
     }
 
     if (!strcmp(argv[i], "-U")) {
-      undef_macro(argv[++i]);
+      char *tmp = argv[++i];      
+      check_parms_length(tmp);
+      undef_macro(tmp);
+      //undef_macro(argv[++i]);
       continue;
     }
 
     if (!strncmp(argv[i], "-U", 2)) {
-      undef_macro(argv[i] + 2);
+      char *tmp = argv[i] + 2;   
+      check_parms_length(tmp);
+      undef_macro(tmp);       
+      //undef_macro(argv[i] + 2);
       continue;
     }
 
     if (!strcmp(argv[i], "-include")) {
-      strarray_push(&opt_include, argv[++i]);
+      char *tmp = argv[++i];    
+      check_parms_length(tmp);          
+      strarray_push(&opt_include, tmp);
+      //strarray_push(&opt_include, argv[++i]);
       continue;
     }
 
     if (!strcmp(argv[i], "-x")) {
-      opt_x = parse_opt_x(argv[++i]);
+      char *tmp = argv[++i];        
+      check_parms_length(tmp);      
+      opt_x = parse_opt_x(tmp);
       continue;
     }
 
     if (!strncmp(argv[i], "-x", 2)) {
-      opt_x = parse_opt_x(argv[i] + 2);
+      char *tmp = argv[i] + 2;        
+      check_parms_length(tmp);          
+      opt_x = parse_opt_x(tmp);
       continue;
     }
 
     if (!strncmp(argv[i], "-l", 2) || !strncmp(argv[i], "-Wl,", 4)) {
-      strarray_push(&input_paths, argv[i]);
+      char *tmp = argv[i];    
+      check_parms_length(tmp);        
+      strarray_push(&input_paths, tmp);
+      //strarray_push(&input_paths, argv[i]);
       continue;
     }
 
     if (!strcmp(argv[i], "-Xlinker")) {
-      strarray_push(&ld_extra_args, argv[++i]);
+      char *tmp = argv[++i];    
+      check_parms_length(tmp);       
+      strarray_push(&ld_extra_args, tmp);
+      //strarray_push(&ld_extra_args, argv[++i]);
       continue;
     }
 
@@ -254,6 +299,7 @@ static void parse_args(int argc, char **argv) {
 
     if (!strcmp(argv[i], "-MF")) {
       opt_MF = argv[++i];
+      check_parms_length(opt_MF);
       continue;
     }
 
@@ -267,6 +313,7 @@ static void parse_args(int argc, char **argv) {
         opt_MT = argv[++i];
       else
         opt_MT = format("%s %s", opt_MT, argv[++i]);
+      check_parms_length(opt_MT);        
       continue;
     }
 
@@ -280,6 +327,7 @@ static void parse_args(int argc, char **argv) {
         opt_MT = quote_makefile(argv[++i]);
       else
         opt_MT = format("%s %s", opt_MT, quote_makefile(argv[++i]));
+      check_parms_length(opt_MT);             
       continue;
     }
 
@@ -295,6 +343,7 @@ static void parse_args(int argc, char **argv) {
 
     if (!strcmp(argv[i], "-cc1-input")) {
       base_file = argv[++i];
+      check_parms_length(base_file);           
       isCc1input = true;
       continue;
     }
@@ -302,11 +351,15 @@ static void parse_args(int argc, char **argv) {
     if (!strcmp(argv[i], "-cc1-output")) {
       isCc1output = true;
       output_file = argv[++i];
+      check_parms_length(output_file);           
       continue;
     }
 
     if (!strcmp(argv[i], "-idirafter")) {
-      strarray_push(&idirafter, argv[i++]);
+      char *tmp = argv[i++];    
+      check_parms_length(tmp);        
+      strarray_push(&idirafter, tmp);
+      //strarray_push(&idirafter, argv[i++]);
       continue;
     }
 
@@ -324,13 +377,19 @@ static void parse_args(int argc, char **argv) {
 
     if (!strcmp(argv[i], "-L")) {
       strarray_push(&ld_extra_args, "-L");
-      strarray_push(&ld_extra_args, argv[++i]);
+      char *tmp = argv[++i];    
+      check_parms_length(tmp);         
+      strarray_push(&ld_extra_args, tmp);      
+      //strarray_push(&ld_extra_args, argv[++i]);
       continue;
     }
 
     if (!strncmp(argv[i], "-L", 2)) {
       strarray_push(&ld_extra_args, "-L");
-      strarray_push(&ld_extra_args, argv[i] + 2);
+      char *tmp = argv[i] + 2;    
+      check_parms_length(tmp);       
+      strarray_push(&ld_extra_args, tmp);
+      //strarray_push(&ld_extra_args, argv[i] + 2);
       continue;
     }
 
@@ -642,8 +701,11 @@ static char *find_gcc_libpath(void) {
 
 static void run_linker(StringArray *inputs, char *output) {
   StringArray arr = {};
-
-  strarray_push(&arr, "ld");
+  if (opt_linker != NULL) {
+    strarray_push(&arr, opt_linker);
+  } else {
+    strarray_push(&arr, "ld");
+  }
   strarray_push(&arr, "-o");
   strarray_push(&arr, output);
   strarray_push(&arr, "-m");
