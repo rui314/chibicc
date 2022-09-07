@@ -337,7 +337,6 @@ static Macro *add_macro(char *name, bool is_objlike, Token *body) {
   Macro *m = calloc(1, sizeof(Macro));
   if (m == NULL)
     error("preprocess.c : in add_macro m is null");  
-
   m->name = name;
   m->is_objlike = is_objlike;
   m->body = body;

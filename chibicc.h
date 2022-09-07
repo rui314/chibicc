@@ -50,6 +50,8 @@ this " PRODUCT " contains only some differences for now like new parameters\n"
 -Wl,<options> Pass comma-separated <options> on to the linker.\n \
 -I<path> Pass path to the include directories \n \
 -L<path> Pass path to the lib directories \n \
+-D<macro> define macro example -DM13 \n \
+-U<macro> undefine macro example -UM13\n \
 chibicc [ -o <path> ] <file>\n"
 
 

@@ -32,6 +32,8 @@ or
     -Wl,<options> Pass comma-separated <options> on to the linker.
     -I<path> Pass path to the include directories
     -L<path> Pass path to the lib directories
+    -D<macro> define macro example -DM13
+    -U<macro> undefine macro example -UM13
     chibicc [ -o <path> ] <file>
 
 ## Examples
@@ -84,6 +86,18 @@ generating the object only : it generates the pointerofpointers.o
 generating executable from objects :
 
     ./chibicc pointerofpointers.o -o pointersofpointers
+
+defining condition at compile time :
+
+    ./chibicc -o ./test/mydefine ./test/define.c -DM13 -I../include -L../lib
+    ./test/mydefine
+    3
+
+undefining condition at compile time :
+
+    ./chibicc -o ./test/mydefine ./test/define.c -UM13 -I../include -L../lib
+    ./test/mydefine
+    4
 
 ## options always passed to the linker
 
