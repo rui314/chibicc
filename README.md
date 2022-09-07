@@ -202,3 +202,5 @@ List of options ignored :
 trying to document cc1 and x options and adding a max length control parameter. Adding documentation for other parameters too.
 
 1.0.2 fixing issue with cc1 parameter only -cc1-input parameter is mandatory. Finishing parameters documentation.
+
+1.0.3 trying to add some sanitizing functions and check if arguments have valid allowed characters (probably too strict!).

@@ -1,4 +1,5 @@
 #include "chibicc.h"
+extern char **environ;
 
 typedef enum {
   FILE_NONE, FILE_C, FILE_ASM, FILE_OBJ, FILE_AR, FILE_DSO,
@@ -57,6 +58,8 @@ static void check_parms_length(char *arg) {
       }
 
 }
+
+
 
 static bool take_arg(char *arg) {
   char *x[] = {
@@ -483,7 +486,9 @@ static void run_subprocess(char **argv) {
   }
 
   if (fork() == 0) {
-    // Child process. Run a new command.
+    //sanitize environment variables here only PATH and IFS.
+    spc_sanitize_environment();
+    
     execvp(argv[0], argv);
     fprintf(stderr, "exec failed: %s: %s\n", argv[0], strerror(errno));
     _exit(1);
@@ -788,13 +793,19 @@ static FileType get_file_type(char *filename) {
 }
 
 int main(int argc, char **argv) {
+
   atexit(cleanup);
   init_macros();
+  int isInvalidArg = validateArgs(argc, argv);
+  if (isInvalidArg == -1) {
+      error("Invalid parameter detected!");
+      usage(-2);
+  }
   parse_args(argc, argv);
 
   if (opt_cc1 &&  !isCc1input) {
       error("with -cc1 parameter -cc1-input is mandatory!");
-      usage(1);
+      usage(-1);
   }
 
   if (opt_cc1) {

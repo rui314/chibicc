@@ -26,7 +26,7 @@
 #endif
 
 #define PRODUCT "chibicc"
-#define VERSION "1.0.2"
+#define VERSION "1.0.3"
 #define MAXLEN 101
 
 #define HELP PRODUCT " is a C compiler based on " PRODUCT " created by Rui Ueyama.\n \
@@ -36,7 +36,7 @@ this " PRODUCT " contains only some differences for now like new parameters\n"
 #define USAGE PRODUCT " usage :\n \
 --help or -h print the help\n \
 --version or -v print the version of " PRODUCT "\n \
--cc1 run the cc1 function needs -cc1-input and -cc1-output parameters \n \
+-cc1 run the cc1 function needs -cc1-input (-cc1-output optional) parameter \n \
 -fuse-ld to specify other linker than ld used by default \n \
 -x Specify the language of the following input files.\n \
     Permissible languages include: c assembler none\n \
@@ -498,3 +498,10 @@ extern StringArray include_paths;
 extern bool opt_fpic;
 extern bool opt_fcommon;
 extern char *base_file;
+
+
+//
+// sanitize.c
+//
+void spc_sanitize_environment(void);
+int validateArgs(int argc, char **argv);
