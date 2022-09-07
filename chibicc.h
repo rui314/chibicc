@@ -48,6 +48,8 @@ this " PRODUCT " contains only some differences for now like new parameters\n"
 -c path to source to compile \n \
 -Xlinker <arg> Pass <arg> on to the linker.\n \
 -Wl,<options> Pass comma-separated <options> on to the linker.\n \
+-I<path> Pass path to the include directories \n \
+-L<path> Pass path to the lib directories \n \
 chibicc [ -o <path> ] <file>\n"
 
 

@@ -30,9 +30,20 @@ or
     -c path to source to compile
     -Xlinker <arg> Pass <arg> on to the linker.
     -Wl,<options> Pass comma-separated <options> on to the linker.
+    -I<path> Pass path to the include directories
+    -L<path> Pass path to the lib directories
     chibicc [ -o <path> ] <file>
 
 ## Examples
+
+Note that probably you need to define the include parameter and lib parameter to be able to execute these examples outside the chibicc directory. If you forgot you will have similar error message :
+
+    /usr/include/stdio.h:33: #include <stddef.h>
+                                    ^ stddef.h: cannot open file: No such file or directory
+
+To solve it, add the include and lib parameter like below assuming that we are in the parent chibicc directory :
+
+        chibicc pointerofpointers.c -I./chibicc/include -L./chibicc/lib
 
 printing the help
 
@@ -50,9 +61,13 @@ compiling and generating an executable
 
     ./chibicc -o ./test/hello ./test/hello.c
 
-specifying another linker than the default one
+specifying another linker than the default one here lld :
 
     ./chibicc -o ./test/hello ./test/hello.c -fuse-ld ld.lld
+
+specifying another linker than the default one here mold (https://github.com/rui314/mold)
+
+    ./chibicc -o ./test/hello ./test/hello.c -fuse-ld mold
 
 generating assembly file
 
@@ -61,6 +76,14 @@ generating assembly file
 generating a.out file if no parameter -o provided
 
     ./chibicc ./test/hello.c
+
+generating the object only : it generates the pointerofpointers.o
+
+    ./chibicc -c pointerofpointers.c -I./chibicc/include -L./chibicc/lib
+
+generating executable from objects :
+
+    ./chibicc pointerofpointers.o -o pointersofpointers
 
 ## options always passed to the linker
 
@@ -111,4 +134,4 @@ List of options ignored :
 1.0.0 Initial version
 
 1.0.1 adding --version -v option and fixing the -cc1 parameter that caused segmentation fault if other mandatory parameters are missing.
-trying to document cc1 and x options and adding a max length control parameter.
+trying to document cc1 and x options and adding a max length control parameter. Adding documentation for other parameters too.
