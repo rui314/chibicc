@@ -21,7 +21,6 @@ or
     -cc1 run the cc1 function needs -cc1-input and -cc1-output parameters
     -fuse-ld to specify other linker than ld used by default
     -x Specify the language of the following input files.
-        Specify the language of the following input files.
         Permissible languages include: c assembler none
         'none' means revert to the default behavior of
         guessing the language based on the file's extension.
@@ -34,6 +33,18 @@ or
     -L<path> Pass path to the lib directories
     -D<macro> define macro example -DM13
     -U<macro> undefine macro example -UM13
+    -s to strip all symbols during linkage phasis
+    -M -MD -MP -MMD -MF <arg> -MT <arg> -MQ <arg> compiler write a list of input files to
+        stdout in a format that "make" command can read. This feature is
+        used to automate file dependency management
+    -fpic or -fPIC Generate position-independent code (PIC)
+    -fcommon is the default if not specified, it's mainly useful to enable legacy code to link without errors
+    -fno-common specifies that the compiler places uninitialized global variables in the BSS section of the object file.
+    -static  pass to the linker to link a program statically
+    -shared pass to the linker to produce a shared object which can then be linked with other objects to form an executable.
+    -hashmap-test to test the hashmap function
+    -idirafter <dir> apply to lookup for both the #include "file" and #include <file> directives.
+    -### to dump all commands executed by chibicc
     chibicc [ -o <path> ] <file>
 
 ## Examples
@@ -99,6 +110,43 @@ undefining condition at compile time :
     ./test/mydefine
     4
 
+By default the symbol tables is populated by default :
+
+    chibicc -o ./test/mydefine ./test/define.c
+    objdump -t ./test/mydefine
+    ./test/mydefine:     file format elf64-x86-64
+    SYMBOL TABLE:
+    0000000000000000 l    df *ABS*  0000000000000000              crt1.o
+    0000000000400320 l     O .note.ABI-tag  0000000000000020              __abi_tag
+    0000000000000000 l    df *ABS*  0000000000000000              crtstuff.c
+
+Stripping symbol tables during linkage phasis adding -s parameter :
+
+    ./chibicc -o ./test/mydefine ./test/define.c -s
+    objdump -t ./test/mydefine
+    ./test/mydefine:     file format elf64-x86-64
+    SYMBOL TABLE:
+    no symbols
+
+other way to generate assembly file
+
+    ./chibicc ./test/define.c -cc1 -cc1-input ./test/define.c -cc1-output mydefine.s
+
+generating dependencies in std output :
+
+    ./chibicc  ./test/define.c -M
+    define.o: \
+    ./test/define.c \
+    /usr/include/stdio.h \
+    /usr/include/x86_64-linux-gnu/bits/libc-header-start.h \
+    /usr/include/features.h \
+
+generating dependencies in a output file with ".d" extension and generating executable a.out :
+
+    ./chibicc  ./test/define.c -MD
+    ls *.d
+    define.d
+
 ## options always passed to the linker
 
 it means that if you don't use the ld linker or ld.lld probably some options should be conditionned depending your linker
@@ -149,3 +197,5 @@ List of options ignored :
 
 1.0.1 adding --version -v option and fixing the -cc1 parameter that caused segmentation fault if other mandatory parameters are missing.
 trying to document cc1 and x options and adding a max length control parameter. Adding documentation for other parameters too.
+
+1.0.2 fixing issue with cc1 parameter only -cc1-input parameter is mandatory. Finishing parameters documentation.

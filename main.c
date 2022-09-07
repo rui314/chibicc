@@ -60,7 +60,7 @@ static void check_parms_length(char *arg) {
 
 static bool take_arg(char *arg) {
   char *x[] = {
-    "-o", "-I", "-idirafter", "-include", "-x", "-MF", "-MT", "-Xlinker", "-cc1-input", "-cc1-output", "-fuse-ld" 
+    "-o", "-I", "-idirafter", "-include", "-x", "-MF", "-MT", "-MQ", "-Xlinker", "-cc1-input", "-cc1-output", "-fuse-ld" 
   };
 
   for (int i = 0; i < sizeof(x) / sizeof(*x); i++) {
@@ -141,7 +141,7 @@ static void parse_args(int argc, char **argv) {
     if (take_arg(argv[i]))
       if (!argv[++i]) {
         printf("parameter without value! the following parameters need to be followed by a value :\n");
-        printf("-o, -I, -idirafter, -include, -x, -MF, -MT, -Xlinker, -cc1-input, -cc1-output \n");
+        printf("-o, -I, -idirafter, -include, -x, -MF, -MQ, -MT, -Xlinker, -cc1-input, -cc1-output, -fuse-ld \n");
         usage(1);
       }
 
@@ -792,8 +792,8 @@ int main(int argc, char **argv) {
   init_macros();
   parse_args(argc, argv);
 
-  if (opt_cc1 && (!isCc1input || !isCc1output)) {
-      error("with -cc1 parameter -cc1-input and -cc1-input mandatory!");
+  if (opt_cc1 &&  !isCc1input) {
+      error("with -cc1 parameter -cc1-input is mandatory!");
       usage(1);
   }
 

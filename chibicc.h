@@ -26,7 +26,7 @@
 #endif
 
 #define PRODUCT "chibicc"
-#define VERSION "1.0.1"
+#define VERSION "1.0.2"
 #define MAXLEN 101
 
 #define HELP PRODUCT " is a C compiler based on " PRODUCT " created by Rui Ueyama.\n \
@@ -39,10 +39,9 @@ this " PRODUCT " contains only some differences for now like new parameters\n"
 -cc1 run the cc1 function needs -cc1-input and -cc1-output parameters \n \
 -fuse-ld to specify other linker than ld used by default \n \
 -x Specify the language of the following input files.\n \
-   Specify the language of the following input files.\n \
     Permissible languages include: c assembler none\n \
-      'none' means revert to the default behavior of\n \
-      guessing the language based on the file's extension.\n \
+    'none' means revert to the default behavior of\n \
+    guessing the language based on the file's extension.\n \
 -S generate assembly file \n \
 -o path to output executable if omitted a.out generated\n \
 -c path to source to compile \n \
@@ -52,8 +51,19 @@ this " PRODUCT " contains only some differences for now like new parameters\n"
 -L<path> Pass path to the lib directories \n \
 -D<macro> define macro example -DM13 \n \
 -U<macro> undefine macro example -UM13\n \
+-s to strip all symbols during linkage phasis \n \
+-M -MD -MP -MMD -MF <arg> -MT <arg> -MQ <arg> compiler write a list of input files to \n \
+    stdout in a format that \"make\" command can read. This feature is\n \
+    used to automate file dependency management\n \
+-fpic or -fPIC Generate position-independent code (PIC)\n \
+-fcommon is the default if not specified, it's mainly useful to enable legacy code to link without errors\n \
+-fno-common specifies that the compiler places uninitialized global variables in the BSS section of the object file.\n \
+-static  pass to the linker to link a program statically\n \
+-shared pass to the linker to produce a shared object which can then be linked with other objects to form an executable.\n \
+-hashmap-test to test the hashmap function \n \
+-idirafter <dir> apply to lookup for both the #include \"file\" and #include <file> directives.\n \
+-### to dump all commands executed by chibicc \n \
 chibicc [ -o <path> ] <file>\n"
-
 
 typedef struct Type Type;
 typedef struct Node Node;
