@@ -63,6 +63,9 @@ this " PRODUCT " contains only some differences for now like new parameters\n"
 -hashmap-test to test the hashmap function \n \
 -idirafter <dir> apply to lookup for both the #include \"file\" and #include <file> directives.\n \
 -### to dump all commands executed by chibicc \n \
+-E Stop after the preprocessing stage; do not run the compiler proper. \n \
+    The output is in the form of preprocessed source code, which is sent to the standard output.\n \
+    Input files that don’t require preprocessing are ignored.\n \
 chibicc [ -o <path> ] <file>\n"
 
 typedef struct Type Type;

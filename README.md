@@ -45,6 +45,9 @@ or
     -hashmap-test to test the hashmap function
     -idirafter <dir> apply to lookup for both the #include "file" and #include <file> directives.
     -### to dump all commands executed by chibicc
+    -E Stop after the preprocessing stage; do not run the compiler proper.
+        The output is in the form of preprocessed source code, which is sent to the standard output.
+        Input files that don’t require preprocessing are ignored.
     chibicc [ -o <path> ] <file>
 
 ## Examples
