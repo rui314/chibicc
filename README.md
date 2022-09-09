@@ -188,6 +188,15 @@ List of options ignored :
     "-mno-red-zone"
     "-w"
 
+## Dockerfile and devcontainer
+
+Adding dockerfile suggested by Oxc0 https://github.com/0xc0/chibicc/tree/new
+To build :
+
+    docker build -t chibicc .
+
+Adding also a devcontainer for those that want to use visual code inside a container (needs vs code extension remote-containers).
+
 ## TODO
 
 - need to document all options by understanding the code!
@@ -204,3 +213,5 @@ trying to document cc1 and x options and adding a max length control parameter. 
 1.0.2 fixing issue with cc1 parameter only -cc1-input parameter is mandatory. Finishing parameters documentation.
 
 1.0.3 trying to add some sanitizing functions and check if arguments have valid allowed characters (probably too strict!).
+
+1.0.4 Adding Dockerfile and a devcontainer
