@@ -449,9 +449,27 @@ static bool endswith(char *p, char *q) {
   return (len1 >= len2) && !strcmp(p + len1 - len2, q);
 }
 
+//returns filename example ./test/hello.c returns hello.c
+static char *extract_filename(char *tmpl) {
+  char *filename = basename(strdup(tmpl));
+  return format("%s", filename);
+}
+
+//return path without filename example : ./test/hello.c returns ./test
+static char *extract_path(char *tmpl, char*basename) {
+int total_length = strlen(tmpl);
+int basename_length = strlen(basename);
+int length = total_length - basename_length + 1;
+char pathonly[length];
+memset(pathonly, 0, sizeof(pathonly));
+strncpy(pathonly, tmpl, sizeof(pathonly) - 1 );
+return format("%s", pathonly);
+}
+
 // Replace file extension
 static char *replace_extn(char *tmpl, char *extn) {
-  char *filename = basename(strdup(tmpl));
+  char *filename = extract_filename(tmpl);
+  //char *filename = basename(strdup(tmpl));  
   char *dot = strrchr(filename, '.');
   if (dot)
     *dot = '\0';
@@ -554,8 +572,18 @@ static void print_dependencies(void) {
   char *path;
   if (opt_MF)
     path = opt_MF;
-  else if (opt_MD)
+  else if (opt_MD) {
+    //fixing the issue with file.d created in the current directory if no -o parameter or in the output directory define by -o parameter
     path = replace_extn(opt_o ? opt_o : base_file, ".d");
+    if (opt_o != NULL) {
+      char *fullpath;
+      char *filename;      
+      filename = extract_filename(opt_o);
+      fullpath = extract_path(opt_o, filename);    
+      strncat(fullpath, path, strlen(path));
+      path = fullpath;
+    }
+  }
   else if (opt_o)
     path = opt_o;
   else

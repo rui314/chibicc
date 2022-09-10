@@ -6,6 +6,8 @@ I want to play with it and to add some other options like choosing other linker 
 It's for learning purposes too, to try to understand existing code and to extend it.
 Using PVS.studio to find some potential issues and fix them.
 
+Trying to work on issues and pull requests done in the original repository.
+
 ## usage
 
 ./chibicc --help
@@ -203,6 +205,11 @@ Adding also a devcontainer for those that want to use visual code inside a conta
 - need to test all options to have a better understanding
 - need to add some input validation to avoid calls to execvp with non-validated input (for now only limited the length of each parameter to 100 characters)
 
+## issues and pull requests fixed
+
+    * Add dockerfile #23 pull request from 0xc0
+    * Issue #30 from ludocode
+
 ## release notes
 
 1.0.0 Initial version
@@ -214,4 +221,4 @@ trying to document cc1 and x options and adding a max length control parameter. 
 
 1.0.3 trying to add some sanitizing functions and check if arguments have valid allowed characters (probably too strict!).
 
-1.0.4 Adding Dockerfile and a devcontainer
+1.0.4 Fixing the output directory for dependencies "xxx.d" when -MD option is set, the output "xxx.d" file is generated in the current directory if no -o parameter defined or in the directory defined by -o parameter (issue #30). Adding Dockerfile and a devcontainer for those who want to play with that (issue #23).
