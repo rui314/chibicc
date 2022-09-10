@@ -213,6 +213,7 @@ Adding also a devcontainer for those that want to use visual code inside a conta
     - Binary add segfaults when at least 1 arg is non-numeric, and both are non-pointer types #42 pull request from StrongerXi
     - It's UB to have a call to va_start without a corresponding call to va_end #51 pull request from camel-cdr
     - Fix bug in codegen.c if (ty->size == 4) instead of if (ty->size == 12) #52 pull request from mtsamis
+    - difficulty in understanding priorities. #54 pull request from ihsinme
 
 ## release notes
 
@@ -225,4 +226,4 @@ trying to document cc1 and x options and adding a max length control parameter. 
 
 1.0.3 trying to add some sanitizing functions and check if arguments have valid allowed characters (probably too strict!).
 
-1.0.4 Fixing the output directory for dependencies "xxx.d" when -MD option is set, the output "xxx.d" file is generated in the current directory if no -o parameter defined or in the directory defined by -o parameter (issue #30). Adding Dockerfile and a devcontainer for those who want to play with that (issue #23). Typecheck void type expressions in return and assignment (issue #41). Binary add segfaults when at least 1 arg is non-numeric, and both are non-pointer types (issue #42). It's UB to have a call to va_start without a corresponding call to va_end (issue #51). Fix bug in codegen.c (issue #52)
+1.0.4 Fixing the output directory for dependencies "xxx.d" when -MD option is set, the output "xxx.d" file is generated in the current directory if no -o parameter defined or in the directory defined by -o parameter (issue #30). Adding Dockerfile and a devcontainer for those who want to play with that (issue #23). Typecheck void type expressions in return and assignment (issue #41). Binary add segfaults when at least 1 arg is non-numeric, and both are non-pointer types (issue #42). It's UB to have a call to va_start without a corresponding call to va_end (issue #51). Fix bug in codegen.c (issue #52). fix issue in main.c (issue #54).
