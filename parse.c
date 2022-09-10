@@ -2397,7 +2397,7 @@ static Node *new_add(Node *lhs, Node *rhs, Token *tok) {
   if (is_numeric(lhs->ty) && is_numeric(rhs->ty))
     return new_binary(ND_ADD, lhs, rhs, tok);
 
-  if ((lhs->ty->base && rhs->ty->base) || (!lhs->ty->base && !rhs->ty->base) )
+  if ((lhs->ty->base == NULL && rhs->ty->base == NULL) || (lhs->ty->base != NULL && rhs->ty->base != NULL) )
     error_tok(tok, "invalid operands");
 
   // Canonicalize `num + ptr` to `ptr + num`.
