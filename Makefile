@@ -1,4 +1,4 @@
-CC=gcc
+CC=chibicc
 CFLAGS=-std=c11 -g -fno-common -Wall -Wno-switch
 
 OBJECT=chibicc

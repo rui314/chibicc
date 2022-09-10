@@ -209,6 +209,7 @@ Adding also a devcontainer for those that want to use visual code inside a conta
 
     - Add dockerfile #23 pull request from 0xc0
     - Issue #30 from ludocode
+    - Typecheck void type expressions in return and assignment #41 pull request from StrongerXi
 
 ## release notes
 
@@ -221,4 +222,4 @@ trying to document cc1 and x options and adding a max length control parameter. 
 
 1.0.3 trying to add some sanitizing functions and check if arguments have valid allowed characters (probably too strict!).
 
-1.0.4 Fixing the output directory for dependencies "xxx.d" when -MD option is set, the output "xxx.d" file is generated in the current directory if no -o parameter defined or in the directory defined by -o parameter (issue #30). Adding Dockerfile and a devcontainer for those who want to play with that (issue #23).
+1.0.4 Fixing the output directory for dependencies "xxx.d" when -MD option is set, the output "xxx.d" file is generated in the current directory if no -o parameter defined or in the directory defined by -o parameter (issue #30). Adding Dockerfile and a devcontainer for those who want to play with that (issue #23). Typecheck void type expressions in return and assignment (issue #41).
