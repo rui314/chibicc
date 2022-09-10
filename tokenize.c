@@ -18,6 +18,7 @@ void error(char *fmt, ...) {
   va_start(ap, fmt);
   vfprintf(stderr, fmt, ap);
   fprintf(stderr, "\n");
+  va_end(ap);
   exit(1);
 }
 
@@ -58,6 +59,7 @@ void error_at(char *loc, char *fmt, ...) {
   va_list ap;
   va_start(ap, fmt);
   verror_at(current_file->name, current_file->contents, line_no, loc, fmt, ap);
+  va_end(ap);
   exit(1);
 }
 
@@ -65,6 +67,7 @@ void error_tok(Token *tok, char *fmt, ...) {
   va_list ap;
   va_start(ap, fmt);
   verror_at(tok->file->name, tok->file->contents, tok->line_no, tok->loc, fmt, ap);
+  va_end(ap);
   exit(1);
 }
 
