@@ -192,7 +192,7 @@ List of options ignored :
 
 ## Dockerfile and devcontainer
 
-Adding dockerfile suggested by Oxc0 https://github.com/0xc0/chibicc/tree/new
+Adding dockerfile suggested by 0xc0 https://github.com/0xc0/chibicc/tree/new
 To build :
 
     docker build -t chibicc .
@@ -207,8 +207,8 @@ Adding also a devcontainer for those that want to use visual code inside a conta
 
 ## issues and pull requests fixed
 
-    * Add dockerfile #23 pull request from 0xc0
-    * Issue #30 from ludocode
+    - Add dockerfile #23 pull request from 0xc0
+    - Issue #30 from ludocode
 
 ## release notes
 
