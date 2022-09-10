@@ -1,0 +1,6 @@
+{
+  "files.associations": {
+    "*.macro": "macromaker",
+    "chibicc.h": "c"
+  }
+}

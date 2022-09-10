@@ -23,7 +23,7 @@ static uint64_t fnv_hash(char *s, int len) {
   return hash;
 }
 
-// Make room for new entires in a given hashmap by removing
+// Make room for new entries in a given hashmap by removing
 // tombstones and possibly extending the bucket size.
 static void rehash(HashMap *map) {
   // Compute the size of the new hashmap.
@@ -89,11 +89,11 @@ static HashEntry *get_or_insert_entry(HashMap *map, char *key, int keylen) {
     if (match(ent, key, keylen))
       return ent;
 
-    if (ent->key == TOMBSTONE) {
-      ent->key = key;
-      ent->keylen = keylen;
-      return ent;
-    }
+    // if (ent->key == TOMBSTONE) {
+    //   ent->key = key;
+    //   ent->keylen = keylen;
+    //   return ent;
+    // }
 
     if (ent->key == NULL) {
       ent->key = key;
