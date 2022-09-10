@@ -1,3 +1,4 @@
+#include <stdio.h>  int main() { return;}
 void foo() { }
 
 void bar() {
