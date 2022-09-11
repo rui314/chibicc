@@ -115,7 +115,7 @@ undefining condition at compile time :
     ./test/mydefine
     4
 
-By default the symbol tables is populated by default :
+By default the symbol tables is populated:
 
     chibicc -o ./test/mydefine ./test/define.c
     objdump -t ./test/mydefine
@@ -216,6 +216,10 @@ Adding also a devcontainer for those that want to use visual code inside a conta
     - difficulty in understanding priorities. #54 pull request from ihsinme
     - Fixed bug in preprocessor process extraneous tokens. #95 pull request from memleaker
     - Hashmap: Do not insert duplicate keys #98 pull request from boki1
+    - issue #65 assembler error on larger than 32-bit bitfields from GabrielRavier
+    - issue #28 bifield validation from zamfofex
+    - issue #48 asan issues with memcmp from math4tots
+    - issue #36 assertion when using empty structs from edubart
 
 ## release notes
 
@@ -229,3 +233,5 @@ trying to document cc1 and x options and adding a max length control parameter. 
 1.0.3 trying to add some sanitizing functions and check if arguments have valid allowed characters (probably too strict!).
 
 1.0.4 Fixing the output directory for dependencies "xxx.d" when -MD option is set, the output "xxx.d" file is generated in the current directory if no -o parameter defined or in the directory defined by -o parameter (issue #30). Adding Dockerfile and a devcontainer for those who want to play with that (issue #23). Typecheck void type expressions in return and assignment (issue #41). Binary add segfaults when at least 1 arg is non-numeric, and both are non-pointer types (issue #42). It's UB to have a call to va_start without a corresponding call to va_end (issue #51). Fix bug in codegen.c (issue #52). fix issue in main.c (issue #54). Fixed bug in preprocessor process extraneous tokens (issue #95). Hashmap: Do not insert duplicate keys (issue #98).
+
+1.0.5 Fixing assembler error on larger than 32-bit bitfields (issue #65) by GabrielRavier. Fixing bitfield validation by zamfofex (issue #28). Replacing memcmp by strncmp (issue #48) by math4tots. Fixing empty structs as one-byte object (issue #36) by edubart.

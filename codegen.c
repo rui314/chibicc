@@ -786,7 +786,13 @@ static void gen_expr(Node *node) {
       // from memory and merge it with a new value.
       Member *mem = node->lhs->member;
       println("  mov %%rax, %%rdi");
-      println("  and $%ld, %%rdi", (1L << mem->bit_width) - 1);
+      if (mem->bit_width >= 32) {
+        println("  mov $%ld, %%rax", (1L << mem->bit_width) - 1);
+        println("  and %%rax, %%rdi");
+      } else {
+        println("  and $%ld, %%rdi", (1L << mem->bit_width) - 1);
+      }
+      //println("  and $%ld, %%rdi", (1L << mem->bit_width) - 1);
       println("  shl $%d, %%rdi", mem->bit_offset);
 
       println("  mov (%%rsp), %%rax");

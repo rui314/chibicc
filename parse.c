@@ -2621,12 +2621,25 @@ static void struct_members(Token **rest, Token *tok, Type *ty) {
       mem->align = attr.align ? attr.align : mem->ty->align;
 
       if (consume(&tok, tok, ":")) {
+        if (!is_integer(mem->ty)) {
+          error_tok(tok, "only integers can be bitfields");
+        }
         mem->is_bitfield = true;
         mem->bit_width = const_expr(&tok, tok);
       }
 
       cur = cur->next = mem;
     }
+  }
+
+  if (idx == 0) {
+    Member *mem = calloc(1, sizeof(Member));
+    if (mem == NULL)
+      error("parse.c : in struct_members mem is null");
+    mem->ty = ty_char;
+    mem->idx = 0;
+    mem->align = mem->ty->align;
+    cur = cur->next = mem;
   }
 
   // If the last element is an array of incomplete type, it's
@@ -2799,6 +2812,7 @@ static Member *get_struct_member(Type *ty, Token *tok) {
   return NULL;
 }
 
+
 // Create a node representing a struct member access, such as foo.bar
 // where foo is a struct and bar is a member name.
 //
@@ -2818,7 +2832,6 @@ static Node *struct_ref(Node *node, Token *tok) {
     error_tok(node->tok, "not a struct nor a union");
 
   Type *ty = node->ty;
-
   for (;;) {
     Member *mem = get_struct_member(ty, tok);
     if (!mem)
@@ -2827,6 +2840,7 @@ static Node *struct_ref(Node *node, Token *tok) {
     node->member = mem;
     if (mem->name)
       break;
+
     ty = mem->ty;
   }
   return node;
