@@ -217,7 +217,7 @@ Adding also a devcontainer for those that want to use visual code inside a conta
     - Fixed bug in preprocessor process extraneous tokens. #95 pull request from memleaker
     - Hashmap: Do not insert duplicate keys #98 pull request from boki1
     - issue #65 assembler error on larger than 32-bit bitfields from GabrielRavier
-    - issue #28 bifield validation from zamfofex
+    - issue #28 bitfield validation from zamfofex
     - issue #48 asan issues with memcmp from math4tots
     - issue #36 assertion when using empty structs from edubart
 
