@@ -1025,10 +1025,17 @@ static Member *struct_designator(Token **rest, Token *tok, Type *ty) {
 
   for (Member *mem = ty->members; mem; mem = mem->next) {
     // Anonymous struct member
-    if (mem->ty->kind == TY_STRUCT && !mem->name) {
-      if (get_struct_member(mem->ty, tok)) {
-        *rest = start;
-        return mem;
+    // if (mem->ty->kind == TY_STRUCT && !mem->name) {
+    //   if (get_struct_member(mem->ty, tok)) {
+    //     *rest = start;
+    //     return mem;
+    //   }
+    if (!mem->name) {
+      if (mem->ty->kind == TY_STRUCT || mem->ty->kind == TY_UNION) {
+        if (get_struct_member(mem->ty, tok)) {
+          *rest = start;
+          return mem;
+        }
       }
       continue;
     }
@@ -2797,10 +2804,15 @@ static Type *union_decl(Token **rest, Token *tok) {
 static Member *get_struct_member(Type *ty, Token *tok) {
   for (Member *mem = ty->members; mem; mem = mem->next) {
     // Anonymous struct member
-    if ((mem->ty->kind == TY_STRUCT || mem->ty->kind == TY_UNION) &&
-        !mem->name) {
-      if (get_struct_member(mem->ty, tok))
-        return mem;
+    // if ((mem->ty->kind == TY_STRUCT || mem->ty->kind == TY_UNION) &&
+    //     !mem->name) {
+    //   if (get_struct_member(mem->ty, tok))
+    //     return mem;
+    if (!mem->name) {
+      if (mem->ty->kind == TY_STRUCT || mem->ty->kind == TY_UNION)
+        if (get_struct_member(mem->ty, tok))
+          return mem;
+    
       continue;
     }
 

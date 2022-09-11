@@ -82,6 +82,7 @@ static void add_default_include_paths(char *argv0) {
   strarray_push(&include_paths, "/usr/local/include");
   strarray_push(&include_paths, "/usr/include/x86_64-linux-gnu");
   strarray_push(&include_paths, "/usr/include");
+  strarray_push(&include_paths, "/usr/include/chibicc/include");
 
   // Keep a copy of the standard include paths for -MMD option.
   for (int i = 0; i < include_paths.len; i++)
