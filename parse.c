@@ -1258,17 +1258,25 @@ static void union_initializer(Token **rest, Token *tok, Initializer *init) {
 //             | assign
 static void initializer2(Token **rest, Token *tok, Initializer *init) {
   if (init->ty->kind == TY_ARRAY && tok->kind == TK_STR) {
-    string_initializer(rest, tok, init);
-    return;
-  }
+     string_initializer(rest, tok, init);
+     return;
+   }
 
+//printf("%d %d\n", init->ty->kind, tok->next->kind);
   if (init->ty->kind == TY_ARRAY) {
-    if (equal(tok, "{"))
+    if (equal(tok, "{")) {
+      if (init->ty->base->kind == TY_CHAR && tok->next->kind == TK_STR) {
+      tok = skip(tok, "{");
+      initializer2(&tok, tok, init);
+      *rest = skip(tok, "}");
+      return;
+      }
       array_initializer1(rest, tok, init);
-    else
-      array_initializer2(rest, tok, init, 0);
     return;
   }
+  array_initializer2(rest, tok, init, 0);
+  return;
+}
 
   if (init->ty->kind == TY_STRUCT) {
     if (equal(tok, "{")) {

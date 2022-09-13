@@ -222,6 +222,7 @@ Adding also a devcontainer for those that want to use visual code inside a conta
     - issue #36 assertion when using empty structs from edubart
     - issue #31 Anonymously named bitfield member segfaults compiler from Anonymously named bitfield member segfaults compiler fixed by zamfofex
     - issue #45 When anonymous union field is specified by designator, compiler crashe from vain0x fixed by zamfofex
+    - issue #80 Size of string is wrong from tyfkda
 
 ## release notes
 
@@ -238,4 +239,4 @@ trying to document cc1 and x options and adding a max length control parameter. 
 
 1.0.5 Fixing assembler error on larger than 32-bit bitfields (issue #65) by GabrielRavier. Fixing bitfield validation by zamfofex (issue #28). Replacing memcmp by strncmp (issue #48) by math4tots. Fixing empty structs as one-byte object (issue #36) by edubart.
 
-1.0.6 Anonymously named bitfield member segfaults compiler (issue #31). Fixing anonymous union field (issue #45) by zamfofex.
+1.0.6 Anonymously named bitfield member segfaults compiler (issue #31). Fixing anonymous union field (issue #45) by zamfofex. Fixing wrong size of string initialized by braces (issue #80) by zamfofex.
