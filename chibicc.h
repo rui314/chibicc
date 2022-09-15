@@ -26,7 +26,7 @@
 #endif
 
 #define PRODUCT "chibicc"
-#define VERSION "1.0.6"
+#define VERSION "1.0.7"
 #define MAXLEN 101
 
 #define HELP PRODUCT " is a C compiler based on " PRODUCT " created by Rui Ueyama.\n \

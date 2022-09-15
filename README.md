@@ -223,6 +223,11 @@ Adding also a devcontainer for those that want to use visual code inside a conta
     - issue #31 Anonymously named bitfield member segfaults compiler from Anonymously named bitfield member segfaults compiler fixed by zamfofex
     - issue #45 When anonymous union field is specified by designator, compiler crashe from vain0x fixed by zamfofex
     - issue #80 Size of string is wrong from tyfkda
+    - issue #72 Internal error when initializing array of long with string literals from GabrielRavier
+    - issue #47 postfix tails on compound literals from vain0x
+    - issue #62 Nested designators error from sanxiyn
+    - issue #37 Using goto inside statement expressions gives an error from edubart
+    - issue #63 Function type parameter without identifier errs by sanxiyn
 
 ## release notes
 
@@ -240,3 +245,5 @@ trying to document cc1 and x options and adding a max length control parameter. 
 1.0.5 Fixing assembler error on larger than 32-bit bitfields (issue #65) by GabrielRavier. Fixing bitfield validation by zamfofex (issue #28). Replacing memcmp by strncmp (issue #48) by math4tots. Fixing empty structs as one-byte object (issue #36) by edubart.
 
 1.0.6 Anonymously named bitfield member segfaults compiler (issue #31). Fixing anonymous union field (issue #45) by zamfofex. Fixing wrong size of string initialized by braces (issue #80) by zamfofex.
+
+1.0.7 Internal error when initializing array of long with string literals (issue #72) by GabrielRavier. Fixing postfix tails on compound literals (issue #47) by zamfofex. Trying to fix nested designators error(issue #62). Fixing Using goto inside statement expressions gives an error (issue #37) by zamfofex. Fixing function type parameter without identifier errs (issue #63) by zamfofex.

@@ -703,7 +703,7 @@ static Type *pointers(Token **rest, Token *tok, Type *ty) {
 static Type *declarator(Token **rest, Token *tok, Type *ty) {
   ty = pointers(&tok, tok, ty);
 
-  if (equal(tok, "(")) {
+  if (equal(tok, "(") && !is_typename(tok->next) && !equal(tok->next, ")")) {
     Token *start = tok;
     Type dummy = {};
     declarator(&tok, start->next, &dummy);
@@ -967,7 +967,8 @@ static void string_initializer(Token **rest, Token *tok, Initializer *init) {
     break;
   }
   default:
-    unreachable();
+    error_tok(tok, "array of inappropriate type initialized from string constant");
+    //unreachable();
   }
 
   *rest = tok->next;
@@ -1024,12 +1025,6 @@ static Member *struct_designator(Token **rest, Token *tok, Type *ty) {
     error_tok(tok, "expected a field designator");
 
   for (Member *mem = ty->members; mem; mem = mem->next) {
-    // Anonymous struct member
-    // if (mem->ty->kind == TY_STRUCT && !mem->name) {
-    //   if (get_struct_member(mem->ty, tok)) {
-    //     *rest = start;
-    //     return mem;
-    //   }
     if (!mem->name) {
       if (mem->ty->kind == TY_STRUCT || mem->ty->kind == TY_UNION) {
         if (get_struct_member(mem->ty, tok)) {
@@ -1069,7 +1064,7 @@ static void designation(Token **rest, Token *tok, Initializer *init) {
   if (equal(tok, ".") && init->ty->kind == TY_STRUCT) {
     Member *mem = struct_designator(&tok, tok, init->ty);
     designation(&tok, tok, init->children[mem->idx]);
-    init->expr = NULL;
+    init->expr = NULL;     
     struct_initializer2(rest, tok, init, mem->next);
     return;
   }
@@ -1085,7 +1080,9 @@ static void designation(Token **rest, Token *tok, Initializer *init) {
     error_tok(tok, "field name not in struct or union initializer");
 
   if (equal(tok, "="))
-    tok = tok->next;
+    tok = skip(tok, "=");
+    //tok = tok->next;
+
   initializer2(rest, tok, init);
 }
 
@@ -1212,11 +1209,11 @@ static void struct_initializer1(Token **rest, Token *tok, Initializer *init) {
 // struct-initializer2 = initializer ("," initializer)*
 static void struct_initializer2(Token **rest, Token *tok, Initializer *init, Member *mem) {
   bool first = true;
-
+  //printf("%d %d \n", init->ty->kind, equal(tok, ","));
   for (; mem && !is_end(tok); mem = mem->next) {
     Token *start = tok;
 
-    if (!first)
+    if (!first) 
       tok = skip(tok, ",");
     first = false;
 
@@ -1224,7 +1221,7 @@ static void struct_initializer2(Token **rest, Token *tok, Initializer *init, Mem
       *rest = start;
       return;
     }
-
+    //printf("ici ? %d \n", equal(tok, ","));
     initializer2(&tok, tok, init->children[mem->idx]);
   }
   *rest = tok;
@@ -1257,12 +1254,17 @@ static void union_initializer(Token **rest, Token *tok, Initializer *init) {
 //             | struct-initializer | union-initializer
 //             | assign
 static void initializer2(Token **rest, Token *tok, Initializer *init) {
+  // trying to fix issue #62 
+  if (equal(tok, ",")) 
+    return;
+
   if (init->ty->kind == TY_ARRAY && tok->kind == TK_STR) {
      string_initializer(rest, tok, init);
      return;
    }
 
-//printf("%d %d\n", init->ty->kind, tok->next->kind);
+
+
   if (init->ty->kind == TY_ARRAY) {
     if (equal(tok, "{")) {
       if (init->ty->base->kind == TY_CHAR && tok->next->kind == TK_STR) {
@@ -2874,7 +2876,7 @@ static Node *new_inc_dec(Node *node, Token *tok, int addend) {
                   node->ty);
 }
 
-// postfix = "(" type-name ")" "{" initializer-list "}"
+// postfix = "(" type-name ")" "{" initializer-list "}" postfix-tail*
 //         = ident "(" func-args ")" postfix-tail*
 //         | primary postfix-tail*
 //
@@ -2885,6 +2887,7 @@ static Node *new_inc_dec(Node *node, Token *tok, int addend) {
 //              | "++"
 //              | "--"
 static Node *postfix(Token **rest, Token *tok) {
+  Node *node;
   if (equal(tok, "(") && is_typename(tok->next)) {
     // Compound literal
     Token *start = tok;
@@ -2893,17 +2896,27 @@ static Node *postfix(Token **rest, Token *tok) {
 
     if (scope->next == NULL) {
       Obj *var = new_anon_gvar(ty);
-      gvar_initializer(rest, tok, var);
-      return new_var_node(var, start);
+      // gvar_initializer(rest, tok, var);
+      // return new_var_node(var, start);
+      gvar_initializer(&tok, tok, var);
+      node = new_var_node(var, start);
+    } else {
+      Obj *var = new_lvar("", ty);
+      Node *lhs = lvar_initializer(&tok, tok, var);
+      Node *rhs = new_var_node(var, tok);
+      node = new_binary(ND_COMMA, lhs, rhs, start);   
+
     }
 
-    Obj *var = new_lvar("", ty);
-    Node *lhs = lvar_initializer(rest, tok, var);
-    Node *rhs = new_var_node(var, tok);
-    return new_binary(ND_COMMA, lhs, rhs, start);
-  }
+    // Obj *var = new_lvar("", ty);
+    // Node *lhs = lvar_initializer(rest, tok, var);
+    // Node *rhs = new_var_node(var, tok);
+    // return new_binary(ND_COMMA, lhs, rhs, start);
+   } else {
+    node = primary(&tok, tok);
+   }
 
-  Node *node = primary(&tok, tok);
+  //Node *node = primary(&tok, tok);
 
   for (;;) {
     if (equal(tok, "(")) {
@@ -3227,7 +3240,8 @@ static void create_param_lvars(Type *param) {
   if (param) {
     create_param_lvars(param->next);
     if (!param->name)
-      error_tok(param->name_pos, "parameter name omitted");
+      return;
+      //error_tok(param->name_pos, "parameter name omitted");
     new_lvar(get_ident(param->name), param);
   }
 }

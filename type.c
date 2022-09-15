@@ -281,6 +281,8 @@ void add_type(Node *node) {
       Node *stmt = node->body;
       while (stmt->next)
         stmt = stmt->next;
+      while (stmt->kind == ND_LABEL)
+        stmt = stmt->lhs;        
       if (stmt->kind == ND_EXPR_STMT) {
         node->ty = stmt->lhs->ty;
         return;
