@@ -1,7 +1,7 @@
 #ifndef __STDARG_H
 #define __STDARG_H
 
-
+typedef unsigned char  Byte;  /* 8 bits */
 
 typedef struct {
   unsigned int gp_offset;
