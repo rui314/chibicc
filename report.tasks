@@ -1,13 +1,13 @@
 pvs-studio.com/en/docs/warnings/	1	err	Help: The documentation for all analyzer warnings is available here: https://pvs-studio.com/en/docs/warnings/.
 /home/stormalf/tests_c/chibicc/main.c	79	warn	V575 The potential null pointer is passed into 'dirname' function. Inspect the first argument. Check lines: 79, 79.
 /home/stormalf/tests_c/chibicc/parse.c	844	warn	V1004 The 'ty->base' pointer was used unsafely after it was verified against nullptr. Check lines: 837, 844.
-/home/stormalf/tests_c/chibicc/parse.c	1519	warn	V773 The return value of function 'write_gvar_data' is required to be utilized. A memory leak is possible.
-/home/stormalf/tests_c/chibicc/parse.c	1943	warn	V1070 Signed value is converted to an unsigned one with subsequent expansion to a larger type in ternary operator.
-/home/stormalf/tests_c/chibicc/parse.c	1944	warn	V1070 Signed value is converted to an unsigned one with subsequent expansion to a larger type in ternary operator.
-/home/stormalf/tests_c/chibicc/parse.c	1945	warn	V1070 Signed value is converted to an unsigned one with subsequent expansion to a larger type in ternary operator.
-/home/stormalf/tests_c/chibicc/parse.c	2432	err	V595 The 'lhs->ty->base' pointer was utilized before it was verified against nullptr. Check lines: 2432, 2440.
-/home/stormalf/tests_c/chibicc/parse.c	3260	warn	V576 Incorrect format. Consider checking the third actual argument of the 'error_tok' function. Under certain conditions the pointer can be null.
-/home/stormalf/tests_c/chibicc/chibicc.h	142	warn	V1071 Consider inspecting the 'skip' function. The return value is not always used. Total calls: 87, discarded results: 1.
+/home/stormalf/tests_c/chibicc/parse.c	1536	warn	V773 The return value of function 'write_gvar_data' is required to be utilized. A memory leak is possible.
+/home/stormalf/tests_c/chibicc/parse.c	1960	warn	V1070 Signed value is converted to an unsigned one with subsequent expansion to a larger type in ternary operator.
+/home/stormalf/tests_c/chibicc/parse.c	1961	warn	V1070 Signed value is converted to an unsigned one with subsequent expansion to a larger type in ternary operator.
+/home/stormalf/tests_c/chibicc/parse.c	1962	warn	V1070 Signed value is converted to an unsigned one with subsequent expansion to a larger type in ternary operator.
+/home/stormalf/tests_c/chibicc/parse.c	2449	err	V595 The 'lhs->ty->base' pointer was utilized before it was verified against nullptr. Check lines: 2449, 2457.
+/home/stormalf/tests_c/chibicc/parse.c	3305	warn	V576 Incorrect format. Consider checking the third actual argument of the 'error_tok' function. Under certain conditions the pointer can be null.
+/home/stormalf/tests_c/chibicc/chibicc.h	142	warn	V1071 Consider inspecting the 'skip' function. The return value is not always used. Total calls: 90, discarded results: 1.
 /home/stormalf/tests_c/chibicc/chibicc.h	143	warn	V1071 Consider inspecting the 'consume' function. The return value is not always used. Total calls: 22, discarded results: 1.
 /home/stormalf/tests_c/chibicc/parse.c	131	warn	V1071 Consider inspecting the 'assign' function. The return value is not always used. Total calls: 24, discarded results: 1.
 /home/stormalf/tests_c/chibicc/preprocess.c	469	warn	V547 Expression 'pp' is always false.

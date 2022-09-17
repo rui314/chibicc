@@ -28,6 +28,8 @@ static char *opt_MF;
 static char *opt_MT;
 static char *opt_o;
 static char *opt_linker;
+static char *symbolic_name;
+static char *r_path;
 
 static StringArray ld_extra_args;
 static StringArray std_include_paths;
@@ -63,7 +65,7 @@ static void check_parms_length(char *arg) {
 
 static bool take_arg(char *arg) {
   char *x[] = {
-    "-o", "-I", "-idirafter", "-include", "-x", "-MF", "-MT", "-MQ", "-Xlinker", "-cc1-input", "-cc1-output", "-fuse-ld" 
+    "-o", "-I", "-idirafter", "-include", "-x", "-MF", "-MT", "-MQ", "-Xlinker", "-cc1-input", "-cc1-output", "-fuse-ld", "-soname", "-rpath" 
   };
 
   for (int i = 0; i < sizeof(x) / sizeof(*x); i++) {
@@ -145,14 +147,13 @@ static void parse_args(int argc, char **argv) {
     if (take_arg(argv[i]))
       if (!argv[++i]) {
         printf("parameter without value! the following parameters need to be followed by a value :\n");
-        printf("-o, -I, -idirafter, -include, -x, -MF, -MQ, -MT, -Xlinker, -cc1-input, -cc1-output, -fuse-ld \n");
+        printf("-o, -I, -idirafter, -include, -x, -MF, -MQ, -MT, -Xlinker, -cc1-input, -cc1-output, -fuse-ld, -soname, -rpath \n");
         usage(1);
       }
 
   StringArray idirafter = {};
 
   for (int i = 1; i < argc; i++) {
-
 
     if (!strcmp(argv[i], "-###")) {
       opt_hash_hash_hash = true;
@@ -291,6 +292,8 @@ static void parse_args(int argc, char **argv) {
       continue;
     }
 
+
+
     if (!strcmp(argv[i], "-s")) {
       strarray_push(&ld_extra_args, "-s");
       continue;
@@ -400,6 +403,23 @@ static void parse_args(int argc, char **argv) {
     if (!strcmp(argv[i], "-hashmap-test")) {
       hashmap_test();
       exit(0);
+    }
+
+    //-soname create a symbolic link before calling the linker like in gcc -Wl,-soname,libcurl.so.4 -o libcurl.so.4.8.0
+    if (!strcmp(argv[i], "-soname")) {
+      char *tmp = argv[++i];
+      check_parms_length(tmp); 
+      symbolic_name = tmp;
+      continue;
+    }
+
+    if (!strcmp(argv[i], "-rpath")) {
+      char *tmp = argv[++i];
+      check_parms_length(tmp); 
+      r_path = tmp;
+      strarray_push(&ld_extra_args, "-rpath");      
+      strarray_push(&ld_extra_args, r_path);      
+      continue;
     }
 
     // These options are ignored for now.
@@ -538,6 +558,7 @@ static void run_cc1(int argc, char **argv, char *input, char *output) {
   }
 
   run_subprocess(args);
+  free(args);
 }
 
 // Print tokens to stdout. Used for -E.
@@ -693,6 +714,12 @@ static void assemble(char *input, char *output) {
   run_subprocess(cmd);
 }
 
+
+static void symbolic_link(char *input, char *output) {
+  char *cmd[] = {"ln", "-s", "-f", output, input, NULL};
+  run_subprocess(cmd);
+}
+
 static char *find_file(char *pattern) {
   char *path = NULL;
   glob_t buf = {};
@@ -817,6 +844,8 @@ static FileType get_file_type(char *filename) {
     return FILE_C;
   if (endswith(filename, ".s"))
     return FILE_ASM;
+  if (endswith(filename, ".so.4"))
+    return FILE_DSO;    
 
   error("<command line>: unknown file extension: %s", filename);
 }
@@ -920,8 +949,13 @@ int main(int argc, char **argv) {
     continue;
   }
 
-  if (ld_args.len > 0)
+  if (ld_args.len > 0) {
+    if (symbolic_name)
+      symbolic_link(symbolic_name, opt_o);    
     run_linker(&ld_args, opt_o ? opt_o : "a.out");
+  }
+  free(opt_MT);
+
   return 0;
 }
 

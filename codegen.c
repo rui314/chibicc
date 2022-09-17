@@ -62,6 +62,7 @@ static char *reg_dx(int sz) {
   case 2: return "%dx";
   case 4: return "%edx";
   case 8: return "%rdx";
+  case 16: return "%rdx";
   }
   unreachable();
 }
@@ -72,6 +73,7 @@ static char *reg_ax(int sz) {
   case 2: return "%ax";
   case 4: return "%eax";
   case 8: return "%rax";
+  case 16: return "%rdx";  
   }
   unreachable();
 }

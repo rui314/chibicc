@@ -524,8 +524,9 @@ static Type *declspec(Token **rest, Token *tok, VarAttr *attr) {
       counter |= SIGNED;
     else if (equal(tok, "unsigned"))
       counter |= UNSIGNED;
-    else
+    else 
       unreachable();
+
 
     switch (counter) {
     case VOID:
@@ -1438,6 +1439,8 @@ static uint64_t read_buf(char *buf, int sz) {
     return *(uint32_t *)buf;
   if (sz == 8)
     return *(uint64_t *)buf;
+  if (sz == 16)
+    return *(long double *)buf;    
   unreachable();
 }
 
@@ -1450,6 +1453,8 @@ static void write_buf(char *buf, uint64_t val, int sz) {
     *(uint32_t *)buf = val;
   else if (sz == 8)
     *(uint64_t *)buf = val;
+  else if (sz == 16)
+    *(long double *)buf = val;      
   else
     unreachable();
 }
@@ -2127,7 +2132,7 @@ static Node *to_assign(Node *binary) {
   //   } while (!atomic_compare_exchange_strong(addr, &old, new));
   //   new;
   // })
-  if (binary->lhs->ty->is_atomic) {
+  if (binary->lhs->ty->is_atomic || binary->atomic_fetch) {
     Node head = {};
     Node *cur = &head;
 
@@ -2135,6 +2140,7 @@ static Node *to_assign(Node *binary) {
     Obj *val = new_lvar("", binary->rhs->ty);
     Obj *old = new_lvar("", binary->lhs->ty);
     Obj *new = new_lvar("", binary->lhs->ty);
+    Obj *ret = binary->atomic_fetch ? old : new;
 
     cur = cur->next =
       new_unary(ND_EXPR_STMT,
@@ -2173,7 +2179,8 @@ static Node *to_assign(Node *binary) {
     loop->cond = new_unary(ND_NOT, cas, tok);
 
     cur = cur->next = loop;
-    cur = cur->next = new_unary(ND_EXPR_STMT, new_var_node(new, tok), tok);
+    //cur = cur->next = new_unary(ND_EXPR_STMT, new_var_node(new, tok), tok);
+    cur = cur->next = new_unary(ND_EXPR_STMT, new_var_node(ret, tok), tok);
 
     Node *node = new_node(ND_STMT_EXPR, tok);
     node->body = head.next;
@@ -3171,6 +3178,33 @@ static Node *primary(Token **rest, Token *tok) {
     *rest = skip(tok, ")");
     return node;
   }
+
+  if (equal(tok, "__builtin_atomic_fetch_op")) {
+    tok = skip(tok->next, "(");
+    Node *obj = new_unary(ND_DEREF, assign(&tok, tok), tok);
+    tok = skip(tok, ",");
+    Node *val = assign(&tok, tok);
+    tok = skip(tok, ",");
+    Node *node;
+
+    if (equal(tok, "0"))
+      node = new_add(obj, val, tok);
+    else if (equal(tok, "1"))
+      node = new_sub(obj, val, tok);
+    else if (equal(tok, "2"))
+      node = new_binary(ND_BITOR, obj, val, tok);
+    else if (equal(tok, "3"))
+      node = new_binary(ND_BITXOR, obj, val, tok);
+    else if (equal(tok, "4"))
+      node = new_binary(ND_BITAND, obj, val, tok);
+    else
+      error_tok(tok, "invalid fetch operator");
+
+    node->atomic_fetch = true;
+    *rest = skip(tok->next, ")");
+    return to_assign(node);
+  }
+
 
   if (tok->kind == TK_IDENT) {
     // Variable or enum constant

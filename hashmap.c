@@ -40,6 +40,8 @@ static void rehash(HashMap *map) {
   // Create a new hashmap and copy all key-values.
   HashMap map2 = {};
   map2.buckets = calloc(cap, sizeof(HashEntry));
+  if (map2.buckets == NULL)
+    error("hashmap.c : in rehash map2.buckets is null!");
   map2.capacity = cap;
 
   for (int i = 0; i < map->capacity; i++) {
@@ -76,6 +78,8 @@ static HashEntry *get_entry(HashMap *map, char *key, int keylen) {
 static HashEntry *get_or_insert_entry(HashMap *map, char *key, int keylen) {
   if (!map->buckets) {
     map->buckets = calloc(INIT_SIZE, sizeof(HashEntry));
+    if (map->buckets == NULL)
+      error("hashmap.c : in get_or_insert_entry map->buckets is null!");
     map->capacity = INIT_SIZE;
   } else if ((map->used * 100) / map->capacity >= HIGH_WATERMARK) {
     rehash(map);
@@ -85,9 +89,11 @@ static HashEntry *get_or_insert_entry(HashMap *map, char *key, int keylen) {
 
   for (int i = 0; i < map->capacity; i++) {
     HashEntry *ent = &map->buckets[(hash + i) % map->capacity];
+    
 
-    if (match(ent, key, keylen))
+    if (match(ent, key, keylen)) 
       return ent;
+    
 
     // if (ent->key == TOMBSTONE) {
     //   ent->key = key;
@@ -162,4 +168,5 @@ void hashmap_test(void) {
 
   assert(hashmap_get(map, "no such key") == NULL);
   printf("OK\n");
+  free(map);
 }

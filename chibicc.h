@@ -26,7 +26,7 @@
 #endif
 
 #define PRODUCT "chibicc"
-#define VERSION "1.0.7"
+#define VERSION "1.0.8"
 #define MAXLEN 101
 
 #define HELP PRODUCT " is a C compiler based on " PRODUCT " created by Rui Ueyama.\n \
@@ -66,6 +66,14 @@ this " PRODUCT " contains only some differences for now like new parameters\n"
 -E Stop after the preprocessing stage; do not run the compiler proper. \n \
     The output is in the form of preprocessed source code, which is sent to the standard output.\n \
     Input files that don’t require preprocessing are ignored.\n \
+-rpath <dir> Add a directory to the runtime library search path this parameter is passed to the linker. \n \
+    This is used when linking an ELF executable with shared objects.\n \
+    All -rpath arguments are concatenated and passed to the runtime linker,\n \
+    which uses them to locate shared objects at runtime. \n \
+    The -rpath option is also used when locating shared objects \n \
+    which are needed by shared objects explicitly included in the link. \n \
+-soname <arg> create a symbolic link (replace if it already exists) between <arg> and <output> before calling the linker. \n \
+    Example ... -soname libcurl.so.4 -o .libs/libcurl.so.4.8.0 creates a symbolic link beetween libcurl.so.4.8.0 and libcurl.so.4. \n \
 chibicc [ -o <path> ] <file>\n"
 
 typedef struct Type Type;
@@ -325,6 +333,9 @@ struct Node {
   Obj *atomic_addr;
   Node *atomic_expr;
 
+  // Atomic fetch operation
+  bool atomic_fetch;
+  
   // Variable
   Obj *var;
 

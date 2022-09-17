@@ -20,7 +20,7 @@ or
     chibicc usage :
     --help or -h print the help
     --version or -v print the version of chibicc
-    -cc1 run the cc1 function needs -cc1-input and -cc1-output parameters
+    -cc1 run the cc1 function needs -cc1-input (-cc1-output optional) parameter
     -fuse-ld to specify other linker than ld used by default
     -x Specify the language of the following input files.
         Permissible languages include: c assembler none
@@ -50,6 +50,14 @@ or
     -E Stop after the preprocessing stage; do not run the compiler proper.
         The output is in the form of preprocessed source code, which is sent to the standard output.
         Input files that don’t require preprocessing are ignored.
+    -rpath <dir> Add a directory to the runtime library search path this parameter is passed to the linker.
+        This is used when linking an ELF executable with shared objects.
+        All -rpath arguments are concatenated and passed to the runtime linker,
+        which uses them to locate shared objects at runtime.
+        The -rpath option is also used when locating shared objects
+        which are needed by shared objects explicitly included in the link.
+    -soname <arg> create a symbolic link (replace if it already exists) between <arg> and <output> before calling the linker.
+        Example ... -soname libcurl.so.4 -o .libs/libcurl.so.4.8.0 creates a symbolic link beetween libcurl.so.4.8.0 and libcurl.so.4.
     chibicc [ -o <path> ] <file>
 
 ## Examples
@@ -199,11 +207,38 @@ To build :
 
 Adding also a devcontainer for those that want to use visual code inside a container (needs vs code extension remote-containers).
 
+## Examples of C projects compiled using chibicc
+
+tcc : tcc compiler (https://github.com/LuaDist/tcc.git)
+
+    chibicc -o tcc tcc.c -DTCC_TARGET_X86_64 -O2 -g -Wall -Wno-pointer-sign -lm -ldl
+    chibicc -o libtcc1.o -c lib/libtcc1.c -O2 -Wall
+    ar rcs libtcc1.a libtcc1.o
+    chibicc -o libtcc.o -c libtcc.c -DTCC_TARGET_X86_64 -O2 -g -Wall -Wno-pointer-sign
+    ar rcs libtcc.a libtcc.o
+    ./texi2pod.pl tcc-doc.texi tcc.pod
+    pod2man --section=1 --center=" " --release=" " tcc.pod > tcc.1
+    chibicc -o libtcc_test tests/libtcc_test.c libtcc.a -I. -O2 -g -Wall -Wno-pointer-sign -lm -ldl
+
+for some projects you need to define CC=chibicc before executing ./configure.
+
+curl : https://github.com/curl/curl.git
+
+    CC=chibicc CFLAGS=-fpic LDFLAGS=-fpic ./configure --with-openssl
+    make
+
+        make[2]: Entering directory ...
+        CC       libcurl_la-altsvc.lo
+        CC       libcurl_la-amigaos.lo
+        ...
+        CC       ../lib/curl_multibyte.o
+        CC       ../lib/version_win32.o
+        CC       ../lib/dynbuf.o
+        CCLD     curl
+
 ## TODO
 
-- need to document all options by understanding the code!
-- need to test all options to have a better understanding
-- need to add some input validation to avoid calls to execvp with non-validated input (for now only limited the length of each parameter to 100 characters)
+- trying to compile other C projects from source to see what is missing or which bug we have with chibicc.
 
 ## issues and pull requests fixed
 
@@ -227,7 +262,10 @@ Adding also a devcontainer for those that want to use visual code inside a conta
     - issue #47 postfix tails on compound literals from vain0x
     - issue #62 Nested designators error from sanxiyn
     - issue #37 Using goto inside statement expressions gives an error from edubart
-    - issue #63 Function type parameter without identifier errs by sanxiyn
+    - issue #63 Function type parameter without identifier errs from sanxiyn
+    - issue #69 Internal error on long double initializer from GabrielRavier
+    - issue #71 Codegen error on _Atomic long double operation assignments from GabrielRavier
+    - Fix atomic fetch operations #101 pull request from chjj
 
 ## release notes
 
@@ -247,3 +285,5 @@ trying to document cc1 and x options and adding a max length control parameter. 
 1.0.6 Anonymously named bitfield member segfaults compiler (issue #31). Fixing anonymous union field (issue #45) by zamfofex. Fixing wrong size of string initialized by braces (issue #80) by zamfofex.
 
 1.0.7 Internal error when initializing array of long with string literals (issue #72) by GabrielRavier. Fixing postfix tails on compound literals (issue #47) by zamfofex. Trying to fix nested designators error(issue #62). Fixing Using goto inside statement expressions gives an error (issue #37) by zamfofex. Fixing function type parameter without identifier errs (issue #63) by zamfofex.
+
+1.0.8 Internal error on long double initializer (issue #69). Codegen error on atomic long double operation assignments (issue #71). Fix atomic fetch operations (issue #101) by chjj. Adding -soname <arg> and -rpath <dir> parameters (needed to be able to compile curl from source). Soname is used to create a symbolic link and rpath is passed to the linker. Testing chibicc with some C projects (compiling fine tcc, curl).

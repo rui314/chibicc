@@ -52,11 +52,29 @@ static int add_millions(void) {
   return x;
 }
 
+static void fetch_ops(void) {
+  _Atomic int x = 0;
+
+  ASSERT(0, atomic_fetch_add(&x, 17));
+  ASSERT(17, atomic_fetch_add(&x, 10));
+  ASSERT(27, atomic_fetch_add(&x, 3));
+  ASSERT(30, atomic_fetch_sub(&x, 17));
+  ASSERT(13, atomic_fetch_sub(&x, 13));
+
+  ASSERT(0, atomic_fetch_or(&x, 0xf0));
+  ASSERT(0xf0, atomic_fetch_or(&x, 0x0f));
+  ASSERT(0xff, atomic_fetch_and(&x, 0x0f));
+  ASSERT(0x0f, atomic_fetch_xor(&x, 0xff));
+  ASSERT(0xf0, atomic_fetch_add(&x, 0));
+}
+
 int main() {
   ASSERT(6*1000*1000, add_millions());
 
   ASSERT(3, ({ int x=3; atomic_exchange(&x, 5); }));
   ASSERT(5, ({ int x=3; atomic_exchange(&x, 5); x; }));
+  
+  fetch_ops();
 
   printf("OK\n");
   return 0;

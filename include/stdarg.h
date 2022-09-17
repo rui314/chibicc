@@ -1,6 +1,8 @@
 #ifndef __STDARG_H
 #define __STDARG_H
 
+
+
 typedef struct {
   unsigned int gp_offset;
   unsigned int fp_offset;
