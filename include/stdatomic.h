@@ -1,6 +1,6 @@
 #ifndef __STDATOMIC_H
 #define __STDATOMIC_H
-
+#define ATOMIC_VAR_INIT(value)  { .__val = (value) }
 #define ATOMIC_BOOL_LOCK_FREE 1
 #define ATOMIC_CHAR_LOCK_FREE 1
 #define ATOMIC_CHAR16_T_LOCK_FREE 1

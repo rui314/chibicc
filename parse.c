@@ -18,6 +18,7 @@
 
 #include "chibicc.h"
 
+
 // Scope for local variables, global variables, typedefs
 // or enum constants
 typedef struct {
@@ -387,8 +388,14 @@ static void push_tag_scope(Token *tok, Type *ty) {
 //             | struct-decl | union-decl | typedef-name
 //             | enum-specifier | typeof-specifier
 //             | "const" | "volatile" | "auto" | "register" | "restrict"
-//             | "__restrict" | "__restrict__" | "_Noreturn")+
-//
+//             | "__restrict" | "__restrict__" | "_Noreturn" | )+
+//The keyword __attribute__ allows you to specify special attributes when making a declaration. 
+//This keyword is followed by an attribute specification inside double parentheses. 
+//The following attributes are currently defined for functions on all targets:
+// noreturn, returns_twice, noinline, always_inline, flatten, pure, const, 
+// nothrow, sentinel, format, format_arg, no_instrument_function, section, 
+// constructor, destructor, used, unused, deprecated, weak, malloc, alias,
+//  warn_unused_result, nonnull and externally_visible
 // The order of typenames in a type-specifier doesn't matter. For
 // example, `int long static` means the same as `static long int`.
 // That can also be written as `static long` because you can omit
@@ -422,8 +429,8 @@ static Type *declspec(Token **rest, Token *tok, VarAttr *attr) {
   Type *ty = ty_int;
   int counter = 0;
   bool is_atomic = false;
-
   while (is_typename(tok)) {
+
     // Handle storage class specifiers.
     if (equal(tok, "typedef") || equal(tok, "static") || equal(tok, "extern") ||
         equal(tok, "inline") || equal(tok, "_Thread_local") || equal(tok, "__thread")) {
@@ -453,7 +460,22 @@ static Type *declspec(Token **rest, Token *tok, VarAttr *attr) {
     if (consume(&tok, tok, "const") || consume(&tok, tok, "volatile") ||
         consume(&tok, tok, "auto") || consume(&tok, tok, "register") ||
         consume(&tok, tok, "restrict") || consume(&tok, tok, "__restrict") ||
-        consume(&tok, tok, "__restrict__") || consume(&tok, tok, "_Noreturn"))
+        consume(&tok, tok, "__restrict__") || consume(&tok, tok, "_Noreturn") ||
+        consume(&tok, tok, "__attribute__((noreturn))") || consume(&tok, tok, "__attribute__((returns_twice))") ||
+        consume(&tok, tok, "__attribute__((noinline))") || consume(&tok, tok, "__attribute__((always_inline))") ||
+        consume(&tok, tok, "__attribute__((flatten))") || consume(&tok, tok, "__attribute__((pure))") ||
+        consume(&tok, tok, "__attribute__((nothrow))") || consume(&tok, tok, "__attribute__((sentinel))") ||
+        consume(&tok, tok, "__attribute__((format))") || consume(&tok, tok, "__attribute__((format_arg))") ||
+        consume(&tok, tok, "__attribute__((no_instrument_function))") || consume(&tok, tok, "__attribute__((section))") ||        
+        consume(&tok, tok, "__attribute__((constructor))") || consume(&tok, tok, "__attribute__((destructor))") ||   
+        consume(&tok, tok, "__attribute__((used))") || consume(&tok, tok, "__attribute__((unused))") ||   
+        consume(&tok, tok, "__attribute__((deprecated))") || consume(&tok, tok, "__attribute__((weak))") ||  
+        consume(&tok, tok, "__attribute__((malloc))") || consume(&tok, tok, "__attribute__((alias))") ||           
+        consume(&tok, tok, "__attribute__((warn_unused_result))") || consume(&tok, tok, "__attribute__((nonnull))") ||           
+        consume(&tok, tok, "__attribute__((externally_visible))") || consume(&tok, tok, "__attribute__((visibility(\"default\")))") ||
+        consume(&tok, tok, "__attribute__((visibility(\"hidden\")))") ||consume(&tok, tok, "__attribute__((visibility(\"protected\")))") ||
+        consume(&tok, tok, "__attribute__((visibility(\"internal\")))")
+        )
       continue;
 
     if (equal(tok, "_Atomic")) {
@@ -715,7 +737,6 @@ static Type *declarator(Token **rest, Token *tok, Type *ty) {
 
   Token *name = NULL;
   Token *name_pos = tok;
-
   if (tok->kind == TK_IDENT) {
     name = tok;
     tok = tok->next;
@@ -1222,7 +1243,6 @@ static void struct_initializer2(Token **rest, Token *tok, Initializer *init, Mem
       *rest = start;
       return;
     }
-    //printf("ici ? %d \n", equal(tok, ","));
     initializer2(&tok, tok, init->children[mem->idx]);
   }
   *rest = tok;
@@ -1553,8 +1573,17 @@ static bool is_typename(Token *tok) {
       "typedef", "enum", "static", "extern", "_Alignas", "signed", "unsigned",
       "const", "volatile", "auto", "register", "restrict", "__restrict",
       "__restrict__", "_Noreturn", "float", "double", "typeof", "inline",
-      "_Thread_local", "__thread", "_Atomic",
+      "_Thread_local", "__thread", "_Atomic", "__attribute__((noreturn))", "__attribute__((returns_twice))",
+      "__attribute__((noinline))", "__attribute__((always_inline))", "__attribute__((flatten))", "__attribute__((pure))", 
+      "__attribute__((nothrow))", "__attribute__((sentinel))", "__attribute__((format))", "__attribute__((format_arg))", 
+      "__attribute__((no_instrument_function))", "__attribute__((section))", "__attribute__((constructor))", 
+      "__attribute__((destructor))", "__attribute__((used))", "__attribute__((unused))", "__attribute__((deprecated))", 
+      "__attribute__((weak))", "__attribute__((alias))", "__attribute__((malloc))", 
+      "__attribute__((warn_unused_result))", "__attribute__((nonnull))", "__attribute__((externally_visible))",
+      "__attribute__((visibility(\"default\")))",  "__attribute__((visibility(\"hidden\")))", 
+      "__attribute__((visibility(\"protected\")))", "__attribute__((visibility(\"internal\")))"
     };
+
 
     for (int i = 0; i < sizeof(kw) / sizeof(*kw); i++)
       hashmap_put(&map, kw[i], (void *)1);
@@ -1572,8 +1601,13 @@ static Node *asm_stmt(Token **rest, Token *tok) {
     tok = tok->next;
 
   tok = skip(tok, "(");
-  if (tok->kind != TK_STR || tok->ty->base->kind != TY_CHAR)
-    error_tok(tok, "expected string literal");
+    if (tok->kind != TK_STR || tok->ty->base->kind != TY_CHAR)
+        error_tok(tok, "expected string literal");
+  
+  //extended assembly like asm ( assembler_template: output operands (optional) : input operands (optional) : list of clobbered registers (optional))  
+  if (equal(tok->next, ":")) {
+      error_tok(tok->next, "extended assembly not managed yet!");
+  }  
   node->asm_str = tok->str;
   *rest = skip(tok->next, ")");
   return node;
@@ -1769,7 +1803,7 @@ static Node *stmt(Token **rest, Token *tok) {
     return node;
   }
 
-  if (equal(tok, "asm"))
+  if (equal(tok, "asm") || equal(tok, "__asm__"))
     return asm_stmt(rest, tok);
 
   if (equal(tok, "goto")) {
@@ -2978,6 +3012,7 @@ static Node *funcall(Token **rest, Token *tok, Node *fn) {
   if (fn->ty->kind != TY_FUNC &&
       (fn->ty->kind != TY_PTR || fn->ty->base->kind != TY_FUNC))
     error_tok(fn->tok, "not a function");
+      
 
   Type *ty = (fn->ty->kind == TY_FUNC) ? fn->ty : fn->ty->base;
   Type *param_ty = ty->params;
@@ -3226,9 +3261,10 @@ static Node *primary(Token **rest, Token *tok) {
         return new_num(sc->enum_val, tok);
     }
 
-    if (equal(tok->next, "("))
+    if (equal(tok->next, "(")) 
       error_tok(tok, "implicit declaration of a function");
-    error_tok(tok, "undefined variable");
+    error_tok(tok, "error: undefined variable");
+    
   }
 
   if (tok->kind == TK_STR) {
@@ -3398,7 +3434,7 @@ static Token *global_variable(Token *tok, Type *basety, VarAttr *attr) {
     first = false;
 
     Type *ty = declarator(&tok, tok, basety);
-    if (!ty->name)
+    if (!ty->name) 
       error_tok(ty->name_pos, "variable name omitted");
 
     Obj *var = new_gvar(get_ident(ty->name), ty);
@@ -3463,7 +3499,8 @@ static void declare_builtin_functions(void) {
 
 // program = (typedef | function-definition | global-variable)*
 Obj *parse(Token *tok) {
-  declare_builtin_functions();
+  if (opt_fbuiltin)
+    declare_builtin_functions();
   globals = NULL;
 
   while (tok->kind != TK_EOF) {
@@ -3494,3 +3531,4 @@ Obj *parse(Token *tok) {
   scan_globals();
   return globals;
 }
+

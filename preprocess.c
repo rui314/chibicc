@@ -43,7 +43,7 @@ typedef Token *macro_handler_fn(Token *);
 typedef struct Macro Macro;
 struct Macro {
   char *name;
-  bool is_objlike; // Object-like or function-like
+  bool is_objlike; // Object-like or function-like or attribut-like
   MacroParam *params;
   char *va_args_name;
   Token *body;
@@ -259,7 +259,7 @@ static Token *read_const_expr(Token **rest, Token *tok) {
   while (tok->kind != TK_EOF) {
     // "defined(foo)" or "defined foo" becomes "1" if macro "foo"
     // is defined. Otherwise "0".
-    if (equal(tok, "defined")) {
+    if (equal(tok, "defined") || equal(tok, "__has_attribute")) {
       Token *start = tok;
       bool has_paren = consume(&tok, tok->next, "(");
 
@@ -299,6 +299,7 @@ static long eval_const_expr(Token **rest, Token *tok) {
   for (Token *t = expr; t->kind != TK_EOF; t = t->next) {
     if (t->kind == TK_IDENT) {
       Token *next = t->next;
+
       *t = *new_num_token(0, t);
       t->next = next;
     }
@@ -336,7 +337,7 @@ static Macro *find_macro(Token *tok) {
 static Macro *add_macro(char *name, bool is_objlike, Token *body) {
   Macro *m = calloc(1, sizeof(Macro));
   if (m == NULL)
-    error("preprocess.c : in add_macro m is null");  
+    error("preprocess.c : in add_macro m is null"); 
   m->name = name;
   m->is_objlike = is_objlike;
   m->body = body;
@@ -381,6 +382,7 @@ static MacroParam *read_macro_params(Token **rest, Token *tok, char **va_args_na
 }
 
 static void read_macro_definition(Token **rest, Token *tok) {
+
   if (tok->kind != TK_IDENT)
     error_tok(tok, "macro name must be an identifier");
   char *name = strndup(tok->loc, tok->len);
@@ -670,7 +672,7 @@ static bool expand_macro(Token **rest, Token *tok) {
   if (m->is_objlike) {
     Hideset *hs = hideset_union(tok->hideset, new_hideset(m->name));
     Token *body = add_hideset(m->body, hs);
-    for (Token *t = body; t->kind != TK_EOF; t = t->next)
+    for (Token *t = body; t->kind != TK_EOF; t = t->next) 
       t->origin = tok;
     *rest = append(body, tok->next);
     (*rest)->at_bol = tok->at_bol;
@@ -905,7 +907,6 @@ static Token *preprocess2(Token *tok) {
       tok = include_file(tok, path ? path : filename, start->next->next);
       continue;
     }
-
     if (equal(tok, "define")) {
       read_macro_definition(&tok, tok->next);
       continue;
@@ -1035,6 +1036,7 @@ static Token *file_macro(Token *tmpl) {
   return new_str_token(tmpl->file->display_name, tmpl);
 }
 
+
 static Token *line_macro(Token *tmpl) {
   while (tmpl->origin)
     tmpl = tmpl->origin;
@@ -1123,6 +1125,8 @@ void init_macros(void) {
   define_macro("__x86_64__", "1");
   define_macro("linux", "1");
   define_macro("unix", "1");
+  define_macro("nonnull", "1");
+  
 
   add_builtin("__FILE__", file_macro);
   add_builtin("__LINE__", line_macro);

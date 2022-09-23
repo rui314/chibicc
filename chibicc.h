@@ -26,8 +26,9 @@
 #endif
 
 #define PRODUCT "chibicc"
-#define VERSION "1.0.8"
+#define VERSION "1.0.9"
 #define MAXLEN 101
+#define DEFAULT_TARGET_MACHINE "x86_64-linux-gnu"
 
 #define HELP PRODUCT " is a C compiler based on " PRODUCT " created by Rui Ueyama.\n \
 See original project https://github.com/rui314/chibicc for more information\n \
@@ -56,6 +57,7 @@ this " PRODUCT " contains only some differences for now like new parameters\n"
     stdout in a format that \"make\" command can read. This feature is\n \
     used to automate file dependency management\n \
 -fpic or -fPIC Generate position-independent code (PIC)\n \
+-fno-pic disables the generation of position-independent code with relative address references\n \
 -fcommon is the default if not specified, it's mainly useful to enable legacy code to link without errors\n \
 -fno-common specifies that the compiler places uninitialized global variables in the BSS section of the object file.\n \
 -static  pass to the linker to link a program statically\n \
@@ -74,6 +76,7 @@ this " PRODUCT " contains only some differences for now like new parameters\n"
     which are needed by shared objects explicitly included in the link. \n \
 -soname <arg> create a symbolic link (replace if it already exists) between <arg> and <output> before calling the linker. \n \
     Example ... -soname libcurl.so.4 -o .libs/libcurl.so.4.8.0 creates a symbolic link beetween libcurl.so.4.8.0 and libcurl.so.4. \n \
+-dumpmachine it's required by some projects returns x86_64-linux-gnu\n \
 chibicc [ -o <path> ] <file>\n"
 
 typedef struct Type Type;
@@ -348,6 +351,7 @@ Node *new_cast(Node *expr, Type *ty);
 int64_t const_expr(Token **rest, Token *tok);
 Obj *parse(Token *tok);
 
+extern bool opt_fbuiltin;
 //
 // type.c
 //
@@ -504,6 +508,7 @@ void hashmap_test(void);
 //
 
 bool file_exists(char *path);
+void dump_machine(void);
 
 extern StringArray include_paths;
 extern bool opt_fpic;
@@ -516,3 +521,11 @@ extern char *base_file;
 //
 void spc_sanitize_environment(void);
 int validateArgs(int argc, char **argv);
+
+
+
+#define XALLOCA(T)		((T *) alloca (sizeof (T)))
+#define XNEW(T)			((T *) xmalloc (sizeof (T)))
+#define XCNEW(T)		((T *) xcalloc (1, sizeof (T)))
+#define XDUP(T, P)		((T *) xmemdup ((P), sizeof (T), sizeof (T)))
+#define XDELETE(P)		free ((void*) (P))

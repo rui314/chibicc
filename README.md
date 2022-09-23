@@ -40,6 +40,7 @@ or
         stdout in a format that "make" command can read. This feature is
         used to automate file dependency management
     -fpic or -fPIC Generate position-independent code (PIC)
+    -fno-pic disables the generation of position-independent code with relative address references
     -fcommon is the default if not specified, it's mainly useful to enable legacy code to link without errors
     -fno-common specifies that the compiler places uninitialized global variables in the BSS section of the object file.
     -static  pass to the linker to link a program statically
@@ -58,6 +59,7 @@ or
         which are needed by shared objects explicitly included in the link.
     -soname <arg> create a symbolic link (replace if it already exists) between <arg> and <output> before calling the linker.
         Example ... -soname libcurl.so.4 -o .libs/libcurl.so.4.8.0 creates a symbolic link beetween libcurl.so.4.8.0 and libcurl.so.4.
+    -dumpmachine it's required by some projects returns x86_64-linux-gnu\n \
     chibicc [ -o <path> ] <file>
 
 ## Examples
@@ -130,7 +132,7 @@ By default the symbol tables is populated:
     ./test/mydefine:     file format elf64-x86-64
     SYMBOL TABLE:
     0000000000000000 l    df *ABS*  0000000000000000              crt1.o
-    0000000000400320 l     O .note.ABI-tag  0000000000000020              __abi_tag
+    0000000000400320 l     O .note.ABI-tag  0000000000000020              \_\_abi_tag
     0000000000000000 l    df *ABS*  0000000000000000              crtstuff.c
 
 Stripping symbol tables during linkage phasis adding -s parameter :
@@ -195,6 +197,10 @@ List of options ignored :
     "-fno-stack-protector"
     "-fno-strict-aliasing"
     "-m64"
+    "-m32"
+    "-pthread"
+    "-pedantic"
+    "-nostdinc"
     "-mno-red-zone"
     "-w"
 
@@ -239,6 +245,7 @@ curl : https://github.com/curl/curl.git
 ## TODO
 
 - trying to compile other C projects from source to see what is missing or which bug we have with chibicc.
+- trying to manage other assembly functions like \_\_asm\_\_("xchgb %b0,%h0": "=Q"(x):"0"(x));
 
 ## issues and pull requests fixed
 
@@ -266,6 +273,8 @@ curl : https://github.com/curl/curl.git
     - issue #69 Internal error on long double initializer from GabrielRavier
     - issue #71 Codegen error on _Atomic long double operation assignments from GabrielRavier
     - Fix atomic fetch operations #101 pull request from chjj
+    - issue #105 \_\_has_attribute(diagnose_if)
+    - issue #106 lots of attributes \_\_attributes\_\_((xxxx)) not managed.
 
 ## release notes
 
@@ -287,3 +296,13 @@ trying to document cc1 and x options and adding a max length control parameter. 
 1.0.7 Internal error when initializing array of long with string literals (issue #72) by GabrielRavier. Fixing postfix tails on compound literals (issue #47) by zamfofex. Trying to fix nested designators error(issue #62). Fixing Using goto inside statement expressions gives an error (issue #37) by zamfofex. Fixing function type parameter without identifier errs (issue #63) by zamfofex.
 
 1.0.8 Internal error on long double initializer (issue #69). Codegen error on atomic long double operation assignments (issue #71). Fix atomic fetch operations (issue #101) by chjj. Adding -soname < arg > and -rpath < dir > parameters (needed to be able to compile curl from source). Soname is used to create a symbolic link and rpath is passed to the linker. Testing chibicc with some C projects (compiling fine tcc, curl).
+
+1.0.9 Adding pthread and pedantic to omitted parameters list. Added -fno-pic parameter. Adding ignored parameter: m32, nostdinc. Adding -dumpmachine parameter. Fixing issue with \_\_has_attribute(diagnose_if). Adding lots of attributes that can be applied to function (for now ignored them) : "\_\_attribute\_\_((noreturn))", "\_\_attribute\_\_((returns_twice))",
+"\_\_attribute\_\_((noinline))", "\_\_attribute\_\_((always_inline))", "\_\_attribute\_\_((flatten))", "\_\_attribute\_\_((pure))",
+"\_\_attribute\_\_((nothrow))", "\_\_attribute\_\_((sentinel))", "\_\_attribute\_\_((format))", "\_\_attribute\_\_((format_arg))",
+"\_\_attribute\_\_((no_instrument_function))", "\_\_attribute\_\_((section))", "\_\_attribute\_\_((constructor))",
+"\_\_attribute\_\_((destructor))", "\_\_attribute\_\_((used))", "\_\_attribute\_\_((unused))", "\_\_attribute\_\_((deprecated))",
+"\_\_attribute\_\_((weak))", "\_\_attribute\_\_((alias))", "\_\_attribute\_\_((malloc))",
+"\_\_attribute\_\_((warn_unused_result))", "\_\_attribute\_\_((nonnull))", "\_\_attribute\_\_((externally_visible))",
+"\_\_attribute\_\_((visibility(\"default\")))", "\_\_attribute\_\_((visibility(\"hidden\")))",
+"\_\_attribute\_\_((visibility(\"protected\")))", "\_\_attribute\_\_((visibility(\"internal\")))"

@@ -7,6 +7,7 @@ typedef enum {
 
 StringArray include_paths;
 bool opt_fcommon = true;
+bool opt_fbuiltin = true;
 bool opt_fpic;
 
 static FileType opt_x;
@@ -60,7 +61,6 @@ static void check_parms_length(char *arg) {
       }
 
 }
-
 
 
 static bool take_arg(char *arg) {
@@ -206,6 +206,12 @@ static void parse_args(int argc, char **argv) {
       continue;
     }
 
+    if (!strcmp(argv[i], "-fno-builtin")) {
+      opt_fbuiltin = false;
+      continue;
+    }
+
+
     if (!strcmp(argv[i], "-c")) {
       opt_c = true;
       continue;
@@ -348,6 +354,11 @@ static void parse_args(int argc, char **argv) {
       continue;
     }
 
+    if (!strcmp(argv[i], "-fno-pic")) {
+      opt_fpic = false;
+      continue;
+    }
+
     if (!strcmp(argv[i], "-cc1-input")) {
       base_file = argv[++i];
       check_parms_length(base_file);           
@@ -405,6 +416,11 @@ static void parse_args(int argc, char **argv) {
       exit(0);
     }
 
+    if (!strcmp(argv[i], "-dumpmachine")) {
+      dump_machine();
+      exit(0);
+    }
+
     //-soname create a symbolic link before calling the linker like in gcc -Wl,-soname,libcurl.so.4 -o libcurl.so.4.8.0
     if (!strcmp(argv[i], "-soname")) {
       char *tmp = argv[++i];
@@ -428,11 +444,14 @@ static void parse_args(int argc, char **argv) {
         !strncmp(argv[i], "-g", 2) ||
         !strncmp(argv[i], "-std=", 5) ||
         !strcmp(argv[i], "-ffreestanding") ||
-        !strcmp(argv[i], "-fno-builtin") ||
         !strcmp(argv[i], "-fno-omit-frame-pointer") ||
         !strcmp(argv[i], "-fno-stack-protector") ||
         !strcmp(argv[i], "-fno-strict-aliasing") ||
         !strcmp(argv[i], "-m64") ||
+        !strcmp(argv[i], "-m32") ||        
+        !strcmp(argv[i], "-pthread") ||    
+        !strcmp(argv[i], "-pedantic") ||     
+        !strcmp(argv[i], "-nostdinc") ||                
         !strcmp(argv[i], "-mno-red-zone") ||
         !strcmp(argv[i], "-w"))
       continue;
@@ -719,6 +738,11 @@ static void symbolic_link(char *input, char *output) {
   char *cmd[] = {"ln", "-s", "-f", output, input, NULL};
   run_subprocess(cmd);
 }
+
+void dump_machine(void) {
+  fprintf(stdout, DEFAULT_TARGET_MACHINE "\n");
+}
+
 
 static char *find_file(char *pattern) {
   char *path = NULL;
