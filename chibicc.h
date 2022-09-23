@@ -523,9 +523,3 @@ void spc_sanitize_environment(void);
 int validateArgs(int argc, char **argv);
 
 
-
-#define XALLOCA(T)		((T *) alloca (sizeof (T)))
-#define XNEW(T)			((T *) xmalloc (sizeof (T)))
-#define XCNEW(T)		((T *) xcalloc (1, sizeof (T)))
-#define XDUP(T, P)		((T *) xmemdup ((P), sizeof (T), sizeof (T)))
-#define XDELETE(P)		free ((void*) (P))
