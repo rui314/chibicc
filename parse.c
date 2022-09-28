@@ -455,26 +455,26 @@ static Type *declspec(Token **rest, Token *tok, VarAttr *attr) {
       tok = tok->next;
       continue;
     }
-
     // These keywords are recognized but ignored.
     if (consume(&tok, tok, "const") || consume(&tok, tok, "volatile") ||
         consume(&tok, tok, "auto") || consume(&tok, tok, "register") ||
         consume(&tok, tok, "restrict") || consume(&tok, tok, "__restrict") ||
-        consume(&tok, tok, "__restrict__") || consume(&tok, tok, "_Noreturn") ||
-        consume(&tok, tok, "__attribute__((noreturn))") || consume(&tok, tok, "__attribute__((returns_twice))") ||
-        consume(&tok, tok, "__attribute__((noinline))") || consume(&tok, tok, "__attribute__((always_inline))") ||
-        consume(&tok, tok, "__attribute__((flatten))") || consume(&tok, tok, "__attribute__((pure))") ||
-        consume(&tok, tok, "__attribute__((nothrow))") || consume(&tok, tok, "__attribute__((sentinel))") ||
-        consume(&tok, tok, "__attribute__((format))") || consume(&tok, tok, "__attribute__((format_arg))") ||
-        consume(&tok, tok, "__attribute__((no_instrument_function))") || consume(&tok, tok, "__attribute__((section))") ||        
-        consume(&tok, tok, "__attribute__((constructor))") || consume(&tok, tok, "__attribute__((destructor))") ||   
-        consume(&tok, tok, "__attribute__((used))") || consume(&tok, tok, "__attribute__((unused))") ||   
-        consume(&tok, tok, "__attribute__((deprecated))") || consume(&tok, tok, "__attribute__((weak))") ||  
-        consume(&tok, tok, "__attribute__((malloc))") || consume(&tok, tok, "__attribute__((alias))") ||           
-        consume(&tok, tok, "__attribute__((warn_unused_result))") || consume(&tok, tok, "__attribute__((nonnull))") ||           
-        consume(&tok, tok, "__attribute__((externally_visible))") || consume(&tok, tok, "__attribute__((visibility(\"default\")))") ||
-        consume(&tok, tok, "__attribute__((visibility(\"hidden\")))") ||consume(&tok, tok, "__attribute__((visibility(\"protected\")))") ||
-        consume(&tok, tok, "__attribute__((visibility(\"internal\")))")
+        consume(&tok, tok, "__restrict__") || consume(&tok, tok, "_Noreturn") 
+        // || 
+        // consume(&tok, tok, "__attribute__((noreturn))") || consume(&tok, tok, "__attribute__((returns_twice))") ||
+        // consume(&tok, tok, "__attribute__((noinline))") || consume(&tok, tok, "__attribute__((always_inline))") ||
+        // consume(&tok, tok, "__attribute__((flatten))") || consume(&tok, tok, "__attribute__((pure))") ||
+        // consume(&tok, tok, "__attribute__((nothrow))") || consume(&tok, tok, "__attribute__((sentinel))") ||
+        // consume(&tok, tok, "__attribute__((format))") || consume(&tok, tok, "__attribute__((format_arg))") ||
+        // consume(&tok, tok, "__attribute__((no_instrument_function))") || consume(&tok, tok, "__attribute__((section))") ||        
+        // consume(&tok, tok, "__attribute__((constructor))") || consume(&tok, tok, "__attribute__((destructor))") ||   
+        // consume(&tok, tok, "__attribute__((used))") || consume(&tok, tok, "__attribute__((unused))") ||   
+        // consume(&tok, tok, "__attribute__((deprecated))") || consume(&tok, tok, "__attribute__((weak))") ||  
+        // consume(&tok, tok, "__attribute__((malloc))") || consume(&tok, tok, "__attribute__((alias))") ||           
+        // consume(&tok, tok, "__attribute__((warn_unused_result))") || consume(&tok, tok, "__attribute__((nonnull))") ||           
+        // consume(&tok, tok, "__attribute__((externally_visible))") || consume(&tok, tok, "__attribute__((visibility(\"default\")))") ||
+        // consume(&tok, tok, "__attribute__((visibility(\"hidden\")))") ||consume(&tok, tok, "__attribute__((visibility(\"protected\")))") ||
+        // consume(&tok, tok, "__attribute__((visibility(\"internal\")))")
         )
       continue;
 
@@ -679,7 +679,7 @@ static Type *func_params(Token **rest, Token *tok, Type *ty) {
 
 // array-dimensions = ("static" | "restrict")* const-expr? "]" type-suffix
 static Type *array_dimensions(Token **rest, Token *tok, Type *ty) {
-  while (equal(tok, "static") || equal(tok, "restrict"))
+  while (equal(tok, "static") || equal(tok, "restrict")  )
     tok = tok->next;
 
   if (equal(tok, "]")) {
@@ -889,7 +889,6 @@ static Node *declaration(Token **rest, Token *tok, Type *basety, VarAttr *attr) 
   Node head = {};
   Node *cur = &head;
   int i = 0;
-
   while (!equal(tok, ";")) {
     if (i++ > 0)
       tok = skip(tok, ",");
@@ -1047,6 +1046,7 @@ static Member *struct_designator(Token **rest, Token *tok, Type *ty) {
     error_tok(tok, "expected a field designator");
 
   for (Member *mem = ty->members; mem; mem = mem->next) {
+    // Anonymous struct member
     if (!mem->name) {
       if (mem->ty->kind == TY_STRUCT || mem->ty->kind == TY_UNION) {
         if (get_struct_member(mem->ty, tok)) {
@@ -1069,6 +1069,7 @@ static Member *struct_designator(Token **rest, Token *tok, Type *ty) {
 
 // designation = ("[" const-expr "]" | "." ident)* "="? initializer
 static void designation(Token **rest, Token *tok, Initializer *init) {
+
   if (equal(tok, "[")) {
     if (init->ty->kind != TY_ARRAY)
       error_tok(tok, "array index in non-array initializer");
@@ -1087,6 +1088,7 @@ static void designation(Token **rest, Token *tok, Initializer *init) {
     Member *mem = struct_designator(&tok, tok, init->ty);
     designation(&tok, tok, init->children[mem->idx]);
     init->expr = NULL;     
+   
     struct_initializer2(rest, tok, init, mem->next);
     return;
   }
@@ -1104,6 +1106,7 @@ static void designation(Token **rest, Token *tok, Initializer *init) {
   if (equal(tok, "="))
     tok = skip(tok, "=");
     //tok = tok->next;
+
 
   initializer2(rest, tok, init);
 }
@@ -1243,12 +1246,14 @@ static void struct_initializer2(Token **rest, Token *tok, Initializer *init, Mem
       *rest = start;
       return;
     }
+
     initializer2(&tok, tok, init->children[mem->idx]);
   }
   *rest = tok;
 }
 
 static void union_initializer(Token **rest, Token *tok, Initializer *init) {
+
   // Unlike structs, union initializers take only one initializer,
   // and that initializes the first union member by default.
   // You can initialize other member using a designated initializer.
@@ -1256,6 +1261,19 @@ static void union_initializer(Token **rest, Token *tok, Initializer *init) {
     Member *mem = struct_designator(&tok, tok->next, init->ty);
     init->mem = mem;
     designation(&tok, tok, init->children[mem->idx]);
+    //fix issue 113, gcc allows to have a struct finishing with ,}
+    if (equal(tok, ",") && equal(tok->next, "}")) 
+      consume(&tok, tok, ","); 
+    //issue #110 when union with ,
+    while (!equal(tok, "}")) {
+      Member *mem = struct_designator(&tok, tok->next, init->ty);
+      init->mem = mem;
+      designation(&tok, tok, init->children[mem->idx]);
+      //fix issue 108, gcc allows to have a struct finishing with ,}
+      if (equal(tok, ",") && equal(tok->next, "}")) 
+        consume(&tok, tok, ","); 
+            
+    }
     *rest = skip(tok, "}");
     return;
   }
@@ -1264,7 +1282,8 @@ static void union_initializer(Token **rest, Token *tok, Initializer *init) {
 
   if (equal(tok, "{")) {
     initializer2(&tok, tok->next, init->children[0]);
-    consume(&tok, tok, ",");
+    if (equal(tok, ",") && equal(tok->next, "}"))
+      consume(&tok, tok, ",");
     *rest = skip(tok, "}");
   } else {
     initializer2(rest, tok, init->children[0]);
@@ -1283,6 +1302,19 @@ static void initializer2(Token **rest, Token *tok, Initializer *init) {
      string_initializer(rest, tok, init);
      return;
    }
+
+//issue #107 with array string initialized by function-like e.g : static const char vlc_usage[] = N_(str)
+  if (init->ty->kind == TY_ARRAY && equal(tok, "(")) {
+    if (equal(tok, "(")) {
+      if (init->ty->base->kind == TY_CHAR && tok->next->kind == TK_STR) {
+      tok = skip(tok, "(");
+      initializer2(&tok, tok, init);
+      *rest = skip(tok, ")");
+      return;
+      }
+     return;
+   }
+  }
 
 
 
@@ -1573,15 +1605,17 @@ static bool is_typename(Token *tok) {
       "typedef", "enum", "static", "extern", "_Alignas", "signed", "unsigned",
       "const", "volatile", "auto", "register", "restrict", "__restrict",
       "__restrict__", "_Noreturn", "float", "double", "typeof", "inline",
-      "_Thread_local", "__thread", "_Atomic", "__attribute__((noreturn))", "__attribute__((returns_twice))",
-      "__attribute__((noinline))", "__attribute__((always_inline))", "__attribute__((flatten))", "__attribute__((pure))", 
-      "__attribute__((nothrow))", "__attribute__((sentinel))", "__attribute__((format))", "__attribute__((format_arg))", 
-      "__attribute__((no_instrument_function))", "__attribute__((section))", "__attribute__((constructor))", 
-      "__attribute__((destructor))", "__attribute__((used))", "__attribute__((unused))", "__attribute__((deprecated))", 
-      "__attribute__((weak))", "__attribute__((alias))", "__attribute__((malloc))", 
-      "__attribute__((warn_unused_result))", "__attribute__((nonnull))", "__attribute__((externally_visible))",
-      "__attribute__((visibility(\"default\")))",  "__attribute__((visibility(\"hidden\")))", 
-      "__attribute__((visibility(\"protected\")))", "__attribute__((visibility(\"internal\")))"
+      "_Thread_local", "__thread", "_Atomic"
+      //, 
+      // "__attribute__((noreturn))", "__attribute__((returns_twice))",
+      // "__attribute__((noinline))", "__attribute__((always_inline))", "__attribute__((flatten))", "__attribute__((pure))", 
+      // "__attribute__((nothrow))", "__attribute__((sentinel))", "__attribute__((format))", "__attribute__((format_arg))", 
+      // "__attribute__((no_instrument_function))", "__attribute__((section))", "__attribute__((constructor))", 
+      // "__attribute__((destructor))", "__attribute__((used))", "__attribute__((unused))", "__attribute__((deprecated))", 
+      // "__attribute__((weak))", "__attribute__((alias))", "__attribute__((malloc))", 
+      // "__attribute__((warn_unused_result))", "__attribute__((nonnull))", "__attribute__((externally_visible))",
+      // "__attribute__((visibility(\"default\")))",  "__attribute__((visibility(\"hidden\")))", 
+      // "__attribute__((visibility(\"protected\")))", "__attribute__((visibility(\"internal\")))"
     };
 
 
@@ -2853,6 +2887,7 @@ static Type *union_decl(Token **rest, Token *tok) {
 
 // Find a struct member by name.
 static Member *get_struct_member(Type *ty, Token *tok) {
+
   for (Member *mem = ty->members; mem; mem = mem->next) {
     // Anonymous struct member
     // if ((mem->ty->kind == TY_STRUCT || mem->ty->kind == TY_UNION) &&
@@ -3097,7 +3132,7 @@ static Node *generic_selection(Token **rest, Token *tok) {
       ret = node;
   }
 
-  if (!ret)
+  if (!ret) 
     error_tok(start, "controlling expression type not compatible with"
               " any generic association type");
   return ret;
@@ -3430,7 +3465,8 @@ static Token *global_variable(Token *tok, Type *basety, VarAttr *attr) {
 
   while (!consume(&tok, tok, ";")) {
     if (!first)
-      tok = skip(tok, ",");
+      if (equal(tok, ","))
+        tok = skip(tok, ",");
     first = false;
 
     Type *ty = declarator(&tok, tok, basety);
@@ -3457,7 +3493,6 @@ static Token *global_variable(Token *tok, Type *basety, VarAttr *attr) {
 static bool is_function(Token *tok) {
   if (equal(tok, ";"))
     return false;
-
   Type dummy = {};
   Type *ty = declarator(&tok, tok, &dummy);
   return ty->kind == TY_FUNC;
@@ -3518,7 +3553,6 @@ Obj *parse(Token *tok) {
       tok = function(tok, basety, &attr);
       continue;
     }
-
     // Global variable
     tok = global_variable(tok, basety, &attr);
   }

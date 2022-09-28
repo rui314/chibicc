@@ -10,6 +10,7 @@
 #define ATOMIC_LONG_LOCK_FREE 1
 #define ATOMIC_LLONG_LOCK_FREE 1
 #define ATOMIC_POINTER_LOCK_FREE 1
+#define ATOMIC_VAR_INIT(value) (value)
 
 typedef enum {
   memory_order_relaxed,

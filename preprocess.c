@@ -159,7 +159,7 @@ static Token *append(Token *tok1, Token *tok2) {
   Token head = {};
   Token *cur = &head;
 
-  for (; tok1->kind != TK_EOF; tok1 = tok1->next)
+  for (; tok1->kind != TK_EOF; tok1 = tok1->next) 
     cur = cur->next = copy_token(tok1);
   cur->next = tok2;
   return head.next;
@@ -184,7 +184,7 @@ static Token *skip_cond_incl2(Token *tok) {
 // Nested `#if` and `#endif` are skipped.
 static Token *skip_cond_incl(Token *tok) {
   while (tok->kind != TK_EOF) {
-    if (is_hash(tok) &&
+    if (is_hash(tok) && 
         (equal(tok->next, "if") || equal(tok->next, "ifdef") ||
          equal(tok->next, "ifndef"))) {
       tok = skip_cond_incl2(tok->next->next);
@@ -259,7 +259,7 @@ static Token *read_const_expr(Token **rest, Token *tok) {
   while (tok->kind != TK_EOF) {
     // "defined(foo)" or "defined foo" becomes "1" if macro "foo"
     // is defined. Otherwise "0".
-    if (equal(tok, "defined") || equal(tok, "__has_attribute")) {
+    if (equal(tok, "defined") || equal(tok,  "__has_attribute")) {
       Token *start = tok;
       bool has_paren = consume(&tok, tok->next, "(");
 
@@ -273,8 +273,8 @@ static Token *read_const_expr(Token **rest, Token *tok) {
 
       cur = cur->next = new_num_token(m ? 1 : 0, start);
       continue;
+      
     }
-
     cur = cur->next = tok;
     tok = tok->next;
   }
@@ -319,7 +319,6 @@ static CondIncl *push_cond_incl(Token *tok, bool included) {
   CondIncl *ci = calloc(1, sizeof(CondIncl));
   if (ci == NULL)
     error("preprocess.c : in push_cond_incl ci is null");  
-
   ci->next = cond_incl;
   ci->ctx = IN_THEN;
   ci->tok = tok;
@@ -385,9 +384,9 @@ static void read_macro_definition(Token **rest, Token *tok) {
 
   if (tok->kind != TK_IDENT)
     error_tok(tok, "macro name must be an identifier");
+
   char *name = strndup(tok->loc, tok->len);
   tok = tok->next;
-
   if (!tok->has_space && equal(tok, "(")) {
     // Function-like macro
     char *va_args_name = NULL;
@@ -633,7 +632,7 @@ static Token *subst(Token *tok, MacroArg *args) {
     // before they are substituted into a macro body.
     if (arg) {
       Token *t = preprocess2(arg->tok);
-      t->at_bol = tok->at_bol;
+      // t->at_bol = tok->at_bol;
       t->has_space = tok->has_space;
       for (; t->kind != TK_EOF; t = t->next)
         cur = cur->next = copy_token(t);
@@ -654,6 +653,7 @@ static Token *subst(Token *tok, MacroArg *args) {
 // If tok is a macro, expand it and return true.
 // Otherwise, do nothing and return false.
 static bool expand_macro(Token **rest, Token *tok) {
+  
   if (hideset_contains(tok->hideset, tok->loc, tok->len))
     return false;
 
@@ -675,7 +675,7 @@ static bool expand_macro(Token **rest, Token *tok) {
     for (Token *t = body; t->kind != TK_EOF; t = t->next) 
       t->origin = tok;
     *rest = append(body, tok->next);
-    (*rest)->at_bol = tok->at_bol;
+    //(*rest)->at_bol = tok->at_bol;
     (*rest)->has_space = tok->has_space;
     return true;
   }
@@ -703,8 +703,9 @@ static bool expand_macro(Token **rest, Token *tok) {
   for (Token *t = body; t->kind != TK_EOF; t = t->next)
     t->origin = macro_token;
   *rest = append(body, tok->next);
-  (*rest)->at_bol = macro_token->at_bol;
-  (*rest)->has_space = macro_token->has_space;
+  //#issue 108 not sure why but this corrupts some tokens "#" that are not recognized starting at beginning of the line.
+  // (*rest)->at_bol = macro_token->at_bol;
+  // (*rest)->has_space = macro_token->has_space;
   return true;
 }
 
@@ -797,8 +798,9 @@ static char *detect_include_guard(Token *tok) {
   char *macro = strndup(tok->loc, tok->len);
   tok = tok->next;
 
-  if (!is_hash(tok) || !equal(tok->next, "define") || !equal(tok->next->next, macro))
+  if (!is_hash(tok) || !equal(tok->next, "define") || !equal(tok->next->next, macro)) 
     return NULL;
+  
 
   // Read until the end of the file.
   while (tok->kind != TK_EOF) {
@@ -807,8 +809,10 @@ static char *detect_include_guard(Token *tok) {
       continue;
     }
 
-    if (equal(tok->next, "endif") && tok->next->next->kind == TK_EOF)
+    if (equal(tok->next, "endif") && tok->next->next->kind == TK_EOF) 
       return macro;
+
+    
 
     if (equal(tok, "if") || equal(tok, "ifdef") || equal(tok, "ifndef"))
       tok = skip_cond_incl(tok->next);
@@ -868,9 +872,9 @@ static Token *preprocess2(Token *tok) {
 
   while (tok->kind != TK_EOF) {
     // If it is a macro, expand it.
-    if (expand_macro(&tok, tok))
+    if (expand_macro(&tok, tok)) 
       continue;
-
+    
     // Pass through if it is not a "#".
     if (!is_hash(tok)) {
       tok->line_delta = tok->file->line_delta;
@@ -882,7 +886,6 @@ static Token *preprocess2(Token *tok) {
 
     Token *start = tok;
     tok = tok->next;
-
     if (equal(tok, "include")) {
       bool is_dquote;
       char *filename = read_include_filename(&tok, tok->next, &is_dquote);
@@ -911,6 +914,8 @@ static Token *preprocess2(Token *tok) {
       read_macro_definition(&tok, tok->next);
       continue;
     }
+
+
 
     if (equal(tok, "undef")) {
       tok = tok->next;
@@ -971,7 +976,7 @@ static Token *preprocess2(Token *tok) {
     }
 
     if (equal(tok, "endif")) {
-      if (!cond_incl)
+      if (!cond_incl) 
         error_tok(start, "stray #endif");
       cond_incl = cond_incl->next;
       tok = skip_line(tok->next);
@@ -1008,6 +1013,12 @@ static Token *preprocess2(Token *tok) {
     if (tok->at_bol)
       continue;
 
+    if (equal(tok, "warning")) {
+      if (tok->next->str != NULL)
+        printf("warning: %s\n", tok->next->str);
+      tok = skip_line(tok->next->next);
+      continue;
+    }
     error_tok(tok, "invalid preprocessor directive");
   }
 
@@ -1016,8 +1027,10 @@ static Token *preprocess2(Token *tok) {
 }
 
 void define_macro(char *name, char *buf) {
-  Token *tok = tokenize(new_file("<built-in>", 1, buf));
-  add_macro(name, true, tok);
+  if (strncmp(name, "__has_attribute", 15)) {
+    Token *tok = tokenize(new_file("<built-in>", 1, buf));
+    add_macro(name, true, tok);
+  } 
 }
 
 void undef_macro(char *name) {
@@ -1126,7 +1139,6 @@ void init_macros(void) {
   define_macro("linux", "1");
   define_macro("unix", "1");
   define_macro("nonnull", "1");
-  
 
   add_builtin("__FILE__", file_macro);
   add_builtin("__LINE__", line_macro);

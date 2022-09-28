@@ -575,7 +575,11 @@ static void run_cc1(int argc, char **argv, char *input, char *output) {
     args[argc++] = "-cc1-output";
     args[argc++] = output;
   }
-
+  //only to compile VLC if not it failed without these definitions set up
+  // args[argc++] = "-DVLC_USED=";
+  // args[argc++] = "-DVLC_API=";
+  // args[argc++] = "-DVLC_MALLOC=";
+  // args[argc++] = "-DVLC_DEPRECATED=";
   run_subprocess(args);
   free(args);
 }

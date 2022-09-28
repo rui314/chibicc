@@ -273,10 +273,16 @@ curl : https://github.com/curl/curl.git
     - issue #69 Internal error on long double initializer from GabrielRavier
     - issue #71 Codegen error on _Atomic long double operation assignments from GabrielRavier
     - Fix atomic fetch operations #101 pull request from chjj
-    - issue #105 \_\_has_attribute(diagnose_if)
-    - issue #106 lots of attributes \_\_attributes\_\_((xxxx)) not managed.
+    - issue #107 string intialized by function-like failed during compilation
+    - issue #108 if a macro ends a line and the next line starts by "#ifdef" the "#" is not recognized starting from beginning of the line.
+    - issue #109 managing #warning as preprocess instruction
+    - issue #110 union initialized by  "input_control_param_t it = { .id = p_input, .time.i_val = 1};" failed due to comma.
 
 ## release notes
+
+1.0.10 Fixing issue about string initialized by function-like (issue #107). Fixing issue when a macro ends a line and the next line starts by "#ifdef" the "#" is not recognized starting from beginning of the line (issue #108). Managing \#warning as preprocessor instruction (issue #109). Fixing issue with union initializer when comma found like "input_control_param_t it = { .id = p_input, .time.i_val = 1};" (issue #110) and input_control_param_t it = { .id = p_input,} (issue #113). Removing fix for issue 106 (caused other issues with VLC when trying to compile).
+
+## old release notes
 
 1.0.0 Initial version
 

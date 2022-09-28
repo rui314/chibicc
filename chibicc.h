@@ -18,6 +18,10 @@
 #include <time.h>
 #include <unistd.h>
 
+#ifndef __has_attribute
+#define __has_attribute(x) __GCC4_has_attribute_##x
+#endif
+
 #define MAX(x, y) ((x) < (y) ? (y) : (x))
 #define MIN(x, y) ((x) < (y) ? (x) : (y))
 
@@ -26,7 +30,7 @@
 #endif
 
 #define PRODUCT "chibicc"
-#define VERSION "1.0.9"
+#define VERSION "1.0.10"
 #define MAXLEN 101
 #define DEFAULT_TARGET_MACHINE "x86_64-linux-gnu"
 
