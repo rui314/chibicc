@@ -914,6 +914,8 @@ static FileType get_file_type(char *filename) {
     return FILE_AR;
   if (endswith(filename, ".so"))
     return FILE_DSO;
+  if (endswith(filename, ".lo"))
+    return FILE_DSO;    
   if (endswith(filename, ".o"))
     return FILE_OBJ;
   if (endswith(filename, ".c"))
