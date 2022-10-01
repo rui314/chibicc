@@ -1,13 +1,14 @@
 pvs-studio.com/en/docs/warnings/	1	err	Help: The documentation for all analyzer warnings is available here: https://pvs-studio.com/en/docs/warnings/.
-/home/stormalf/tests_c/chibicc/main.c	81	warn	V575 The potential null pointer is passed into 'dirname' function. Inspect the first argument. Check lines: 81, 81.
-/home/stormalf/tests_c/chibicc/parse.c	866	warn	V1004 The 'ty->base' pointer was used unsafely after it was verified against nullptr. Check lines: 859, 866.
-/home/stormalf/tests_c/chibicc/parse.c	1593	warn	V773 The return value of function 'write_gvar_data' is required to be utilized. A memory leak is possible.
-/home/stormalf/tests_c/chibicc/parse.c	2033	warn	V1070 Signed value is converted to an unsigned one with subsequent expansion to a larger type in ternary operator.
-/home/stormalf/tests_c/chibicc/parse.c	2034	warn	V1070 Signed value is converted to an unsigned one with subsequent expansion to a larger type in ternary operator.
-/home/stormalf/tests_c/chibicc/parse.c	2035	warn	V1070 Signed value is converted to an unsigned one with subsequent expansion to a larger type in ternary operator.
-/home/stormalf/tests_c/chibicc/parse.c	2524	err	V595 The 'lhs->ty->base' pointer was utilized before it was verified against nullptr. Check lines: 2524, 2532.
-/home/stormalf/tests_c/chibicc/parse.c	3410	warn	V576 Incorrect format. Consider checking the third actual argument of the 'error_tok' function. Under certain conditions the pointer can be null.
-/home/stormalf/tests_c/chibicc/chibicc.h	157	warn	V1071 Consider inspecting the 'skip' function. The return value is not always used. Total calls: 96, discarded results: 1.
+/home/stormalf/tests_c/chibicc/main.c	44	warn	V707 Giving short names to global variables is considered to be bad practice. It is suggested to rename 'f' variable.
+/home/stormalf/tests_c/chibicc/main.c	86	warn	V575 The potential null pointer is passed into 'dirname' function. Inspect the first argument. Check lines: 86, 86.
+/home/stormalf/tests_c/chibicc/parse.c	843	warn	V1004 The 'ty->base' pointer was used unsafely after it was verified against nullptr. Check lines: 836, 843.
+/home/stormalf/tests_c/chibicc/parse.c	1574	warn	V773 The return value of function 'write_gvar_data' is required to be utilized. A memory leak is possible.
+/home/stormalf/tests_c/chibicc/parse.c	2014	warn	V1070 Signed value is converted to an unsigned one with subsequent expansion to a larger type in ternary operator.
+/home/stormalf/tests_c/chibicc/parse.c	2015	warn	V1070 Signed value is converted to an unsigned one with subsequent expansion to a larger type in ternary operator.
+/home/stormalf/tests_c/chibicc/parse.c	2016	warn	V1070 Signed value is converted to an unsigned one with subsequent expansion to a larger type in ternary operator.
+/home/stormalf/tests_c/chibicc/parse.c	2505	err	V595 The 'lhs->ty->base' pointer was utilized before it was verified against nullptr. Check lines: 2505, 2513.
+/home/stormalf/tests_c/chibicc/parse.c	3395	warn	V576 Incorrect format. Consider checking the third actual argument of the 'error_tok' function. Under certain conditions the pointer can be null.
+/home/stormalf/tests_c/chibicc/chibicc.h	159	warn	V1071 Consider inspecting the 'skip' function. The return value is not always used. Total calls: 96, discarded results: 1.
 /home/stormalf/tests_c/chibicc/parse.c	132	warn	V1071 Consider inspecting the 'assign' function. The return value is not always used. Total calls: 26, discarded results: 1.
 /home/stormalf/tests_c/chibicc/preprocess.c	470	warn	V547 Expression 'pp' is always false.
 /home/stormalf/tests_c/chibicc/preprocess.c	894	warn	V575 The potential null pointer is passed into 'dirname' function. Inspect the first argument. Check lines: 894, 894.

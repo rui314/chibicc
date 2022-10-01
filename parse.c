@@ -389,13 +389,6 @@ static void push_tag_scope(Token *tok, Type *ty) {
 //             | enum-specifier | typeof-specifier
 //             | "const" | "volatile" | "auto" | "register" | "restrict"
 //             | "__restrict" | "__restrict__" | "_Noreturn" | )+
-//The keyword __attribute__ allows you to specify special attributes when making a declaration. 
-//This keyword is followed by an attribute specification inside double parentheses. 
-//The following attributes are currently defined for functions on all targets:
-// noreturn, returns_twice, noinline, always_inline, flatten, pure, const, 
-// nothrow, sentinel, format, format_arg, no_instrument_function, section, 
-// constructor, destructor, used, unused, deprecated, weak, malloc, alias,
-//  warn_unused_result, nonnull and externally_visible
 // The order of typenames in a type-specifier doesn't matter. For
 // example, `int long static` means the same as `static long int`.
 // That can also be written as `static long` because you can omit
@@ -460,21 +453,6 @@ static Type *declspec(Token **rest, Token *tok, VarAttr *attr) {
         consume(&tok, tok, "auto") || consume(&tok, tok, "register") ||
         consume(&tok, tok, "restrict") || consume(&tok, tok, "__restrict") ||
         consume(&tok, tok, "__restrict__") || consume(&tok, tok, "_Noreturn") 
-        // || 
-        // consume(&tok, tok, "__attribute__((noreturn))") || consume(&tok, tok, "__attribute__((returns_twice))") ||
-        // consume(&tok, tok, "__attribute__((noinline))") || consume(&tok, tok, "__attribute__((always_inline))") ||
-        // consume(&tok, tok, "__attribute__((flatten))") || consume(&tok, tok, "__attribute__((pure))") ||
-        // consume(&tok, tok, "__attribute__((nothrow))") || consume(&tok, tok, "__attribute__((sentinel))") ||
-        // consume(&tok, tok, "__attribute__((format))") || consume(&tok, tok, "__attribute__((format_arg))") ||
-        // consume(&tok, tok, "__attribute__((no_instrument_function))") || consume(&tok, tok, "__attribute__((section))") ||        
-        // consume(&tok, tok, "__attribute__((constructor))") || consume(&tok, tok, "__attribute__((destructor))") ||   
-        // consume(&tok, tok, "__attribute__((used))") || consume(&tok, tok, "__attribute__((unused))") ||   
-        // consume(&tok, tok, "__attribute__((deprecated))") || consume(&tok, tok, "__attribute__((weak))") ||  
-        // consume(&tok, tok, "__attribute__((malloc))") || consume(&tok, tok, "__attribute__((alias))") ||           
-        // consume(&tok, tok, "__attribute__((warn_unused_result))") || consume(&tok, tok, "__attribute__((nonnull))") ||           
-        // consume(&tok, tok, "__attribute__((externally_visible))") || consume(&tok, tok, "__attribute__((visibility(\"default\")))") ||
-        // consume(&tok, tok, "__attribute__((visibility(\"hidden\")))") ||consume(&tok, tok, "__attribute__((visibility(\"protected\")))") ||
-        // consume(&tok, tok, "__attribute__((visibility(\"internal\")))")
         )
       continue;
 
@@ -715,7 +693,7 @@ static Type *pointers(Token **rest, Token *tok, Type *ty) {
   while (consume(&tok, tok, "*")) {
     ty = pointer_to(ty);
     while (equal(tok, "const") || equal(tok, "volatile") || equal(tok, "restrict") ||
-           equal(tok, "__restrict") || equal(tok, "__restrict__"))
+           equal(tok, "__restrict") || equal(tok, "__restrict__") || equal(tok, "_Atomic"))
       tok = tok->next;
   }
   *rest = tok;
@@ -741,7 +719,6 @@ static Type *declarator(Token **rest, Token *tok, Type *ty) {
     name = tok;
     tok = tok->next;
   }
-
   ty = type_suffix(rest, tok, ty);
   ty->name = name;
   ty->name_pos = name_pos;
@@ -890,9 +867,9 @@ static Node *declaration(Token **rest, Token *tok, Type *basety, VarAttr *attr) 
   Node *cur = &head;
   int i = 0;
   while (!equal(tok, ";")) {
-    if (i++ > 0)
+    if (i++ > 0) 
       tok = skip(tok, ",");
-
+    
     Type *ty = declarator(&tok, tok, basety);
     if (ty->kind == TY_VOID)
       error_tok(tok, "variable declared void");
@@ -1121,8 +1098,9 @@ static int count_array_init_elements(Token *tok, Type *ty) {
   int i = 0, max = 0;
 
   while (!consume_end(&tok, tok)) {
-    if (!first)
+    if (!first) 
       tok = skip(tok, ",");
+
     first = false;
 
     if (equal(tok, "[")) {
@@ -1158,8 +1136,9 @@ static void array_initializer1(Token **rest, Token *tok, Initializer *init) {
   }
 
   for (int i = 0; !consume_end(rest, tok); i++) {
-    if (!first)
+    if (!first) 
       tok = skip(tok, ",");
+
     first = false;
 
     if (equal(tok, "[")) {
@@ -1190,7 +1169,7 @@ static void array_initializer2(Token **rest, Token *tok, Initializer *init, int 
 
   for (; i < init->ty->array_len && !is_end(tok); i++) {
     Token *start = tok;
-    if (i > 0)
+    if (i > 0) 
       tok = skip(tok, ",");
 
     if (equal(tok, "[") || equal(tok, ".")) {
@@ -1211,8 +1190,9 @@ static void struct_initializer1(Token **rest, Token *tok, Initializer *init) {
   bool first = true;
 
   while (!consume_end(rest, tok)) {
-    if (!first)
+    if (!first) 
       tok = skip(tok, ",");
+
     first = false;
 
     if (equal(tok, ".")) {
@@ -1240,6 +1220,7 @@ static void struct_initializer2(Token **rest, Token *tok, Initializer *init, Mem
 
     if (!first) 
       tok = skip(tok, ",");
+
     first = false;
 
     if (equal(tok, "[") || equal(tok, ".")) {
@@ -2700,8 +2681,9 @@ static void struct_members(Token **rest, Token *tok, Type *ty) {
 
     // Regular struct members
     while (!consume(&tok, tok, ";")) {
-      if (!first)
+      if (!first) 
         tok = skip(tok, ",");
+
       first = false;
 
       Member *mem = calloc(1, sizeof(Member));
@@ -3105,13 +3087,14 @@ static Node *generic_selection(Token **rest, Token *tok) {
 
   Node *ctrl = assign(&tok, tok);
   add_type(ctrl);
-
+  
   Type *t1 = ctrl->ty;
   if (t1->kind == TY_FUNC)
     t1 = pointer_to(t1);
   else if (t1->kind == TY_ARRAY)
     t1 = pointer_to(t1->base);
 
+  //try to fix issue with VLC
   Node *ret = NULL;
 
   while (!consume(rest, tok, ")")) {
@@ -3132,9 +3115,11 @@ static Node *generic_selection(Token **rest, Token *tok) {
       ret = node;
   }
 
-  if (!ret) 
-    error_tok(start, "controlling expression type not compatible with"
-              " any generic association type");
+  if (!ret) {
+    ret = ctrl;
+    // error_tok(start, "controlling expression type not compatible with"
+    //           " any generic association type");
+  }
   return ret;
 }
 

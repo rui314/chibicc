@@ -1,5 +1,7 @@
 #include "chibicc.h"
 
+#define CODEGEN_C "codegen.c"
+
 #define GP_MAX 6
 #define FP_MAX 8
 

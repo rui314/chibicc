@@ -1,8 +1,10 @@
 #include "chibicc.h"
+#define MAIN_C "main.c"
+
 extern char **environ;
 
 typedef enum {
-  FILE_NONE, FILE_C, FILE_ASM, FILE_OBJ, FILE_AR, FILE_DSO,
+  FILE_NONE, FILE_C, FILE_ASM, FILE_OBJ, FILE_AR, FILE_DSO
 } FileType;
 
 StringArray include_paths;
@@ -25,11 +27,12 @@ static bool opt_static;
 static bool opt_shared;
 static bool isCc1input = false;
 static bool isCc1output = false;
+static bool isDebug = false;
 static char *opt_MF;
 static char *opt_MT;
 static char *opt_o;
 static char *opt_linker;
-static char *symbolic_name;
+//static char *symbolic_name;
 static char *r_path;
 
 static StringArray ld_extra_args;
@@ -38,6 +41,8 @@ static StringArray std_include_paths;
 char *base_file;
 static char *output_file;
 
+static FILE *f;
+static char logFile[] = "/tmp/chibicc.log";
 static StringArray input_paths;
 static StringArray tmpfiles;
 
@@ -56,7 +61,7 @@ static void printVersion(int status) {
 //check the length and validity of parameter to avoid non valid input values
 static void check_parms_length(char *arg) {
       if (strlen(arg) > MAXLEN) {
-      error("maximum length parameter overpassed");
+      error("%s : in check_parms_length maximum length parameter overpassed", MAIN_C);
       exit(EXIT_FAILURE);
       }
 
@@ -65,7 +70,7 @@ static void check_parms_length(char *arg) {
 
 static bool take_arg(char *arg) {
   char *x[] = {
-    "-o", "-I", "-idirafter", "-include", "-x", "-MF", "-MT", "-MQ", "-Xlinker", "-cc1-input", "-cc1-output", "-fuse-ld", "-soname", "-rpath" 
+    "-o", "-I", "-idirafter", "-include", "-x", "-MF", "-MT", "-MQ", "-Xlinker", "-cc1-input", "-cc1-output", "-fuse-ld", "-soname", "-rpath", "-z", "--version-script" 
   };
 
   for (int i = 0; i < sizeof(x) / sizeof(*x); i++) {
@@ -106,13 +111,13 @@ static FileType parse_opt_x(char *s) {
     return FILE_ASM;
   if (!strcmp(s, "none"))
     return FILE_NONE;
-  error("<command line>: unknown argument for -x: %s", s);
+  error("%s : in parse_opt_x <command line>: unknown argument for -x: %s", MAIN_C, s);
 }
 
 static char *quote_makefile(char *s) {
   char *buf = calloc(1, strlen(s) * 2 + 1);
   if (buf == NULL) {
-      error("in quote_makefile buf pointer is null!");
+      error("%s in quote_makefile buf pointer is null!", MAIN_C);
   }
 
   for (int i = 0, j = 0; s[i]; i++) {
@@ -147,7 +152,7 @@ static void parse_args(int argc, char **argv) {
     if (take_arg(argv[i]))
       if (!argv[++i]) {
         printf("parameter without value! the following parameters need to be followed by a value :\n");
-        printf("-o, -I, -idirafter, -include, -x, -MF, -MQ, -MT, -Xlinker, -cc1-input, -cc1-output, -fuse-ld, -soname, -rpath \n");
+        printf("-o, -I, -idirafter, -include, -x, -MF, -MQ, -MT, -Xlinker, -cc1-input, -cc1-output, -fuse-ld, -soname, -rpath, -z, --version-script \n");
         usage(1);
       }
 
@@ -193,6 +198,11 @@ static void parse_args(int argc, char **argv) {
 
     if (!strcmp(argv[i], "-S")) {
       opt_S = true;
+      continue;
+    }
+
+    if (!strcmp(argv[i], "-debug") || !strcmp(argv[i], "-log")) {
+      isDebug = true;
       continue;
     }
 
@@ -298,6 +308,35 @@ static void parse_args(int argc, char **argv) {
       continue;
     }
 
+    //not sure what this linker option means
+    if (!strcmp(argv[i], "-z")) {
+      char *tmp = argv[++i];  
+      printf("%s\n", argv[i]);
+      check_parms_length(tmp);       
+      strarray_push(&ld_extra_args, "-z");      
+      strarray_push(&ld_extra_args, tmp);
+      //strarray_push(&ld_extra_args, argv[++i]);
+      continue;
+    }
+
+    //not sure why the --version-script is interpreted as -version-script ?
+    if (!strcmp(argv[i], "-version-script")) {
+      char *tmp = argv[++i];  
+      printf("%s\n", argv[i]);
+      check_parms_length(tmp);       
+      strarray_push(&ld_extra_args, "--version-script");      
+      strarray_push(&ld_extra_args, tmp);
+      //strarray_push(&ld_extra_args, argv[++i]);
+      continue;
+    }
+
+    if (!strcmp(argv[i], "-x")) {
+      char *tmp = argv[++i];    
+      check_parms_length(tmp);       
+      strarray_push(&ld_extra_args, tmp);
+      //strarray_push(&ld_extra_args, argv[++i]);
+      continue;
+    }
 
 
     if (!strcmp(argv[i], "-s")) {
@@ -425,7 +464,9 @@ static void parse_args(int argc, char **argv) {
     if (!strcmp(argv[i], "-soname")) {
       char *tmp = argv[++i];
       check_parms_length(tmp); 
-      symbolic_name = tmp;
+      strarray_push(&ld_extra_args, "-soname");      
+      strarray_push(&ld_extra_args, tmp);            
+      //symbolic_name = tmp;
       continue;
     }
 
@@ -457,7 +498,7 @@ static void parse_args(int argc, char **argv) {
       continue;
 
     if (argv[i][0] == '-' && argv[i][1] != '\0')
-      error("unknown argument: %s", argv[i]);
+      error("%s in parse_args unknown argument: %s", MAIN_C, argv[i]);
 
     strarray_push(&input_paths, argv[i]);
   }
@@ -466,7 +507,7 @@ static void parse_args(int argc, char **argv) {
     strarray_push(&include_paths, idirafter.data[i]);
 
   if (input_paths.len == 0)
-    error("no input files");
+    error("%s : in parse_args no input files", MAIN_C);
 
   // -E implies that the input is the C macro language.
   if (opt_E)
@@ -479,7 +520,7 @@ static FILE *open_file(char *path) {
 
   FILE *out = fopen(path, "w");
   if (!out)
-    error("cannot open output file: %s: %s", path, strerror(errno));
+    error("%s : in open_file cannot open output file: %s: %s", MAIN_C, path, strerror(errno));
   return out;
 }
 
@@ -519,15 +560,18 @@ static char *replace_extn(char *tmpl, char *extn) {
 static void cleanup(void) {
   for (int i = 0; i < tmpfiles.len; i++)
     unlink(tmpfiles.data[i]);
+
+  if (isDebug && f != NULL)
+    fclose(f);
 }
 
 static char *create_tmpfile(void) {
   char *path = strdup("/tmp/chibicc-XXXXXX");
   if (path == NULL)
-    error("main.c : in create_tmpfilepath path is null");
+    error("%s : in create_tmpfile path path is null", MAIN_C);
   int fd = mkstemp(path);
   if (fd == -1)
-    error("mkstemp failed: %s", strerror(errno));
+    error("%s : in create_tmpfile mkstemp failed: %s", MAIN_C, strerror(errno));
   close(fd);
 
   strarray_push(&tmpfiles, path);
@@ -535,20 +579,27 @@ static char *create_tmpfile(void) {
 }
 
 static void run_subprocess(char **argv) {
-  // If -### is given, dump the subprocess's command line.
+  // If -### or -debug is given, dump the subprocess's command line.
   if (opt_hash_hash_hash) {
-    fprintf(stderr, "%s", argv[0]);
+    fprintf(stdout, "%s", argv[0]);
     for (int i = 1; argv[i]; i++)
-      fprintf(stderr, " %s", argv[i]);
-    fprintf(stderr, "\n");
-  }
+      fprintf(stdout, " %s", argv[i]);
+    fprintf(stdout, "\n");
+   }
+
+  if (isDebug && f != NULL) {
+   fprintf(f, "%s", argv[0]);
+   for (int i = 1; argv[i]; i++)
+     fprintf(f, " %s", argv[i]);
+   fprintf(f, "\n");
+   }
 
   if (fork() == 0) {
     //sanitize environment variables here only PATH and IFS.
     spc_sanitize_environment();
     
     execvp(argv[0], argv);
-    fprintf(stderr, "exec failed: %s: %s\n", argv[0], strerror(errno));
+    fprintf(stderr, "%s : in run_subprocess exec failed: %s: %s\n", MAIN_C, argv[0], strerror(errno));
     _exit(1);
   }
 
@@ -562,7 +613,7 @@ static void run_subprocess(char **argv) {
 static void run_cc1(int argc, char **argv, char *input, char *output) {
   char **args = calloc(argc + 10, sizeof(char *));
   if (args == NULL) 
-    error("main.c : in run_cc1 args is null");
+    error("%s : in run_cc1 args is null", MAIN_C);
   memcpy(args, argv, argc * sizeof(char *));
   args[argc++] = "-cc1";
 
@@ -576,10 +627,6 @@ static void run_cc1(int argc, char **argv, char *input, char *output) {
     args[argc++] = output;
   }
   //only to compile VLC if not it failed without these definitions set up
-  // args[argc++] = "-DVLC_USED=";
-  // args[argc++] = "-DVLC_API=";
-  // args[argc++] = "-DVLC_MALLOC=";
-  // args[argc++] = "-DVLC_DEPRECATED=";
   run_subprocess(args);
   free(args);
 }
@@ -662,7 +709,7 @@ static void print_dependencies(void) {
 static Token *must_tokenize_file(char *path) {
   Token *tok = tokenize_file(path);
   if (!tok)
-    error("%s: %s", path, strerror(errno));
+    error("%s : in must_tokenize_file %s: %s", MAIN_C, path, strerror(errno));
   return tok;
 }
 
@@ -690,7 +737,7 @@ static void cc1(void) {
     } else {
       path = search_include_paths(incl);
       if (!path)
-        error("-include: %s: %s", incl, strerror(errno));
+        error("%s : in cc1 -include: %s: %s", MAIN_C, incl, strerror(errno));
     }
 
     Token *tok2 = must_tokenize_file(path);
@@ -738,10 +785,10 @@ static void assemble(char *input, char *output) {
 }
 
 
-static void symbolic_link(char *input, char *output) {
-  char *cmd[] = {"ln", "-s", "-f", output, input, NULL};
-  run_subprocess(cmd);
-}
+// static void symbolic_link(char *input, char *output) {
+//   char *cmd[] = {"ln", "-s", "-f", output, input, NULL};
+//   run_subprocess(cmd);
+// }
 
 void dump_machine(void) {
   fprintf(stdout, DEFAULT_TARGET_MACHINE "\n");
@@ -769,12 +816,13 @@ static char *find_libpath(void) {
     return "/usr/lib/x86_64-linux-gnu";
   if (file_exists("/usr/lib64/crti.o"))
     return "/usr/lib64";
-  error("library path is not found");
+  error("%s : in find_libpath library path is not found", MAIN_C);
 }
 
 static char *find_gcc_libpath(void) {
   char *paths[] = {
     "/usr/lib/gcc/x86_64-linux-gnu/*/crtbegin.o",
+    "/usr/lib/gcc/x86_64-*/*/crtbegin.o",
     "/usr/lib/gcc/x86_64-pc-linux-gnu/*/crtbegin.o", // For Gentoo
     "/usr/lib/gcc/x86_64-redhat-linux/*/crtbegin.o", // For Fedora
   };
@@ -785,7 +833,7 @@ static char *find_gcc_libpath(void) {
       return dirname(path);
   }
 
-  error("gcc library path is not found");
+  error("%s : in find_gcc_libpath gcc library path is not found", MAIN_C);
 }
 
 static void run_linker(StringArray *inputs, char *output) {
@@ -874,23 +922,33 @@ static FileType get_file_type(char *filename) {
     return FILE_ASM;
   if (endswith(filename, ".so.4"))
     return FILE_DSO;    
-
-  error("<command line>: unknown file extension: %s", filename);
+ 
+  error("%s : in get_file_type <command line>: unknown file extension: %s", MAIN_C, filename);
 }
 
 int main(int argc, char **argv) {
 
+  if(isDebug) {
+    f = fopen(logFile, "w");
+    if (f == NULL) {
+      error("%s : in main Issue with -debug parameter, file not opened!", MAIN_C);
+      exit(-2);
+    }
+  }
+
   atexit(cleanup);
   init_macros();
+
+      
   int isInvalidArg = validateArgs(argc, argv);
   if (isInvalidArg == -1) {
-      error("Invalid parameter detected!");
+      error("%s : in main Invalid parameter detected!", MAIN_C);
       usage(-2);
   }
   parse_args(argc, argv);
 
   if (opt_cc1 &&  !isCc1input) {
-      error("with -cc1 parameter -cc1-input is mandatory!");
+      error("%s : in main with -cc1 parameter -cc1-input is mandatory!", MAIN_C);
       usage(-1);
   }
 
@@ -901,7 +959,7 @@ int main(int argc, char **argv) {
   }
 
   if (input_paths.len > 1 && opt_o && (opt_c || opt_S || opt_E))
-    error("cannot specify '-o' with '-c,' '-S' or '-E' with multiple files");
+    error("%s : in main cannot specify '-o' with '-c,' '-S' or '-E' with multiple files", MAIN_C);
 
   StringArray ld_args = {};
 
@@ -968,6 +1026,7 @@ int main(int argc, char **argv) {
       continue;
     }
 
+
     // Compile, assemble and link
     char *tmp1 = create_tmpfile();
     char *tmp2 = create_tmpfile();
@@ -978,10 +1037,13 @@ int main(int argc, char **argv) {
   }
 
   if (ld_args.len > 0) {
-    if (symbolic_name)
-      symbolic_link(symbolic_name, opt_o);    
+    // if (symbolic_name)
+    //   symbolic_link(symbolic_name, opt_o);    
     run_linker(&ld_args, opt_o ? opt_o : "a.out");
   }
+
+  if (isDebug && f != NULL)
+    fclose(f);
   free(opt_MT);
 
   return 0;

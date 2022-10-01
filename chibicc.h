@@ -30,7 +30,7 @@
 #endif
 
 #define PRODUCT "chibicc"
-#define VERSION "1.0.10"
+#define VERSION "1.0.11"
 #define MAXLEN 101
 #define DEFAULT_TARGET_MACHINE "x86_64-linux-gnu"
 
@@ -52,6 +52,9 @@ this " PRODUCT " contains only some differences for now like new parameters\n"
 -c path to source to compile \n \
 -Xlinker <arg> Pass <arg> on to the linker.\n \
 -Wl,<options> Pass comma-separated <options> on to the linker.\n \
+-z <arg> Pass <arg> on to the linker. \n \
+-soname <arg> Pass -soname <arg> on to the linker. \n \
+--version-script <arg> Pass --version-script <arg> to the linker.\n \
 -I<path> Pass path to the include directories \n \
 -L<path> Pass path to the lib directories \n \
 -D<macro> define macro example -DM13 \n \
@@ -69,6 +72,7 @@ this " PRODUCT " contains only some differences for now like new parameters\n"
 -hashmap-test to test the hashmap function \n \
 -idirafter <dir> apply to lookup for both the #include \"file\" and #include <file> directives.\n \
 -### to dump all commands executed by chibicc \n \
+-debug to dump all commands executed by chibicc in a log file in /tmp/chibicc.log\n \
 -E Stop after the preprocessing stage; do not run the compiler proper. \n \
     The output is in the form of preprocessed source code, which is sent to the standard output.\n \
     Input files that don’t require preprocessing are ignored.\n \
@@ -78,8 +82,6 @@ this " PRODUCT " contains only some differences for now like new parameters\n"
     which uses them to locate shared objects at runtime. \n \
     The -rpath option is also used when locating shared objects \n \
     which are needed by shared objects explicitly included in the link. \n \
--soname <arg> create a symbolic link (replace if it already exists) between <arg> and <output> before calling the linker. \n \
-    Example ... -soname libcurl.so.4 -o .libs/libcurl.so.4.8.0 creates a symbolic link beetween libcurl.so.4.8.0 and libcurl.so.4. \n \
 -dumpmachine it's required by some projects returns x86_64-linux-gnu\n \
 chibicc [ -o <path> ] <file>\n"
 

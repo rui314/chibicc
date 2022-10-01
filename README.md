@@ -31,6 +31,9 @@ or
     -c path to source to compile
     -Xlinker <arg> Pass <arg> on to the linker.
     -Wl,<options> Pass comma-separated <options> on to the linker.
+    -z <arg> Pass <arg> on to the linker.
+    -soname <arg> Pass -soname <arg> on to the linker.
+    --version-script <arg> Pass --version-script <arg> to the linker.
     -I<path> Pass path to the include directories
     -L<path> Pass path to the lib directories
     -D<macro> define macro example -DM13
@@ -48,6 +51,7 @@ or
     -hashmap-test to test the hashmap function
     -idirafter <dir> apply to lookup for both the #include "file" and #include <file> directives.
     -### to dump all commands executed by chibicc
+    -debug to dump all commands executed by chibicc in a log file in /tmp/chibicc.log
     -E Stop after the preprocessing stage; do not run the compiler proper.
         The output is in the form of preprocessed source code, which is sent to the standard output.
         Input files that don’t require preprocessing are ignored.
@@ -57,9 +61,7 @@ or
         which uses them to locate shared objects at runtime.
         The -rpath option is also used when locating shared objects
         which are needed by shared objects explicitly included in the link.
-    -soname <arg> create a symbolic link (replace if it already exists) between <arg> and <output> before calling the linker.
-        Example ... -soname libcurl.so.4 -o .libs/libcurl.so.4.8.0 creates a symbolic link beetween libcurl.so.4.8.0 and libcurl.so.4.
-    -dumpmachine it's required by some projects returns x86_64-linux-gnu\n \
+    -dumpmachine it's required by some projects returns x86_64-linux-gnu
     chibicc [ -o <path> ] <file>
 
 ## Examples
@@ -242,6 +244,14 @@ curl : https://github.com/curl/curl.git
         CC       ../lib/dynbuf.o
         CCLD     curl
 
+## Limts
+
+Some C projects doesn't compile for now.
+
+VLC
+
+    VLC doesn't compile with chibicc because it has some extended assembly inline that are not managed yet. Even if for this part I'll try to use gcc it failed during linking with multiple definitions. If I use gcc to compile VLC it compiles fine. Perhaps mixing chibicc and gcc is not a great idea!
+
 ## TODO
 
 - trying to compile other C projects from source to see what is missing or which bug we have with chibicc.
@@ -277,10 +287,13 @@ curl : https://github.com/curl/curl.git
     - issue #108 if a macro ends a line and the next line starts by "#ifdef" the "#" is not recognized starting from beginning of the line.
     - issue #109 managing #warning as preprocess instruction
     - issue #110 union initialized by  "input_control_param_t it = { .id = p_input, .time.i_val = 1};" failed due to comma.
+    - issue #113 depending where is _Atomic parsing failed
+        ./issues/issue113.c:7:         char *_Atomic str; /**< Current value (if character string) */
+                                     ^ expected ','
 
 ## release notes
 
-1.0.10 Fixing issue about string initialized by function-like (issue #107). Fixing issue when a macro ends a line and the next line starts by "#ifdef" the "#" is not recognized starting from beginning of the line (issue #108). Managing \#warning as preprocessor instruction (issue #109). Fixing issue with union initializer when comma found like "input_control_param_t it = { .id = p_input, .time.i_val = 1};" (issue #110) and input_control_param_t it = { .id = p_input,} (issue #113). Removing fix for issue 106 (caused other issues with VLC when trying to compile).
+1.0.11 Fixing issue #113 about \_Atomic when it's placed after the type. Fixing other issue like issue #108 sometimes some #ifdef are not recognized if a macro ends the previous line and the next line starting by a preprocessing instruction. Managing differently -soname and adding option -z, and --version-script. Adding -debug option to write commands in /tmp/chibicc.log (later I'll add some debugs info/values on this file to help to fix bugs). Adding 2 functions in stdatomic.h needed by VLC atomic_compare_exchange_strong_explicit(object, expected, desired, success, failure) that returns false for now and atomic_compare_exchange_weak_explicit(object, expected, desired, success, failure) that returns false too.
 
 ## old release notes
 
@@ -312,3 +325,5 @@ trying to document cc1 and x options and adding a max length control parameter. 
 "\_\_attribute\_\_((warn_unused_result))", "\_\_attribute\_\_((nonnull))", "\_\_attribute\_\_((externally_visible))",
 "\_\_attribute\_\_((visibility(\"default\")))", "\_\_attribute\_\_((visibility(\"hidden\")))",
 "\_\_attribute\_\_((visibility(\"protected\")))", "\_\_attribute\_\_((visibility(\"internal\")))"
+
+1.0.10 Fixing issue about string initialized by function-like (issue #107). Fixing issue when a macro ends a line and the next line starts by "#ifdef" the "#" is not recognized starting from beginning of the line (issue #108). Managing \#warning as preprocessor instruction (issue #109). Fixing issue with union initializer when comma found like "input_control_param_t it = { .id = p_input, .time.i_val = 1};" (issue #110) and input_control_param_t it = { .id = p_input,} (issue #113). Removing fix for issue 106 (caused other issues with VLC when trying to compile).
