@@ -30,7 +30,7 @@ static void error(char *fmt, ...) {
   exit(1);
 }
 
-// Consumes the current token if it matches `s`.
+// Consumes the current token if it matches `op`.
 static bool equal(Token *tok, char *op) {
   return memcmp(tok->loc, op, tok->len) == 0 && op[tok->len] == '\0';
 }
