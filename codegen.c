@@ -1,5 +1,4 @@
 #include "chibicc.h"
-
 #define CODEGEN_C "codegen.c"
 
 #define GP_MAX 6
@@ -183,7 +182,7 @@ static void gen_addr(Node *node) {
     return;
   }
 
-  error_tok(node->tok, "not an lvalue");
+  error_tok(node->tok, "%s not an lvalue", CODEGEN_C);
 }
 
 // Load a value from where %rax is pointing to.
@@ -1061,7 +1060,7 @@ static void gen_expr(Node *node) {
       return;
     }
 
-    error_tok(node->tok, "invalid expression");
+    error_tok(node->tok, "%s invalid expression", CODEGEN_C);
   }
   case TY_LDOUBLE: {
     gen_expr(node->lhs);
@@ -1100,7 +1099,7 @@ static void gen_expr(Node *node) {
       return;
     }
 
-    error_tok(node->tok, "invalid expression");
+    error_tok(node->tok, "%s invalid expression", CODEGEN_C);
   }
   }
 
@@ -1193,7 +1192,7 @@ static void gen_expr(Node *node) {
     return;
   }
 
-  error_tok(node->tok, "invalid expression");
+  error_tok(node->tok, "%s invalid expression", CODEGEN_C);
 }
 
 static void gen_stmt(Node *node) {
@@ -1314,7 +1313,7 @@ static void gen_stmt(Node *node) {
     return;
   }
 
-  error_tok(node->tok, "invalid statement");
+  error_tok(node->tok, "%s invalid statement", CODEGEN_C);
 }
 
 // Assign offsets to local variables.

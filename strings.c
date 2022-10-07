@@ -1,4 +1,5 @@
 #include "chibicc.h"
+#define STRINGS_C "strings.c"
 
 void strarray_push(StringArray *arr, char *s) {
   if (!arr->data) {
@@ -10,7 +11,7 @@ void strarray_push(StringArray *arr, char *s) {
     char **tmp;
     tmp = realloc(arr->data, sizeof(char *) * arr->capacity * 2);
     if (tmp == NULL)
-      error("strings.c : in strarray_push reallocation of arr->data failed!");
+      error("%s: in strarray_push reallocation of arr->data failed!", STRINGS_C);
     arr->data = tmp;
     arr->capacity *= 2;
     for (int i = arr->len; i < arr->capacity; i++)

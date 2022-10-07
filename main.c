@@ -30,7 +30,7 @@ static bool isCc1output = false;
 static bool isDebug = false;
 static char *opt_MF;
 static char *opt_MT;
-static char *opt_o;
+char *opt_o;
 static char *opt_linker;
 //static char *symbolic_name;
 static char *r_path;
@@ -40,8 +40,13 @@ static StringArray std_include_paths;
 
 char *base_file;
 static char *output_file;
-
 static FILE *f;
+
+//for dot diagrams
+FILE *dotf;
+char *dot_file;
+bool isDotfile = false;
+
 static char logFile[] = "/tmp/chibicc.log";
 static StringArray input_paths;
 static StringArray tmpfiles;
@@ -201,8 +206,13 @@ static void parse_args(int argc, char **argv) {
       continue;
     }
 
-    if (!strcmp(argv[i], "-debug") || !strcmp(argv[i], "-log")) {
+    if (!strcmp(argv[i], "-debug")) {
       isDebug = true;
+      continue;
+    }
+
+    if (!strcmp(argv[i], "-dotfile")) {
+      isDotfile = true;
       continue;
     }
 
@@ -531,13 +541,13 @@ static bool endswith(char *p, char *q) {
 }
 
 //returns filename example ./test/hello.c returns hello.c
-static char *extract_filename(char *tmpl) {
+char *extract_filename(char *tmpl) {
   char *filename = basename(strdup(tmpl));
   return format("%s", filename);
 }
 
 //return path without filename example : ./test/hello.c returns ./test
-static char *extract_path(char *tmpl, char*basename) {
+char *extract_path(char *tmpl, char*basename) {
 int total_length = strlen(tmpl);
 int basename_length = strlen(basename);
 int length = total_length - basename_length + 1;
@@ -548,7 +558,7 @@ return format("%s", pathonly);
 }
 
 // Replace file extension
-static char *replace_extn(char *tmpl, char *extn) {
+char *replace_extn(char *tmpl, char *extn) {
   char *filename = extract_filename(tmpl);
   //char *filename = basename(strdup(tmpl));  
   char *dot = strrchr(filename, '.');
@@ -563,6 +573,15 @@ static void cleanup(void) {
 
   if (isDebug && f != NULL)
     fclose(f);
+
+
+  //for dot diagrams
+  if (isDotfile && dotf != NULL) {
+    fprintf(dotf,"}\n");  
+    fclose(dotf);    
+  }
+
+
 }
 
 static char *create_tmpfile(void) {
@@ -600,7 +619,7 @@ static void run_subprocess(char **argv) {
     
     execvp(argv[0], argv);
     fprintf(stderr, "%s : in run_subprocess exec failed: %s: %s\n", MAIN_C, argv[0], strerror(errno));
-    _exit(1);
+    _exit(99);
   }
 
   // Wait for the child process to finish.
@@ -929,16 +948,16 @@ static FileType get_file_type(char *filename) {
 }
 
 int main(int argc, char **argv) {
+  atexit(cleanup);
 
   if(isDebug) {
     f = fopen(logFile, "w");
     if (f == NULL) {
       error("%s : in main Issue with -debug parameter, file not opened!", MAIN_C);
-      exit(-2);
+      exit(2);
     }
   }
-
-  atexit(cleanup);
+ 
   init_macros();
 
       
@@ -1044,8 +1063,6 @@ int main(int argc, char **argv) {
     run_linker(&ld_args, opt_o ? opt_o : "a.out");
   }
 
-  if (isDebug && f != NULL)
-    fclose(f);
   free(opt_MT);
 
   return 0;

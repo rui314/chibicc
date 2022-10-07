@@ -83,6 +83,7 @@ this " PRODUCT " contains only some differences for now like new parameters\n"
     The -rpath option is also used when locating shared objects \n \
     which are needed by shared objects explicitly included in the link. \n \
 -dumpmachine it's required by some projects returns x86_64-linux-gnu\n \
+-dotfile generates a file with .dot extension that can be visualized using graphviz package \n \
 chibicc [ -o <path> ] <file>\n"
 
 typedef struct Type Type;
@@ -351,6 +352,8 @@ struct Node {
   // Numeric literal
   int64_t val;
   long double fval;
+  //for dot diagram
+  int unique_number;  
 };
 
 Node *new_cast(Node *expr, Type *ty);
@@ -468,6 +471,9 @@ Type *enum_type(void);
 Type *struct_type(void);
 void add_type(Node *node);
 
+char *nodekind2str(NodeKind kind);
+
+
 //
 // codegen.c
 //
@@ -520,8 +526,13 @@ extern StringArray include_paths;
 extern bool opt_fpic;
 extern bool opt_fcommon;
 extern char *base_file;
-
-
+extern char *dot_file;
+extern char *opt_o;
+extern char *replace_extn(char *tmpl, char *extn);
+extern FILE *dotf;
+extern bool isDotfile;
+extern char *extract_filename(char *tmpl);
+extern char *extract_path(char *tmpl, char*basename) ;
 //
 // sanitize.c
 //

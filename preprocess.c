@@ -23,6 +23,7 @@
 // https://github.com/rui314/chibicc/wiki/cpp.algo.pdf
 
 #include "chibicc.h"
+#define PREPROCESS_C "preprocess.c"
 
 typedef struct MacroParam MacroParam;
 struct MacroParam {
@@ -91,7 +92,7 @@ static Token *skip_line(Token *tok) {
 static Token *copy_token(Token *tok) {
   Token *t = calloc(1, sizeof(Token));
   if (t == NULL)
-    error("preprocess.c : in copy_token t is null");
+    error("%s: in copy_token : t is null", PREPROCESS_C);
   *t = *tok;
   t->next = NULL;
   return t;
@@ -107,7 +108,7 @@ static Token *new_eof(Token *tok) {
 static Hideset *new_hideset(char *name) {
   Hideset *hs = calloc(1, sizeof(Hideset));
   if (hs == NULL)
-    error("preprocess.c : in new_hideset hs is null");  
+    error("%s: in new_hideset : hs is null", PREPROCESS_C);  
   hs->name = name;
   return hs;
 }
@@ -211,7 +212,7 @@ static char *quote_string(char *str) {
 
   char *buf = calloc(1, bufsize);
   if (buf == NULL)
-    error("preprocess.c : in quote_string buf is null");  
+    error("%s: in quote_string : buf is null", PREPROCESS_C);  
 
   char *p = buf;
   *p++ = '"';
@@ -264,7 +265,7 @@ static Token *read_const_expr(Token **rest, Token *tok) {
       bool has_paren = consume(&tok, tok->next, "(");
 
       if (tok->kind != TK_IDENT)
-        error_tok(start, "macro name must be an identifier");
+        error_tok(start, "%s: in read_const_expr : macro name must be an identifier", PREPROCESS_C);
       Macro *m = find_macro(tok);
       tok = tok->next;
 
@@ -290,7 +291,7 @@ static long eval_const_expr(Token **rest, Token *tok) {
   expr = preprocess2(expr);
 
   if (expr->kind == TK_EOF)
-    error_tok(start, "no expression");
+    error_tok(start, "%s: in eval_const_expr : no expression", PREPROCESS_C);
 
   // [https://www.sigbus.info/n1570#6.10.1p4] The standard requires
   // we replace remaining non-macro identifiers with "0" before
@@ -311,14 +312,14 @@ static long eval_const_expr(Token **rest, Token *tok) {
   Token *rest2;
   long val = const_expr(&rest2, expr);
   if (rest2->kind != TK_EOF)
-    error_tok(rest2, "extra token");
+    error_tok(rest2, "%s: in eval_const_expr : extra token", PREPROCESS_C);
   return val;
 }
 
 static CondIncl *push_cond_incl(Token *tok, bool included) {
   CondIncl *ci = calloc(1, sizeof(CondIncl));
   if (ci == NULL)
-    error("preprocess.c : in push_cond_incl ci is null");  
+    error("%s: in push_cond_incl : ci is null", PREPROCESS_C);  
   ci->next = cond_incl;
   ci->ctx = IN_THEN;
   ci->tok = tok;
@@ -336,7 +337,7 @@ static Macro *find_macro(Token *tok) {
 static Macro *add_macro(char *name, bool is_objlike, Token *body) {
   Macro *m = calloc(1, sizeof(Macro));
   if (m == NULL)
-    error("preprocess.c : in add_macro m is null"); 
+    error("%s: in add_macro : m is null", PREPROCESS_C); 
   m->name = name;
   m->is_objlike = is_objlike;
   m->body = body;
@@ -359,7 +360,7 @@ static MacroParam *read_macro_params(Token **rest, Token *tok, char **va_args_na
     }
 
     if (tok->kind != TK_IDENT)
-      error_tok(tok, "expected an identifier");
+      error_tok(tok, "%s in read_macro_params : expected an identifier", PREPROCESS_C);
 
     if (equal(tok->next, "...")) {
       *va_args_name = strndup(tok->loc, tok->len);
@@ -369,7 +370,7 @@ static MacroParam *read_macro_params(Token **rest, Token *tok, char **va_args_na
 
     MacroParam *m = calloc(1, sizeof(MacroParam));
     if (m == NULL)
-      error("preprocess.c : in read_macro_params m is null");  
+      error("%s: in read_macro_params : m is null", PREPROCESS_C);  
 
     m->name = strndup(tok->loc, tok->len);
     cur = cur->next = m;
@@ -383,7 +384,7 @@ static MacroParam *read_macro_params(Token **rest, Token *tok, char **va_args_na
 static void read_macro_definition(Token **rest, Token *tok) {
 
   if (tok->kind != TK_IDENT)
-    error_tok(tok, "macro name must be an identifier");
+    error_tok(tok, "%s: in read_macro_definition : macro name must be an identifier", PREPROCESS_C);
 
   char *name = strndup(tok->loc, tok->len);
   tok = tok->next;
@@ -413,7 +414,7 @@ static MacroArg *read_macro_arg_one(Token **rest, Token *tok, bool read_rest) {
       break;
 
     if (tok->kind == TK_EOF)
-      error_tok(tok, "premature end of input");
+      error_tok(tok, "%s: in read_macro_arg_one : premature end of input", PREPROCESS_C);
 
     if (equal(tok, "("))
       level++;
@@ -428,7 +429,7 @@ static MacroArg *read_macro_arg_one(Token **rest, Token *tok, bool read_rest) {
 
   MacroArg *arg = calloc(1, sizeof(MacroArg));
   if (arg == NULL)
-    error("preprocess.c : in read_macro_arg_one arg is null");  
+    error("%s: in read_macro_arg_one : arg is null", PREPROCESS_C);  
 
   arg->tok = head.next;
   *rest = tok;
@@ -456,7 +457,7 @@ read_macro_args(Token **rest, Token *tok, MacroParam *params, char *va_args_name
     if (equal(tok, ")")) {
       arg = calloc(1, sizeof(MacroArg));
       if (arg == NULL)
-        error("preprocess.c : in read_macro_args arg is null");  
+        error("%s: in read_macro_args : arg is null", PREPROCESS_C);  
 
       arg->tok = new_eof(tok);
     } else {
@@ -468,7 +469,7 @@ read_macro_args(Token **rest, Token *tok, MacroParam *params, char *va_args_name
     arg->is_va_args = true;
     cur = cur->next = arg;
   } else if (pp) {
-    error_tok(start, "too many arguments");
+    error_tok(start, "%s: in read_macro_args : too many arguments", PREPROCESS_C);
   }
 
   skip(tok, ")");
@@ -495,7 +496,7 @@ static char *join_tokens(Token *tok, Token *end) {
 
   char *buf = calloc(1, len);
   if (buf == NULL)
-    error("preprocess.c : in join_tokens buf is null");  
+    error("%s: in join_tokens : buf is null", PREPROCESS_C);  
 
 
   // Copy token texts.
@@ -528,7 +529,7 @@ static Token *paste(Token *lhs, Token *rhs) {
   // Tokenize the resulting string.
   Token *tok = tokenize(new_file(lhs->file->name, lhs->file->file_no, buf));
   if (tok->next->kind != TK_EOF)
-    error_tok(lhs, "pasting forms '%s', an invalid token", buf);
+    error_tok(lhs, "%s: in paste : pasting forms '%s', an invalid token", PREPROCESS_C, buf);
   return tok;
 }
 
@@ -549,7 +550,7 @@ static Token *subst(Token *tok, MacroArg *args) {
     if (equal(tok, "#")) {
       MacroArg *arg = find_arg(args, tok->next);
       if (!arg)
-        error_tok(tok->next, "'#' is not followed by a macro parameter");
+        error_tok(tok->next, "%s: in subst : '#' is not followed by a macro parameter", PREPROCESS_C);
       cur = cur->next = stringize(tok, arg->tok);
       tok = tok->next->next;
       continue;
@@ -573,10 +574,10 @@ static Token *subst(Token *tok, MacroArg *args) {
 
     if (equal(tok, "##")) {
       if (cur == &head)
-        error_tok(tok, "'##' cannot appear at start of macro expansion");
+        error_tok(tok, "%s: in subst : '##' cannot appear at start of macro expansion", PREPROCESS_C);
 
       if (tok->next->kind == TK_EOF)
-        error_tok(tok, "'##' cannot appear at end of macro expansion");
+        error_tok(tok, "%s: in subst : '##' cannot appear at end of macro expansion", PREPROCESS_C);
 
       MacroArg *arg = find_arg(args, tok->next);
       if (arg) {
@@ -762,7 +763,7 @@ static char *read_include_filename(Token **rest, Token *tok, bool *is_dquote) {
     // Find closing ">".
     for (; !equal(tok, ">"); tok = tok->next)
       if (tok->at_bol || tok->kind == TK_EOF)
-        error_tok(tok, "expected '>'");
+        error_tok(tok, "%s: in read_include_filename : expected '>'", PREPROCESS_C);
 
     *is_dquote = false;
     *rest = skip_line(tok->next);
@@ -777,7 +778,7 @@ static char *read_include_filename(Token **rest, Token *tok, bool *is_dquote) {
     return read_include_filename(&tok2, tok2, is_dquote);
   }
 
-  error_tok(tok, "expected a filename");
+  error_tok(tok, "%s: in read_include_filename : expected a filename", PREPROCESS_C);
 }
 
 // Detect the following "include guard" pattern.
@@ -837,7 +838,7 @@ static Token *include_file(Token *tok, char *path, Token *filename_tok) {
 
   Token *tok2 = tokenize_file(path);
   if (!tok2)
-    error_tok(filename_tok, "%s: cannot open file: %s", path, strerror(errno));
+    error_tok(filename_tok, "%s: in include_file : %s: cannot open file: %s", PREPROCESS_C, path, strerror(errno));
 
   guard_name = detect_include_guard(tok2);
   if (guard_name)
@@ -852,7 +853,7 @@ static void read_line_marker(Token **rest, Token *tok) {
   tok = preprocess(copy_line(rest, tok));
 
   if (tok->kind != TK_NUM || tok->ty->kind != TY_INT)
-    error_tok(tok, "invalid line marker");
+    error_tok(tok, "%s: in read_line_marker : invalid line marker", PREPROCESS_C);
   start->file->line_delta = tok->val - start->line_no;
 
   tok = tok->next;
@@ -860,7 +861,7 @@ static void read_line_marker(Token **rest, Token *tok) {
     return;
 
   if (tok->kind != TK_STR)
-    error_tok(tok, "filename expected");
+    error_tok(tok, "%s: in read_line_marker : filename expected", PREPROCESS_C);
   start->file->display_name = tok->str;
 }
 
@@ -920,7 +921,7 @@ static Token *preprocess2(Token *tok) {
     if (equal(tok, "undef")) {
       tok = tok->next;
       if (tok->kind != TK_IDENT)
-        error_tok(tok, "macro name must be an identifier");
+        error_tok(tok, "%s: in preprocess2 : macro name must be an identifier", PREPROCESS_C);
       undef_macro(strndup(tok->loc, tok->len));
       tok = skip_line(tok->next);
       continue;
@@ -954,7 +955,7 @@ static Token *preprocess2(Token *tok) {
 
     if (equal(tok, "elif")) {
       if (!cond_incl || cond_incl->ctx == IN_ELSE)
-        error_tok(start, "stray #elif");
+        error_tok(start, "%s: in preprocess2 : stray #elif", PREPROCESS_C);
       cond_incl->ctx = IN_ELIF;
 
       if (!cond_incl->included && eval_const_expr(&tok, tok))
@@ -966,7 +967,7 @@ static Token *preprocess2(Token *tok) {
 
     if (equal(tok, "else")) {
       if (!cond_incl || cond_incl->ctx == IN_ELSE)
-        error_tok(start, "stray #else");
+        error_tok(start, "%s: in preprocess2 : stray #else", PREPROCESS_C);
       cond_incl->ctx = IN_ELSE;
       tok = skip_line(tok->next);
 
@@ -977,7 +978,7 @@ static Token *preprocess2(Token *tok) {
 
     if (equal(tok, "endif")) {
       if (!cond_incl) 
-        error_tok(start, "stray #endif");
+        error_tok(start, "%s: in preprocess2 : stray #endif", PREPROCESS_C);
       cond_incl = cond_incl->next;
       tok = skip_line(tok->next);
       continue;
@@ -1007,7 +1008,7 @@ static Token *preprocess2(Token *tok) {
     }
 
     if (equal(tok, "error"))
-      error_tok(tok, "error");
+      error_tok(tok, "%s: in preprocess2 : error", PREPROCESS_C);
 
     // `#`-only line is legal. It's called a null directive.
     if (tok->at_bol)
@@ -1019,7 +1020,7 @@ static Token *preprocess2(Token *tok) {
       tok = skip_line(tok->next->next);
       continue;
     }
-    error_tok(tok, "invalid preprocessor directive");
+    error_tok(tok, "%s: in preprocess2 : invalid preprocessor directive", PREPROCESS_C);
   }
 
   cur->next = tok;
@@ -1190,7 +1191,7 @@ static void join_adjacent_string_literals(Token *tok) {
         kind = k;
         basety = t->ty->base;
       } else if (k != STR_NONE && kind != k) {
-        error_tok(t, "unsupported non-standard concatenation of string literals");
+        error_tok(t, "%s: in join_adjacent_string_literals : unsupported non-standard concatenation of string literals", PREPROCESS_C);
       }
     }
 
@@ -1220,7 +1221,7 @@ static void join_adjacent_string_literals(Token *tok) {
 
     char *buf = calloc(tok1->ty->base->size, len);
     if (buf == NULL)
-      error("preprocess.c : in join_adjacent_string_literals buf is null");  
+      error("%s: in join_adjacent_string_literals :  buf is null", PREPROCESS_C);  
 
 
     int i = 0;
@@ -1241,7 +1242,7 @@ static void join_adjacent_string_literals(Token *tok) {
 Token *preprocess(Token *tok) {
   tok = preprocess2(tok);
   if (cond_incl)
-    error_tok(cond_incl->tok, "unterminated conditional directive");
+    error_tok(cond_incl->tok, "%s: in preprocess : unterminated conditional directive", PREPROCESS_C);
   convert_pp_tokens(tok);
   join_adjacent_string_literals(tok);
 

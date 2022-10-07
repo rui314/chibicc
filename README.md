@@ -62,6 +62,7 @@ or
         The -rpath option is also used when locating shared objects
         which are needed by shared objects explicitly included in the link.
     -dumpmachine it's required by some projects returns x86_64-linux-gnu
+    -dotfile generates a file with .dot extension that can be visualized using graphviz package
     chibicc [ -o <path> ] <file>
 
 ## Examples
@@ -291,9 +292,29 @@ VLC
         ./issues/issue113.c:7:         char *_Atomic str; /**< Current value (if character string) */
                                      ^ expected ','
 
+## debug
+
+To debug with gdb don't forget to use the set follow-fork-mode child because chibicc creates a child job.
+
+    gdb ./chibicc
+    (gdb) set follow-fork-mode child
+    (gdb) r issues/issue116.c -o issues/issue116
+    Starting program: /home/stormalf/ubuntu/chibicc/chibicc issues/issue116.c -o issues/issue116
+    [Attaching after process 174090 fork to child process 174091]
+    [New inferior 2 (process 174091)]
+    [Detaching after fork from parent process 174090]
+    [Inferior 1 (process 174090) detached]
+    process 174091 is executing new program: /home/stormalf/ubuntu/chibicc/chibicc
+    [Switching to process 174091]
+
+    Thread 2.1 "chibicc" hit Breakpoint 1, 0x0000000000432726 in parse () at parse.c:3703
+    3703          return "UNREACHABLE";    // Atomic e
+
+
 ## release notes
 
-1.0.11 Fixing issue #113 about \_Atomic when it's placed after the type. Fixing other issue like issue #108 sometimes some #ifdef are not recognized if a macro ends the previous line and the next line starting by a preprocessing instruction. Managing differently -soname and adding option -z, and --version-script. Adding -debug option to write commands in /tmp/chibicc.log (later I'll add some debugs info/values on this file to help to fix bugs). Adding 2 functions in stdatomic.h needed by VLC atomic_compare_exchange_strong_explicit(object, expected, desired, success, failure) that returns false for now and atomic_compare_exchange_weak_explicit(object, expected, desired, success, failure) that returns false too. Managing .lo files (libtool object). Adding generic path for Fix 'gcc library path is not found' on some platforms #108 by [Stardust8502](https://github.com/Stardust8502/chibicc).
+1.0.12 Adding -dotfile parameter that generates a xxx.dot file that we can visualized using graphviz package by [hdewig100](https://github.com/hedwig100/chibicc). Adding in error message chibicc file name and function when a message error is displayed to help for debugging. Adding in Makefile the way to create shared library libchibicc.so.
+
 
 ## old release notes
 
@@ -327,3 +348,5 @@ trying to document cc1 and x options and adding a max length control parameter. 
 "\_\_attribute\_\_((visibility(\"protected\")))", "\_\_attribute\_\_((visibility(\"internal\")))"
 
 1.0.10 Fixing issue about string initialized by function-like (issue #107). Fixing issue when a macro ends a line and the next line starts by "#ifdef" the "#" is not recognized starting from beginning of the line (issue #108). Managing \#warning as preprocessor instruction (issue #109). Fixing issue with union initializer when comma found like "input_control_param_t it = { .id = p_input, .time.i_val = 1};" (issue #110) and input_control_param_t it = { .id = p_input,} (issue #113). Removing fix for issue 106 (caused other issues with VLC when trying to compile).
+
+1.0.11 Fixing issue #113 about \_Atomic when it's placed after the type. Fixing other issue like issue #108 sometimes some #ifdef are not recognized if a macro ends the previous line and the next line starting by a preprocessing instruction. Managing differently -soname and adding option -z, and --version-script. Adding -debug option to write commands in /tmp/chibicc.log (later I'll add some debugs info/values on this file to help to fix bugs). Adding 2 functions in stdatomic.h needed by VLC atomic_compare_exchange_strong_explicit(object, expected, desired, success, failure) that returns false for now and atomic_compare_exchange_weak_explicit(object, expected, desired, success, failure) that returns false too. Managing .lo files (libtool object). Adding generic path for Fix 'gcc library path is not found' on some platforms #108 by [Stardust8502](https://github.com/Stardust8502/chibicc). 

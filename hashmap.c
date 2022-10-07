@@ -1,6 +1,7 @@
 // This is an implementation of the open-addressing hash table.
 
 #include "chibicc.h"
+#define HASHMAP_C "hashmap.c"
 
 // Initial hash bucket size
 #define INIT_SIZE 16
@@ -41,7 +42,7 @@ static void rehash(HashMap *map) {
   HashMap map2 = {};
   map2.buckets = calloc(cap, sizeof(HashEntry));
   if (map2.buckets == NULL)
-    error("hashmap.c : in rehash map2.buckets is null!");
+    error("%s: in rehash map2.buckets is null!", HASHMAP_C);
   map2.capacity = cap;
 
   for (int i = 0; i < map->capacity; i++) {
@@ -79,7 +80,7 @@ static HashEntry *get_or_insert_entry(HashMap *map, char *key, int keylen) {
   if (!map->buckets) {
     map->buckets = calloc(INIT_SIZE, sizeof(HashEntry));
     if (map->buckets == NULL)
-      error("hashmap.c : in get_or_insert_entry map->buckets is null!");
+      error("%s: in get_or_insert_entry map->buckets is null!", HASHMAP_C);
     map->capacity = INIT_SIZE;
   } else if ((map->used * 100) / map->capacity >= HIGH_WATERMARK) {
     rehash(map);
