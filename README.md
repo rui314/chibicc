@@ -311,6 +311,13 @@ To debug with gdb don't forget to use the set follow-fork-mode child because chi
     3703          return "UNREACHABLE";    // Atomic e
 
 
+## diagram
+
+Example of diagram generated with -dotfile parameter :
+
+![diagram](https://github.com/stormalf/chibicc/blob/main/asm.png)
+
+
 ## release notes
 
 1.0.12 Adding -dotfile parameter that generates a xxx.dot file that we can visualized using graphviz package by [hdewig100](https://github.com/hedwig100/chibicc). Adding in error message chibicc file name and function when a message error is displayed to help for debugging. Adding in Makefile the way to create shared library libchibicc.so.

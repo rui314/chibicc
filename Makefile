@@ -30,12 +30,10 @@ test: $(TESTS)
 	test/driver.sh ./$(OBJECT)
 
 
-#for managing dot diagram
-test-png: $(TESTS)
+# #for managing dot diagram
+# test-png: $(TESTS)
 	
-
-
-test-all: test test-stage2 test-png
+test-all: test test-stage2
 
 # Stage 2
 
