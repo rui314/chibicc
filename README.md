@@ -274,8 +274,13 @@ Replace chibicc by gcc for compiling this one :
 
     make
 
+One issue remaining : 
 
+    chibicc  -Iinclude -Iapps/include  -pthread -m64 -Wall -O3 -DOPENSSL_BUILDING_OPENSSL -DNDEBUG   -c -o test/rsa_complex-bin-rsa_complex.o test/rsa_complex.c
+    /usr/include/x86_64-linux-gnu/bits/cmathcalls.h:55: __MATHCALL (cacos, (_Mdouble_complex_ __z));
+                                                                                            ^ expected ','    
 
+fixed for now by using gcc. I'll try to fix later.
 
 ## Limits
 
@@ -284,7 +289,6 @@ Some C projects doesn't compile for now. It helps to find some bugs and to try t
 VLC
 
     VLC doesn't compile with chibicc because it has some extended assembly inline that are not managed yet. Even if for this part I'll try to use gcc it failed during linking with multiple definitions. If I use gcc to compile VLC it compiles fine. Perhaps mixing chibicc and gcc is not a great idea!
-
 
 
 ## TODO
@@ -329,8 +333,11 @@ VLC
         ./issues/issue116.c:26:     make_dh(1024_160);
                                                 ^ expected ','
     - issue #117 parsing failed if a generic argument in macro starts by a number example  ...(void))fromtype##2obj_decode... in this case chibicc considers wrongly 2 as a number.
-    - issue #118issues/issue118.c:1: NID_sha_224
+    - issue #118 issues/issue118.c:1: NID_sha_224
                                      ^ parse.c: in primary : error: undefined variable
+    - issue #119 caused by cmathcalls   /usr/include/x86_64-linux-gnu/bits/cmathcalls.h:55: __MATHCALL (cacos, (_Mdouble_complex_ __z));
+    ^ expected ','
+
 ## debug
 
 To debug with gdb don't forget to use the set follow-fork-mode child because chibicc creates a child job.
@@ -360,7 +367,7 @@ Example of diagram generated with -dotfile parameter :
 ## release notes
 
 1.0.12 Adding -dotfile parameter that generates a xxx.dot file that we can visualized using graphviz package by [hdewig100](https://github.com/hedwig100/chibicc). Adding in error message chibicc file name and function when a message error is displayed to help for debugging. Adding in Makefile the way to create shared library libchibicc.so. Fixing issue #116 with 1024_160 splitted wrongly in two tokens. Fixing issue #117 with number after generic parameter like "fromtype##2obj_decode". Fixing issue #118 same as 117, to allow some identifiers to start by number when they are generics. Linking lpthread if -pthread is passed. Ignoring -z and -Bsymbolic. Fixing the issue with linkage need to add current directory to the path before the others (probably it's a security issue because it means that for compiling the objects library found in the current path will be taken in priority!)
-
+Fixing issue #119 about cmathcalls.
 
 ## old release notes
 
@@ -396,3 +403,4 @@ trying to document cc1 and x options and adding a max length control parameter. 
 1.0.10 Fixing issue about string initialized by function-like (issue #107). Fixing issue when a macro ends a line and the next line starts by "#ifdef" the "#" is not recognized starting from beginning of the line (issue #108). Managing \#warning as preprocessor instruction (issue #109). Fixing issue with union initializer when comma found like "input_control_param_t it = { .id = p_input, .time.i_val = 1};" (issue #110) and input_control_param_t it = { .id = p_input,} (issue #113). Removing fix for issue 106 (caused other issues with VLC when trying to compile).
 
 1.0.11 Fixing issue #113 about \_Atomic when it's placed after the type. Fixing other issue like issue #108 sometimes some #ifdef are not recognized if a macro ends the previous line and the next line starting by a preprocessing instruction. Managing differently -soname and adding option -z, and --version-script. Adding -debug option to write commands in /tmp/chibicc.log (later I'll add some debugs info/values on this file to help to fix bugs). Adding 2 functions in stdatomic.h needed by VLC atomic_compare_exchange_strong_explicit(object, expected, desired, success, failure) that returns false for now and atomic_compare_exchange_weak_explicit(object, expected, desired, success, failure) that returns false too. Managing .lo files (libtool object). Adding generic path for Fix 'gcc library path is not found' on some platforms #108 by [Stardust8502](https://github.com/Stardust8502/chibicc). 
+

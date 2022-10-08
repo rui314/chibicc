@@ -379,7 +379,6 @@ static void parse_args(int argc, char **argv)
     if (!strcmp(argv[i], "-version-script"))
     {
       char *tmp = argv[++i];
-      printf("%s\n", argv[i]);
       check_parms_length(tmp);
       strarray_push(&ld_extra_args, "--version-script");
       strarray_push(&ld_extra_args, tmp);
@@ -575,6 +574,8 @@ static void parse_args(int argc, char **argv)
         !strcmp(argv[i], "-m64") ||
         !strcmp(argv[i], "-m32") ||
         !strcmp(argv[i], "-Bsymbolic") ||
+        !strcmp(argv[i], "-z") ||
+        !strcmp(argv[i], "defs") ||
         //        !strcmp(argv[i], "-pthread") ||
         !strcmp(argv[i], "-pedantic") ||
         !strcmp(argv[i], "-nostdinc") ||
