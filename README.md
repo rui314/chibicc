@@ -245,6 +245,36 @@ curl : https://github.com/curl/curl.git
         CC       ../lib/dynbuf.o
         CCLD     curl
 
+## Linkage issues
+
+openssl : https://github.com/openssl/openssl.git
+Very interesting project that helps to find some bugs (see issue from 108 to 118). It doesn't link well for now!
+
+    CC=chibicc ./Configure
+    
+You need to remove from the file from openssl/crypto/perlasm/x86_64-xlate.pl
+
+    	my $section='.note.gnu.property, #alloc';
+
+by :
+
+    	my $section='.note.gnu.property';
+
+    make
+
+It fails for extended assembly :
+
+    chibicc  -Iinclude  -fPIC -pthread -m64 -Wall -O3 -DOPENSSL_BUILDING_OPENSSL -DNDEBUG   -c -o engines/afalg-dso-e_afalg.o engines/e_afalg.c
+    /usr/include/x86_64-linux-gnu/asm/swab.h:10:    __asm__("bswapl %0" : "=r" (val) : "0" (val));
+                                                                     ^ parse.c : in asm_stmt : extended assembly not managed yet!
+
+Replace chibicc by gcc for compiling this one :
+
+    gcc  -Iinclude  -fPIC -pthread -m64 -Wall -O3 -DOPENSSL_BUILDING_OPENSSL -DNDEBUG   -c -o engines/afalg-dso-e_afalg.o engines/e_afalg.c
+
+    make
+
+And at the end, it fails for Linkage issue with lots of "undefined references" that seems linked to -pthread ignored (not found yet what is wrong but you can use at the end gcc for the linking instead of chibicc).
 
 ## Limits
 
@@ -254,17 +284,7 @@ VLC
 
     VLC doesn't compile with chibicc because it has some extended assembly inline that are not managed yet. Even if for this part I'll try to use gcc it failed during linking with multiple definitions. If I use gcc to compile VLC it compiles fine. Perhaps mixing chibicc and gcc is not a great idea!
 
-openssl : https://github.com/openssl/openssl.git
-Very interesting project that helps to find some bugs (see issue from 108 to 118)
 
-    Unfortunately openssl uses also extended assembly that are not managed yet!
-    To be able to compile for these specifics cases, I had to use gcc.
-    chibicc -fPIC -pthread -m64 -Wall -O3 -L. -Wl,-z,defs -Wl,-znodelete -shared -Wl,-Bsymbolic   \
-        -o engines/afalg.so -Wl,--version-script=engines/afalg.ld \
-        engines/afalg-dso-e_afalg.o \
-        -lcrypto -ldl -pthread
-
-failed to find some references not sure why it failed with chibicc, replacing for this last compile command gcc works fine! Perhaps an issue with --version-script not managed well or other options
 
 ## TODO
 

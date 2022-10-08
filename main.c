@@ -84,7 +84,7 @@ static void check_parms_length(char *arg)
 static bool take_arg(char *arg)
 {
   char *x[] = {
-      "-o", "-I", "-idirafter", "-include", "-x", "-MF", "-MT", "-MQ", "-Xlinker", "-cc1-input", "-cc1-output", "-fuse-ld", "-soname", "-rpath", "-z", "--version-script"};
+      "-o", "-I", "-idirafter", "-include", "-x", "-MF", "-MT", "-MQ", "-Xlinker", "-cc1-input", "-cc1-output", "-fuse-ld", "-soname", "-rpath", "--version-script"};
 
   for (int i = 0; i < sizeof(x) / sizeof(*x); i++)
   {
@@ -175,7 +175,7 @@ static void parse_args(int argc, char **argv)
       if (!argv[++i])
       {
         printf("parameter without value! the following parameters need to be followed by a value :\n");
-        printf("-o, -I, -idirafter, -include, -x, -MF, -MQ, -MT, -Xlinker, -cc1-input, -cc1-output, -fuse-ld, -soname, -rpath, -z, --version-script \n");
+        printf("-o, -I, -idirafter, -include, -x, -MF, -MQ, -MT, -Xlinker, -cc1-input, -cc1-output, -fuse-ld, -soname, -rpath, --version-script \n");
         usage(1);
       }
 
@@ -345,6 +345,8 @@ static void parse_args(int argc, char **argv)
 
     if (!strncmp(argv[i], "-l", 2) || !strncmp(argv[i], "-Wl,", 4))
     {
+      if (!strncmp(argv[i], "-Wl,-z", 6))
+        continue;
       char *tmp = argv[i];
       check_parms_length(tmp);
       strarray_push(&input_paths, tmp);
@@ -362,16 +364,16 @@ static void parse_args(int argc, char **argv)
     }
 
     // not sure what this linker option means
-    if (!strcmp(argv[i], "-z"))
-    {
-      char *tmp = argv[++i];
-      printf("%s\n", argv[i]);
-      check_parms_length(tmp);
-      strarray_push(&ld_extra_args, "-z");
-      strarray_push(&ld_extra_args, tmp);
-      // strarray_push(&ld_extra_args, argv[++i]);
-      continue;
-    }
+    // if (!strcmp(argv[i], "-z"))
+    // {
+    //   char *tmp = argv[++i];
+    //   printf("%s\n", argv[i]);
+    //   check_parms_length(tmp);
+    //   strarray_push(&ld_extra_args, "-z");
+    //   strarray_push(&ld_extra_args, tmp);
+    //   // strarray_push(&ld_extra_args, argv[++i]);
+    //   continue;
+    // }
 
     // not sure why the --version-script is interpreted as -version-script ?
     if (!strcmp(argv[i], "-version-script"))
@@ -502,6 +504,12 @@ static void parse_args(int argc, char **argv)
       continue;
     }
 
+    if (!strcmp(argv[i], "-pthread"))
+    {
+      strarray_push(&ld_extra_args, "-lpthread");
+      continue;
+    }
+
     if (!strcmp(argv[i], "-L"))
     {
       strarray_push(&ld_extra_args, "-L");
@@ -566,7 +574,8 @@ static void parse_args(int argc, char **argv)
         !strcmp(argv[i], "-fno-strict-aliasing") ||
         !strcmp(argv[i], "-m64") ||
         !strcmp(argv[i], "-m32") ||
-        !strcmp(argv[i], "-pthread") ||
+        !strcmp(argv[i], "-Bsymbolic") ||
+        //        !strcmp(argv[i], "-pthread") ||
         !strcmp(argv[i], "-pedantic") ||
         !strcmp(argv[i], "-nostdinc") ||
         !strcmp(argv[i], "-mno-red-zone") ||
