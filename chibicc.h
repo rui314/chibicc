@@ -68,6 +68,7 @@ this " PRODUCT " contains only some differences for now like new parameters\n"
 -fcommon is the default if not specified, it's mainly useful to enable legacy code to link without errors\n \
 -fno-common specifies that the compiler places uninitialized global variables in the BSS section of the object file.\n \
 -static  pass to the linker to link a program statically\n \
+-pthread pass to the linker to link with lpthread library \n \
 -shared pass to the linker to produce a shared object which can then be linked with other objects to form an executable.\n \
 -hashmap-test to test the hashmap function \n \
 -idirafter <dir> apply to lookup for both the #include \"file\" and #include <file> directives.\n \

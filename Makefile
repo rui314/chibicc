@@ -66,4 +66,4 @@ clean:
 	rm -rf $(OBJECT) tmp* $(TESTS) test/*.s test/*.exe stage2 diagram/*.png test/*.dot $(OBJECTLIB)
 	find * -type f '(' -name '*~' -o -name '*.o' ')' -exec rm {} ';'
 
-.PHONY: test clean test-stage2 test-png libchibicc
+.PHONY: test clean test-stage2 libchibicc
