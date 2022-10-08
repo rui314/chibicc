@@ -245,13 +245,26 @@ curl : https://github.com/curl/curl.git
         CC       ../lib/dynbuf.o
         CCLD     curl
 
+
 ## Limits
 
-Some C projects doesn't compile for now.
+Some C projects doesn't compile for now. It helps to find some bugs and to try to fix them!
 
 VLC
 
     VLC doesn't compile with chibicc because it has some extended assembly inline that are not managed yet. Even if for this part I'll try to use gcc it failed during linking with multiple definitions. If I use gcc to compile VLC it compiles fine. Perhaps mixing chibicc and gcc is not a great idea!
+
+openssl : https://github.com/openssl/openssl.git
+Very interesting project that helps to find some bugs (see issue from 108 to 118)
+
+    Unfortunately openssl uses also extended assembly that are not managed yet!
+    To be able to compile for these specifics cases, I had to use gcc.
+    chibicc -fPIC -pthread -m64 -Wall -O3 -L. -Wl,-z,defs -Wl,-znodelete -shared -Wl,-Bsymbolic   \
+        -o engines/afalg.so -Wl,--version-script=engines/afalg.ld \
+        engines/afalg-dso-e_afalg.o \
+        -lcrypto -ldl -pthread
+
+failed to find some references not sure why it failed with chibicc, replacing for this last compile command gcc works fine! Perhaps an issue with --version-script not managed well or other options
 
 ## TODO
 
@@ -295,7 +308,8 @@ VLC
         ./issues/issue116.c:26:     make_dh(1024_160);
                                                 ^ expected ','
     - issue #117 parsing failed if a generic argument in macro starts by a number example  ...(void))fromtype##2obj_decode... in this case chibicc considers wrongly 2 as a number.
-
+    - issue #118issues/issue118.c:1: NID_sha_224
+                                     ^ parse.c: in primary : error: undefined variable
 ## debug
 
 To debug with gdb don't forget to use the set follow-fork-mode child because chibicc creates a child job.
@@ -324,7 +338,7 @@ Example of diagram generated with -dotfile parameter :
 
 ## release notes
 
-1.0.12 Adding -dotfile parameter that generates a xxx.dot file that we can visualized using graphviz package by [hdewig100](https://github.com/hedwig100/chibicc). Adding in error message chibicc file name and function when a message error is displayed to help for debugging. Adding in Makefile the way to create shared library libchibicc.so. Fixing issue #116 with 1024_160 splitted wrongly in two tokens. Fixing issue #117 with number after generic parameter like "fromtype##2obj_decode".
+1.0.12 Adding -dotfile parameter that generates a xxx.dot file that we can visualized using graphviz package by [hdewig100](https://github.com/hedwig100/chibicc). Adding in error message chibicc file name and function when a message error is displayed to help for debugging. Adding in Makefile the way to create shared library libchibicc.so. Fixing issue #116 with 1024_160 splitted wrongly in two tokens. Fixing issue #117 with number after generic parameter like "fromtype##2obj_decode". Fixing issue #118 same as 117, to allow some identifiers to start by number when they are generics.
 
 
 ## old release notes

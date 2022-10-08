@@ -132,12 +132,12 @@ static bool startswith(char *p, char *q)
 
 // Read an identifier and returns the length of it.
 // If p does not point to a valid identifier, 0 is returned.
-static int read_ident(char *start, char *previous)
+static int read_ident(char *start, char *previous, bool isNotANumber)
 {
   char *p = start;
   uint32_t c = decode_utf8(&p, p);
   // allows identifier starting by a number if previous character was an hashtag
-  if (*previous == '#')
+  if (*previous == '#' || isNotANumber)
   {
     if (!is_ident3(c))
       return 0;
@@ -643,6 +643,7 @@ Token *tokenize(File *file)
   char *p = file->contents;
   Token head = {};
   Token *cur = &head;
+  bool isNotANumber = false;
 
   at_bol = true;
   has_space = false;
@@ -688,7 +689,9 @@ Token *tokenize(File *file)
       continue;
     }
 
+    // to manage particular cases see issue 116, 117, 118
     char *previous = p - 1;
+    char *current = p;
     // Numeric literal
     // to fix issue #117, checking that previous character is not an hashtag!
     if ((isdigit(*p) || (*p == '.' && isdigit(p[1]))) && *(previous) != '#')
@@ -705,11 +708,16 @@ Token *tokenize(File *file)
           break;
       }
       // fixing issue #116 with wrong number detected 1024_160 was considered as number 1024 and other token _160!
-      if (*p == '_')
+      if (*p != '_')
+      {
+        cur = cur->next = new_token(TK_PP_NUM, q, p);
         continue;
-
-      cur = cur->next = new_token(TK_PP_NUM, q, p);
-      continue;
+      }
+      else
+      {
+        p = current;
+        isNotANumber = true;
+      }
     }
 
     // String literal
@@ -787,7 +795,7 @@ Token *tokenize(File *file)
     }
 
     // Identifier or keyword
-    int ident_len = read_ident(p, previous);
+    int ident_len = read_ident(p, previous, isNotANumber);
     if (ident_len)
     {
       cur = cur->next = new_token(TK_IDENT, p, p + ident_len);
