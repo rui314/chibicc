@@ -290,7 +290,11 @@ VLC
     - issue #110 union initialized by  "input_control_param_t it = { .id = p_input, .time.i_val = 1};" failed due to comma.
     - issue #113 depending where is _Atomic parsing failed
         ./issues/issue113.c:7:         char *_Atomic str; /**< Current value (if character string) */
-                                     ^ expected ','
+                                             ^ expected ','
+    - issue #116 (issue #110 at rui314/chibicc) token incorrectly splitted into two tokens the first one considered wrongly as number
+        ./issues/issue116.c:26:     make_dh(1024_160);
+                                                ^ expected ','
+    - issue #117 parsing failed if a generic argument in macro starts by a number example  ...(void))fromtype##2obj_decode... in this case chibicc considers wrongly 2 as a number.
 
 ## debug
 
@@ -320,7 +324,7 @@ Example of diagram generated with -dotfile parameter :
 
 ## release notes
 
-1.0.12 Adding -dotfile parameter that generates a xxx.dot file that we can visualized using graphviz package by [hdewig100](https://github.com/hedwig100/chibicc). Adding in error message chibicc file name and function when a message error is displayed to help for debugging. Adding in Makefile the way to create shared library libchibicc.so.
+1.0.12 Adding -dotfile parameter that generates a xxx.dot file that we can visualized using graphviz package by [hdewig100](https://github.com/hedwig100/chibicc). Adding in error message chibicc file name and function when a message error is displayed to help for debugging. Adding in Makefile the way to create shared library libchibicc.so. Fixing issue #116 with 1024_160 splitted wrongly in two tokens. Fixing issue #117 with number after generic parameter like "fromtype##2obj_decode".
 
 
 ## old release notes

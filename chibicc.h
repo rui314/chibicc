@@ -26,7 +26,7 @@
 #define MIN(x, y) ((x) < (y) ? (x) : (y))
 
 #ifndef __GNUC__
-# define __attribute__(x)
+#define __attribute__(x)
 #endif
 
 #define PRODUCT "chibicc"
@@ -96,7 +96,8 @@ typedef struct Hideset Hideset;
 // strings.c
 //
 
-typedef struct {
+typedef struct
+{
   char **data;
   int capacity;
   int len;
@@ -110,7 +111,8 @@ char *format(char *fmt, ...) __attribute__((format(printf, 1, 2)));
 //
 
 // Token
-typedef enum {
+typedef enum
+{
   TK_IDENT,   // Identifiers
   TK_PUNCT,   // Punctuators
   TK_KEYWORD, // Keywords
@@ -120,7 +122,8 @@ typedef enum {
   TK_EOF,     // End-of-file markers
 } TokenKind;
 
-typedef struct {
+typedef struct
+{
   char *name;
   int file_no;
   char *contents;
@@ -132,7 +135,8 @@ typedef struct {
 
 // Token type
 typedef struct Token Token;
-struct Token {
+struct Token
+{
   TokenKind kind;   // Token kind
   Token *next;      // Next token
   int64_t val;      // If kind is TK_NUM, its value
@@ -185,7 +189,8 @@ Token *preprocess(Token *tok);
 
 // Variable or function
 typedef struct Obj Obj;
-struct Obj {
+struct Obj
+{
   Obj *next;
   char *name;    // Variable name
   Type *ty;      // Type
@@ -226,7 +231,8 @@ struct Obj {
 // or a pointer to another global variable. This struct represents the
 // latter.
 typedef struct Relocation Relocation;
-struct Relocation {
+struct Relocation
+{
   Relocation *next;
   int offset;
   char **label;
@@ -234,7 +240,8 @@ struct Relocation {
 };
 
 // AST node
-typedef enum {
+typedef enum
+{
   ND_NULL_EXPR, // Do nothing
   ND_ADD,       // +
   ND_SUB,       // -
@@ -286,14 +293,15 @@ typedef enum {
 } NodeKind;
 
 // AST node type
-struct Node {
+struct Node
+{
   NodeKind kind; // Node kind
   Node *next;    // Next node
   Type *ty;      // Type, e.g. int or pointer to int
   Token *tok;    // Representative token
 
-  Node *lhs;     // Left-hand side
-  Node *rhs;     // Right-hand side
+  Node *lhs; // Left-hand side
+  Node *rhs; // Right-hand side
 
   // "if" or "for" statement
   Node *cond;
@@ -345,15 +353,15 @@ struct Node {
 
   // Atomic fetch operation
   bool atomic_fetch;
-  
+
   // Variable
   Obj *var;
 
   // Numeric literal
   int64_t val;
   long double fval;
-  //for dot diagram
-  int unique_number;  
+  // for dot diagram
+  int unique_number;
 };
 
 Node *new_cast(Node *expr, Type *ty);
@@ -365,7 +373,8 @@ extern bool opt_fbuiltin;
 // type.c
 //
 
-typedef enum {
+typedef enum
+{
   TY_VOID,
   TY_BOOL,
   TY_CHAR,
@@ -384,13 +393,14 @@ typedef enum {
   TY_UNION,
 } TypeKind;
 
-struct Type {
+struct Type
+{
   TypeKind kind;
-  int size;           // sizeof() value
-  int align;          // alignment
-  bool is_unsigned;   // unsigned or signed
-  bool is_atomic;     // true if _Atomic
-  Type *origin;       // for type compatibility check
+  int size;         // sizeof() value
+  int align;        // alignment
+  bool is_unsigned; // unsigned or signed
+  bool is_atomic;   // true if _Atomic
+  Type *origin;     // for type compatibility check
 
   // Pointer-to or array-of type. We intentionally use the same member
   // to represent pointer/array duality in C.
@@ -426,7 +436,8 @@ struct Type {
 };
 
 // Struct member
-struct Member {
+struct Member
+{
   Member *next;
   Type *ty;
   Token *tok; // for error message
@@ -473,7 +484,6 @@ void add_type(Node *node);
 
 char *nodekind2str(NodeKind kind);
 
-
 //
 // codegen.c
 //
@@ -489,19 +499,22 @@ int encode_utf8(char *buf, uint32_t c);
 uint32_t decode_utf8(char **new_pos, char *p);
 bool is_ident1(uint32_t c);
 bool is_ident2(uint32_t c);
+bool is_ident3(uint32_t c); // to fix issue #117
 int display_width(char *p, int len);
 
 //
 // hashmap.c
 //
 
-typedef struct {
+typedef struct
+{
   char *key;
   int keylen;
   void *val;
 } HashEntry;
 
-typedef struct {
+typedef struct
+{
   HashEntry *buckets;
   int capacity;
   int used;
@@ -532,11 +545,9 @@ extern char *replace_extn(char *tmpl, char *extn);
 extern FILE *dotf;
 extern bool isDotfile;
 extern char *extract_filename(char *tmpl);
-extern char *extract_path(char *tmpl, char*basename) ;
+extern char *extract_path(char *tmpl, char *basename);
 //
 // sanitize.c
 //
 void spc_sanitize_environment(void);
 int validateArgs(int argc, char **argv);
-
-

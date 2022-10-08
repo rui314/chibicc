@@ -13,7 +13,8 @@ static bool at_bol;
 static bool has_space;
 
 // Reports an error and exit.
-void error(char *fmt, ...) {
+void error(char *fmt, ...)
+{
   va_list ap;
   va_start(ap, fmt);
   vfprintf(stderr, fmt, ap);
@@ -27,7 +28,8 @@ void error(char *fmt, ...) {
 // foo.c:10: x = y + 1;
 //               ^ <error message here>
 static void verror_at(char *filename, char *input, int line_no,
-                      char *loc, char *fmt, va_list ap) {
+                      char *loc, char *fmt, va_list ap)
+{
   // Find a line containing `loc`.
   char *line = loc;
   while (input < line && line[-1] != '\n')
@@ -50,7 +52,8 @@ static void verror_at(char *filename, char *input, int line_no,
   fprintf(stderr, "\n");
 }
 
-void error_at(char *loc, char *fmt, ...) {
+void error_at(char *loc, char *fmt, ...)
+{
   int line_no = 1;
   for (char *p = current_file->contents; p < loc; p++)
     if (*p == '\n')
@@ -63,7 +66,8 @@ void error_at(char *loc, char *fmt, ...) {
   exit(8);
 }
 
-void error_tok(Token *tok, char *fmt, ...) {
+void error_tok(Token *tok, char *fmt, ...)
+{
   va_list ap;
   va_start(ap, fmt);
   verror_at(tok->file->name, tok->file->contents, tok->line_no, tok->loc, fmt, ap);
@@ -71,7 +75,8 @@ void error_tok(Token *tok, char *fmt, ...) {
   exit(7);
 }
 
-void warn_tok(Token *tok, char *fmt, ...) {
+void warn_tok(Token *tok, char *fmt, ...)
+{
   va_list ap;
   va_start(ap, fmt);
   verror_at(tok->file->name, tok->file->contents, tok->line_no, tok->loc, fmt, ap);
@@ -79,19 +84,23 @@ void warn_tok(Token *tok, char *fmt, ...) {
 }
 
 // Consumes the current token if it matches `op`.
-bool equal(Token *tok, char *op) {
+bool equal(Token *tok, char *op)
+{
   return strncmp(tok->loc, op, tok->len) == 0 && op[tok->len] == '\0';
 }
 
 // Ensure that the current token is `op`.
-Token *skip(Token *tok, char *op) {
+Token *skip(Token *tok, char *op)
+{
   if (!equal(tok, op))
     error_tok(tok, "expected '%s'", op);
   return tok->next;
 }
 
-bool consume(Token **rest, Token *tok, char *str) {
-  if (equal(tok, str)) {
+bool consume(Token **rest, Token *tok, char *str)
+{
+  if (equal(tok, str))
+  {
     *rest = tok->next;
     return true;
   }
@@ -100,7 +109,8 @@ bool consume(Token **rest, Token *tok, char *str) {
 }
 
 // Create a new token.
-static Token *new_token(TokenKind kind, char *start, char *end) {
+static Token *new_token(TokenKind kind, char *start, char *end)
+{
   Token *tok = calloc(1, sizeof(Token));
   if (tok == NULL)
     error("tokenize.c : in new_token tok is null!");
@@ -111,24 +121,34 @@ static Token *new_token(TokenKind kind, char *start, char *end) {
   tok->filename = current_file->display_name;
   tok->at_bol = at_bol;
   tok->has_space = has_space;
-
   at_bol = has_space = false;
   return tok;
 }
 
-static bool startswith(char *p, char *q) {
+static bool startswith(char *p, char *q)
+{
   return strncmp(p, q, strlen(q)) == 0;
 }
 
 // Read an identifier and returns the length of it.
 // If p does not point to a valid identifier, 0 is returned.
-static int read_ident(char *start) {
+static int read_ident(char *start, char *previous)
+{
   char *p = start;
   uint32_t c = decode_utf8(&p, p);
-  if (!is_ident1(c))
-    return 0;
-
-  for (;;) {
+  // allows identifier starting by a number if previous character was an hashtag
+  if (*previous == '#')
+  {
+    if (!is_ident3(c))
+      return 0;
+  }
+  else
+  {
+    if (!is_ident1(c))
+      return 0;
+  }
+  for (;;)
+  {
     char *q;
     c = decode_utf8(&q, p);
     if (!is_ident2(c))
@@ -137,7 +157,8 @@ static int read_ident(char *start) {
   }
 }
 
-static int from_hex(char c) {
+static int from_hex(char c)
+{
   if ('0' <= c && c <= '9')
     return c - '0';
   if ('a' <= c && c <= 'f')
@@ -146,11 +167,32 @@ static int from_hex(char c) {
 }
 
 // Read a punctuator token from p and returns its length.
-static int read_punct(char *p) {
+static int read_punct(char *p)
+{
   static char *kw[] = {
-    "<<=", ">>=", "...", "==", "!=", "<=", ">=", "->", "+=",
-    "-=", "*=", "/=", "++", "--", "%=", "&=", "|=", "^=", "&&",
-    "||", "<<", ">>", "##",
+      "<<=",
+      ">>=",
+      "...",
+      "==",
+      "!=",
+      "<=",
+      ">=",
+      "->",
+      "+=",
+      "-=",
+      "*=",
+      "/=",
+      "++",
+      "--",
+      "%=",
+      "&=",
+      "|=",
+      "^=",
+      "&&",
+      "||",
+      "<<",
+      ">>",
+      "##",
   };
 
   for (int i = 0; i < sizeof(kw) / sizeof(*kw); i++)
@@ -160,19 +202,58 @@ static int read_punct(char *p) {
   return ispunct(*p) ? 1 : 0;
 }
 
-static bool is_keyword(Token *tok) {
+static bool is_keyword(Token *tok)
+{
   static HashMap map;
 
-  if (map.capacity == 0) {
+  if (map.capacity == 0)
+  {
     static char *kw[] = {
-      "return", "if", "else", "for", "while", "int", "sizeof", "char",
-      "struct", "union", "short", "long", "void", "typedef", "_Bool",
-      "enum", "static", "goto", "break", "continue", "switch", "case",
-      "default", "extern", "_Alignof", "_Alignas", "do", "signed",
-      "unsigned", "const", "volatile", "auto", "register", "restrict",
-      "__restrict", "__restrict__", "_Noreturn", "float", "double",
-      "typeof", "asm", "_Thread_local", "__thread", "_Atomic",
-      "__attribute__",
+        "return",
+        "if",
+        "else",
+        "for",
+        "while",
+        "int",
+        "sizeof",
+        "char",
+        "struct",
+        "union",
+        "short",
+        "long",
+        "void",
+        "typedef",
+        "_Bool",
+        "enum",
+        "static",
+        "goto",
+        "break",
+        "continue",
+        "switch",
+        "case",
+        "default",
+        "extern",
+        "_Alignof",
+        "_Alignas",
+        "do",
+        "signed",
+        "unsigned",
+        "const",
+        "volatile",
+        "auto",
+        "register",
+        "restrict",
+        "__restrict",
+        "__restrict__",
+        "_Noreturn",
+        "float",
+        "double",
+        "typeof",
+        "asm",
+        "_Thread_local",
+        "__thread",
+        "_Atomic",
+        "__attribute__",
     };
 
     for (int i = 0; i < sizeof(kw) / sizeof(*kw); i++)
@@ -182,11 +263,14 @@ static bool is_keyword(Token *tok) {
   return hashmap_get2(&map, tok->loc, tok->len);
 }
 
-static int read_escaped_char(char **new_pos, char *p) {
-  if ('0' <= *p && *p <= '7') {
+static int read_escaped_char(char **new_pos, char *p)
+{
+  if ('0' <= *p && *p <= '7')
+  {
     // Read an octal number.
     int c = *p++ - '0';
-    if ('0' <= *p && *p <= '7') {
+    if ('0' <= *p && *p <= '7')
+    {
       c = (c << 3) + (*p++ - '0');
       if ('0' <= *p && *p <= '7')
         c = (c << 3) + (*p++ - '0');
@@ -195,7 +279,8 @@ static int read_escaped_char(char **new_pos, char *p) {
     return c;
   }
 
-  if (*p == 'x') {
+  if (*p == 'x')
+  {
     // Read a hexadecimal number.
     p++;
     if (!isxdigit(*p))
@@ -221,24 +306,36 @@ static int read_escaped_char(char **new_pos, char *p) {
   // of the compiler but also for the security of the generated code.
   // For more info, read "Reflections on Trusting Trust" by Ken Thompson.
   // https://github.com/rui314/chibicc/wiki/thompson1984.pdf
-  switch (*p) {
-  case 'a': return '\a';
-  case 'b': return '\b';
-  case 't': return '\t';
-  case 'n': return '\n';
-  case 'v': return '\v';
-  case 'f': return '\f';
-  case 'r': return '\r';
+  switch (*p)
+  {
+  case 'a':
+    return '\a';
+  case 'b':
+    return '\b';
+  case 't':
+    return '\t';
+  case 'n':
+    return '\n';
+  case 'v':
+    return '\v';
+  case 'f':
+    return '\f';
+  case 'r':
+    return '\r';
   // [GNU] \e for the ASCII escape character is a GNU C extension.
-  case 'e': return 27;
-  default: return *p;
+  case 'e':
+    return 27;
+  default:
+    return *p;
   }
 }
 
 // Find a closing double-quote.
-static char *string_literal_end(char *p) {
+static char *string_literal_end(char *p)
+{
   char *start = p;
-  for (; *p != '"'; p++) {
+  for (; *p != '"'; p++)
+  {
     if (*p == '\n' || *p == '\0')
       error_at(start, "unclosed string literal");
     if (*p == '\\')
@@ -247,14 +344,16 @@ static char *string_literal_end(char *p) {
   return p;
 }
 
-static Token *read_string_literal(char *start, char *quote) {
+static Token *read_string_literal(char *start, char *quote)
+{
   char *end = string_literal_end(quote + 1);
   char *buf = calloc(1, end - quote);
   if (buf == NULL)
     error("tokenize.c : in read_string_literal buf is null!");
   int len = 0;
 
-  for (char *p = quote + 1; p < end;) {
+  for (char *p = quote + 1; p < end;)
+  {
     if (*p == '\\')
       buf[len++] = read_escaped_char(&p, p + 1);
     else
@@ -274,24 +373,30 @@ static Token *read_string_literal(char *start, char *quote) {
 // equal to or larger than that are encoded in 4 bytes. Each 2 bytes
 // in the 4 byte sequence is called "surrogate", and a 4 byte sequence
 // is called a "surrogate pair".
-static Token *read_utf16_string_literal(char *start, char *quote) {
+static Token *read_utf16_string_literal(char *start, char *quote)
+{
   char *end = string_literal_end(quote + 1);
   uint16_t *buf = calloc(2, end - start);
   if (buf == NULL)
-    error("tokenize.c : in read_utf16_string_literal buf is null!");    
+    error("tokenize.c : in read_utf16_string_literal buf is null!");
   int len = 0;
 
-  for (char *p = quote + 1; p < end;) {
-    if (*p == '\\') {
+  for (char *p = quote + 1; p < end;)
+  {
+    if (*p == '\\')
+    {
       buf[len++] = read_escaped_char(&p, p + 1);
       continue;
     }
 
     uint32_t c = decode_utf8(&p, p);
-    if (c < 0x10000) {
+    if (c < 0x10000)
+    {
       // Encode a code point in 2 bytes.
       buf[len++] = c;
-    } else {
+    }
+    else
+    {
       // Encode a code point in 4 bytes.
       c -= 0x10000;
       buf[len++] = 0xd800 + ((c >> 10) & 0x3ff);
@@ -309,14 +414,16 @@ static Token *read_utf16_string_literal(char *start, char *quote) {
 //
 // UTF-32 is a fixed-width encoding for Unicode. Each code point is
 // encoded in 4 bytes.
-static Token *read_utf32_string_literal(char *start, char *quote, Type *ty) {
+static Token *read_utf32_string_literal(char *start, char *quote, Type *ty)
+{
   char *end = string_literal_end(quote + 1);
   uint32_t *buf = calloc(4, end - quote);
   if (buf == NULL)
-    error("tokenize.c : in read_utf32_string_literal buf is null!");  
+    error("tokenize.c : in read_utf32_string_literal buf is null!");
   int len = 0;
 
-  for (char *p = quote + 1; p < end;) {
+  for (char *p = quote + 1; p < end;)
+  {
     if (*p == '\\')
       buf[len++] = read_escaped_char(&p, p + 1);
     else
@@ -329,7 +436,8 @@ static Token *read_utf32_string_literal(char *start, char *quote, Type *ty) {
   return tok;
 }
 
-static Token *read_char_literal(char *start, char *quote, Type *ty) {
+static Token *read_char_literal(char *start, char *quote, Type *ty)
+{
   char *p = quote + 1;
   if (*p == '\0')
     error_at(start, "unclosed char literal");
@@ -350,18 +458,24 @@ static Token *read_char_literal(char *start, char *quote, Type *ty) {
   return tok;
 }
 
-static bool convert_pp_int(Token *tok) {
+static bool convert_pp_int(Token *tok)
+{
   char *p = tok->loc;
 
   // Read a binary, octal, decimal or hexadecimal number.
   int base = 10;
-  if (!strncasecmp(p, "0x", 2) && isxdigit(p[2])) {
+  if (!strncasecmp(p, "0x", 2) && isxdigit(p[2]))
+  {
     p += 2;
     base = 16;
-  } else if (!strncasecmp(p, "0b", 2) && (p[2] == '0' || p[2] == '1')) {
+  }
+  else if (!strncasecmp(p, "0b", 2) && (p[2] == '0' || p[2] == '1'))
+  {
     p += 2;
     base = 2;
-  } else if (*p == '0') {
+  }
+  else if (*p == '0')
+  {
     base = 8;
   }
 
@@ -374,19 +488,28 @@ static bool convert_pp_int(Token *tok) {
   if (startswith(p, "LLU") || startswith(p, "LLu") ||
       startswith(p, "llU") || startswith(p, "llu") ||
       startswith(p, "ULL") || startswith(p, "Ull") ||
-      startswith(p, "uLL") || startswith(p, "ull")) {
+      startswith(p, "uLL") || startswith(p, "ull"))
+  {
     p += 3;
     l = u = true;
-  } else if (!strncasecmp(p, "lu", 2) || !strncasecmp(p, "ul", 2)) {
+  }
+  else if (!strncasecmp(p, "lu", 2) || !strncasecmp(p, "ul", 2))
+  {
     p += 2;
     l = u = true;
-  } else if (startswith(p, "LL") || startswith(p, "ll")) {
+  }
+  else if (startswith(p, "LL") || startswith(p, "ll"))
+  {
     p += 2;
     l = true;
-  } else if (*p == 'L' || *p == 'l') {
+  }
+  else if (*p == 'L' || *p == 'l')
+  {
     p++;
     l = true;
-  } else if (*p == 'U' || *p == 'u') {
+  }
+  else if (*p == 'U' || *p == 'u')
+  {
     p++;
     u = true;
   }
@@ -396,7 +519,8 @@ static bool convert_pp_int(Token *tok) {
 
   // Infer a type.
   Type *ty;
-  if (base == 10) {
+  if (base == 10)
+  {
     if (l && u)
       ty = ty_ulong;
     else if (l)
@@ -405,7 +529,9 @@ static bool convert_pp_int(Token *tok) {
       ty = (val >> 32) ? ty_ulong : ty_uint;
     else
       ty = (val >> 31) ? ty_long : ty_int;
-  } else {
+  }
+  else
+  {
     if (l && u)
       ty = ty_ulong;
     else if (l)
@@ -435,7 +561,8 @@ static bool convert_pp_int(Token *tok) {
 // token after preprocessing.
 //
 // This function converts a pp-number token to a regular number token.
-static void convert_pp_number(Token *tok) {
+static void convert_pp_number(Token *tok)
+{
   // Try to parse as an integer constant.
   if (convert_pp_int(tok))
     return;
@@ -445,13 +572,18 @@ static void convert_pp_number(Token *tok) {
   long double val = strtold(tok->loc, &end);
 
   Type *ty;
-  if (*end == 'f' || *end == 'F') {
+  if (*end == 'f' || *end == 'F')
+  {
     ty = ty_float;
     end++;
-  } else if (*end == 'l' || *end == 'L') {
+  }
+  else if (*end == 'l' || *end == 'L')
+  {
     ty = ty_ldouble;
     end++;
-  } else {
+  }
+  else
+  {
     ty = ty_double;
   }
 
@@ -463,8 +595,10 @@ static void convert_pp_number(Token *tok) {
   tok->ty = ty;
 }
 
-void convert_pp_tokens(Token *tok) {
-  for (Token *t = tok; t->kind != TK_EOF; t = t->next) {
+void convert_pp_tokens(Token *tok)
+{
+  for (Token *t = tok; t->kind != TK_EOF; t = t->next)
+  {
     if (is_keyword(t))
       t->kind = TK_KEYWORD;
     else if (t->kind == TK_PP_NUM)
@@ -473,12 +607,15 @@ void convert_pp_tokens(Token *tok) {
 }
 
 // Initialize line info for all tokens.
-static void add_line_numbers(Token *tok) {
+static void add_line_numbers(Token *tok)
+{
   char *p = current_file->contents;
   int n = 1;
 
-  do {
-    if (p == tok->loc) {
+  do
+  {
+    if (p == tok->loc)
+    {
       tok->line_no = n;
       tok = tok->next;
     }
@@ -487,7 +624,8 @@ static void add_line_numbers(Token *tok) {
   } while (*p++);
 }
 
-Token *tokenize_string_literal(Token *tok, Type *basety) {
+Token *tokenize_string_literal(Token *tok, Type *basety)
+{
   Token *t;
   if (basety->size == 2)
     t = read_utf16_string_literal(tok->loc, tok->loc);
@@ -498,7 +636,8 @@ Token *tokenize_string_literal(Token *tok, Type *basety) {
 }
 
 // Tokenize a given string and returns new tokens.
-Token *tokenize(File *file) {
+Token *tokenize(File *file)
+{
   current_file = file;
 
   char *p = file->contents;
@@ -508,9 +647,12 @@ Token *tokenize(File *file) {
   at_bol = true;
   has_space = false;
 
-  while (*p) {
+  while (*p)
+  {
+
     // Skip line comments.
-    if (startswith(p, "//")) {
+    if (startswith(p, "//"))
+    {
       p += 2;
       while (*p != '\n')
         p++;
@@ -519,7 +661,8 @@ Token *tokenize(File *file) {
     }
 
     // Skip block comments.
-    if (startswith(p, "/*")) {
+    if (startswith(p, "/*"))
+    {
       char *q = strstr(p + 2, "*/");
       if (!q)
         error_at(p, "unclosed block comment");
@@ -529,7 +672,8 @@ Token *tokenize(File *file) {
     }
 
     // Skip newline.
-    if (*p == '\n') {
+    if (*p == '\n')
+    {
       p++;
       at_bol = true;
       has_space = false;
@@ -537,16 +681,22 @@ Token *tokenize(File *file) {
     }
 
     // Skip whitespace characters.
-    if (isspace(*p)) {
+    if (isspace(*p))
+    {
       p++;
       has_space = true;
       continue;
     }
 
+    char *previous = p - 1;
     // Numeric literal
-    if (isdigit(*p) || (*p == '.' && isdigit(p[1]))) {
+    // to fix issue #117, checking that previous character is not an hashtag!
+    if ((isdigit(*p) || (*p == '.' && isdigit(p[1]))) && *(previous) != '#')
+    {
       char *q = p++;
-      for (;;) {
+      for (;;)
+      {
+
         if (p[0] && p[1] && strchr("eEpP", p[0]) && strchr("+-", p[1]))
           p += 2;
         else if (isalnum(*p) || *p == '.')
@@ -554,47 +704,57 @@ Token *tokenize(File *file) {
         else
           break;
       }
+      // fixing issue #116 with wrong number detected 1024_160 was considered as number 1024 and other token _160!
+      if (*p == '_')
+        continue;
+
       cur = cur->next = new_token(TK_PP_NUM, q, p);
       continue;
     }
 
     // String literal
-    if (*p == '"') {
+    if (*p == '"')
+    {
       cur = cur->next = read_string_literal(p, p);
       p += cur->len;
       continue;
     }
 
     // UTF-8 string literal
-    if (startswith(p, "u8\"")) {
+    if (startswith(p, "u8\""))
+    {
       cur = cur->next = read_string_literal(p, p + 2);
       p += cur->len;
       continue;
     }
 
     // UTF-16 string literal
-    if (startswith(p, "u\"")) {
+    if (startswith(p, "u\""))
+    {
       cur = cur->next = read_utf16_string_literal(p, p + 1);
       p += cur->len;
       continue;
     }
 
     // Wide string literal
-    if (startswith(p, "L\"")) {
+    if (startswith(p, "L\""))
+    {
       cur = cur->next = read_utf32_string_literal(p, p + 1, ty_int);
       p += cur->len;
       continue;
     }
 
     // UTF-32 string literal
-    if (startswith(p, "U\"")) {
+    if (startswith(p, "U\""))
+    {
       cur = cur->next = read_utf32_string_literal(p, p + 1, ty_uint);
       p += cur->len;
       continue;
     }
 
     // Character literal
-    if (*p == '\'') {
+    if (*p == '\'')
+    {
       cur = cur->next = read_char_literal(p, p, ty_int);
       cur->val = (char)cur->val;
       p += cur->len;
@@ -602,7 +762,8 @@ Token *tokenize(File *file) {
     }
 
     // UTF-16 character literal
-    if (startswith(p, "u'")) {
+    if (startswith(p, "u'"))
+    {
       cur = cur->next = read_char_literal(p, p + 1, ty_ushort);
       cur->val &= 0xffff;
       p += cur->len;
@@ -610,22 +771,25 @@ Token *tokenize(File *file) {
     }
 
     // Wide character literal
-    if (startswith(p, "L'")) {
+    if (startswith(p, "L'"))
+    {
       cur = cur->next = read_char_literal(p, p + 1, ty_int);
       p += cur->len;
       continue;
     }
 
     // UTF-32 character literal
-    if (startswith(p, "U'")) {
+    if (startswith(p, "U'"))
+    {
       cur = cur->next = read_char_literal(p, p + 1, ty_uint);
       p += cur->len;
       continue;
     }
 
     // Identifier or keyword
-    int ident_len = read_ident(p);
-    if (ident_len) {
+    int ident_len = read_ident(p, previous);
+    if (ident_len)
+    {
       cur = cur->next = new_token(TK_IDENT, p, p + ident_len);
       p += cur->len;
       continue;
@@ -633,7 +797,8 @@ Token *tokenize(File *file) {
 
     // Punctuators
     int punct_len = read_punct(p);
-    if (punct_len) {
+    if (punct_len)
+    {
       cur = cur->next = new_token(TK_PUNCT, p, p + punct_len);
       p += cur->len;
       continue;
@@ -648,13 +813,17 @@ Token *tokenize(File *file) {
 }
 
 // Returns the contents of a given file.
-static char *read_file(char *path) {
+static char *read_file(char *path)
+{
   FILE *fp;
 
-  if (strcmp(path, "-") == 0) {
+  if (strcmp(path, "-") == 0)
+  {
     // By convention, read from stdin if a given filename is "-".
     fp = stdin;
-  } else {
+  }
+  else
+  {
     fp = fopen(path, "r");
     if (!fp)
       return NULL;
@@ -665,7 +834,8 @@ static char *read_file(char *path) {
   FILE *out = open_memstream(&buf, &buflen);
 
   // Read the entire file.
-  for (;;) {
+  for (;;)
+  {
     char buf2[4096];
     int n = fread(buf2, 1, sizeof(buf2), fp);
     if (n == 0)
@@ -685,14 +855,16 @@ static char *read_file(char *path) {
   return buf;
 }
 
-File **get_input_files(void) {
+File **get_input_files(void)
+{
   return input_files;
 }
 
-File *new_file(char *name, int file_no, char *contents) {
+File *new_file(char *name, int file_no, char *contents)
+{
   File *file = calloc(1, sizeof(File));
   if (file == NULL)
-    error("tokenize.c : in new_file file is null!");    
+    error("tokenize.c : in new_file file is null!");
   file->name = name;
   file->display_name = name;
   file->file_no = file_no;
@@ -701,17 +873,24 @@ File *new_file(char *name, int file_no, char *contents) {
 }
 
 // Replaces \r or \r\n with \n.
-static void canonicalize_newline(char *p) {
+static void canonicalize_newline(char *p)
+{
   int i = 0, j = 0;
 
-  while (p[i]) {
-    if (p[i] == '\r' && p[i + 1] == '\n') {
+  while (p[i])
+  {
+    if (p[i] == '\r' && p[i + 1] == '\n')
+    {
       i += 2;
       p[j++] = '\n';
-    } else if (p[i] == '\r') {
+    }
+    else if (p[i] == '\r')
+    {
       i++;
       p[j++] = '\n';
-    } else {
+    }
+    else
+    {
       p[j++] = p[i++];
     }
   }
@@ -720,7 +899,8 @@ static void canonicalize_newline(char *p) {
 }
 
 // Removes backslashes followed by a newline.
-static void remove_backslash_newline(char *p) {
+static void remove_backslash_newline(char *p)
+{
   int i = 0, j = 0;
 
   // We want to keep the number of newline characters so that
@@ -728,15 +908,21 @@ static void remove_backslash_newline(char *p) {
   // This counter maintain the number of newlines we have removed.
   int n = 0;
 
-  while (p[i]) {
-    if (p[i] == '\\' && p[i + 1] == '\n') {
+  while (p[i])
+  {
+    if (p[i] == '\\' && p[i + 1] == '\n')
+    {
       i += 2;
       n++;
-    } else if (p[i] == '\n') {
+    }
+    else if (p[i] == '\n')
+    {
       p[j++] = p[i++];
       for (; n > 0; n--)
         p[j++] = '\n';
-    } else {
+    }
+    else
+    {
       p[j++] = p[i++];
     }
   }
@@ -746,9 +932,11 @@ static void remove_backslash_newline(char *p) {
   p[j] = '\0';
 }
 
-static uint32_t read_universal_char(char *p, int len) {
+static uint32_t read_universal_char(char *p, int len)
+{
   uint32_t c = 0;
-  for (int i = 0; i < len; i++) {
+  for (int i = 0; i < len; i++)
+  {
     if (!isxdigit(p[i]))
       return 0;
     c = (c << 4) | from_hex(p[i]);
@@ -757,30 +945,45 @@ static uint32_t read_universal_char(char *p, int len) {
 }
 
 // Replace \u or \U escape sequences with corresponding UTF-8 bytes.
-static void convert_universal_chars(char *p) {
+static void convert_universal_chars(char *p)
+{
   char *q = p;
 
-  while (*p) {
-    if (startswith(p, "\\u")) {
+  while (*p)
+  {
+    if (startswith(p, "\\u"))
+    {
       uint32_t c = read_universal_char(p + 2, 4);
-      if (c) {
+      if (c)
+      {
         p += 6;
         q += encode_utf8(q, c);
-      } else {
+      }
+      else
+      {
         *q++ = *p++;
       }
-    } else if (startswith(p, "\\U")) {
+    }
+    else if (startswith(p, "\\U"))
+    {
       uint32_t c = read_universal_char(p + 2, 8);
-      if (c) {
+      if (c)
+      {
         p += 10;
         q += encode_utf8(q, c);
-      } else {
+      }
+      else
+      {
         *q++ = *p++;
       }
-    } else if (p[0] == '\\') {
+    }
+    else if (p[0] == '\\')
+    {
       *q++ = *p++;
       *q++ = *p++;
-    } else {
+    }
+    else
+    {
       *q++ = *p++;
     }
   }
@@ -788,7 +991,8 @@ static void convert_universal_chars(char *p) {
   *q = '\0';
 }
 
-Token *tokenize_file(char *path) {
+Token *tokenize_file(char *path)
+{
   char *p = read_file(path);
   if (!p)
     return NULL;
@@ -811,7 +1015,7 @@ Token *tokenize_file(char *path) {
   // Save the filename for assembler .file directive.
   input_files = realloc(input_files, sizeof(char *) * (file_no + 2));
   if (input_files == NULL)
-    error("tokenize.c : in tokenize_file input_files is null!");    
+    error("tokenize.c : in tokenize_file input_files is null!");
   input_files[file_no] = file;
   input_files[file_no + 1] = NULL;
   file_no++;
