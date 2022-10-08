@@ -1000,7 +1000,7 @@ static void run_linker(StringArray *inputs, char *output)
     strarray_push(&arr, format("%s/crti.o", libpath));
     strarray_push(&arr, format("%s/crtbegin.o", gcc_libpath));
   }
-
+  strarray_push(&arr, "-L.");
   strarray_push(&arr, format("-L%s", gcc_libpath));
   strarray_push(&arr, "-L/usr/lib/x86_64-linux-gnu");
   strarray_push(&arr, "-L/usr/lib64");

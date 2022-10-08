@@ -218,7 +218,7 @@ To build :
 
 Adding also a devcontainer for those that want to use visual code inside a container (needs vs code extension remote-containers).
 
-## Examples of C projects compiled using chibicc
+## Examples of C projects compiled successfully using chibicc
 
 tcc : tcc compiler (https://github.com/LuaDist/tcc.git)
 
@@ -247,8 +247,6 @@ curl : https://github.com/curl/curl.git
         CC       ../lib/dynbuf.o
         CCLD     curl
 
-## Linkage issues
-
 openssl : https://github.com/openssl/openssl.git
 Very interesting project that helps to find some bugs (see issue from 108 to 118). It doesn't link well for now!
 
@@ -276,7 +274,8 @@ Replace chibicc by gcc for compiling this one :
 
     make
 
-And at the end, it fails for Linkage issue with lots of "undefined references" that seems linked to -pthread ignored (not found yet what is wrong but you can use at the end gcc for the linking instead of chibicc).
+
+
 
 ## Limits
 
@@ -360,7 +359,7 @@ Example of diagram generated with -dotfile parameter :
 
 ## release notes
 
-1.0.12 Adding -dotfile parameter that generates a xxx.dot file that we can visualized using graphviz package by [hdewig100](https://github.com/hedwig100/chibicc). Adding in error message chibicc file name and function when a message error is displayed to help for debugging. Adding in Makefile the way to create shared library libchibicc.so. Fixing issue #116 with 1024_160 splitted wrongly in two tokens. Fixing issue #117 with number after generic parameter like "fromtype##2obj_decode". Fixing issue #118 same as 117, to allow some identifiers to start by number when they are generics. Linking lpthread if -pthread is passed. Ignoring -z and -Bsymbolic.
+1.0.12 Adding -dotfile parameter that generates a xxx.dot file that we can visualized using graphviz package by [hdewig100](https://github.com/hedwig100/chibicc). Adding in error message chibicc file name and function when a message error is displayed to help for debugging. Adding in Makefile the way to create shared library libchibicc.so. Fixing issue #116 with 1024_160 splitted wrongly in two tokens. Fixing issue #117 with number after generic parameter like "fromtype##2obj_decode". Fixing issue #118 same as 117, to allow some identifiers to start by number when they are generics. Linking lpthread if -pthread is passed. Ignoring -z and -Bsymbolic. Fixing the issue with linkage need to add current directory to the path before the others (probably it's a security issue because it means that for compiling the objects library found in the current path will be taken in priority!)
 
 
 ## old release notes
