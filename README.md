@@ -367,7 +367,7 @@ Example of diagram generated with -dotfile parameter :
 ## release notes
 
 1.0.12 Adding -dotfile parameter that generates a xxx.dot file that we can visualized using graphviz package by [hdewig100](https://github.com/hedwig100/chibicc). Adding in error message chibicc file name and function when a message error is displayed to help for debugging. Adding in Makefile the way to create shared library libchibicc.so. Fixing issue #116 with 1024_160 splitted wrongly in two tokens. Fixing issue #117 with number after generic parameter like "fromtype##2obj_decode". Fixing issue #118 same as 117, to allow some identifiers to start by number when they are generics. Linking lpthread if -pthread is passed. Ignoring -z and -Bsymbolic. Fixing the issue with linkage need to add current directory to the path before the others (probably it's a security issue because it means that for compiling the objects library found in the current path will be taken in priority!)
-Fixing issue #119 about cmathcalls.
+Fixing issue #119 about cmathcalls. Removing fix for #119 caused an infinite loop
 
 ## old release notes
 

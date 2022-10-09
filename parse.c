@@ -688,11 +688,7 @@ static Type *func_params(Token **rest, Token *tok, Type *ty)
   while (!equal(tok, ")"))
   {
     if (cur != &head)
-    {
-      // fixing issue #119
-      if (equal(tok, ","))
-        tok = skip(tok, ",");
-    }
+      tok = skip(tok, ",");
 
     if (equal(tok, "..."))
     {
