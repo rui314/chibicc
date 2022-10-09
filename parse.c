@@ -432,7 +432,7 @@ static void push_tag_scope(Token *tok, Type *ty)
   hashmap_put2(&scope->tags, tok->loc, tok->len, ty);
 }
 
-// declspec = ("void" | "_Bool" | "char" | "short" | "int" | "long"
+// declspec = ("void" | "_Bool" | "char" | "short" | "int" | "long" | "double"
 //             | "typedef" | "static" | "extern" | "inline"
 //             | "_Thread_local" | "__thread"
 //             | "signed" | "unsigned"
@@ -505,8 +505,9 @@ static Type *declspec(Token **rest, Token *tok, VarAttr *attr)
       continue;
     }
     // These keywords are recognized but ignored.
+    // fixing issue #119 _Complex
     if (consume(&tok, tok, "const") || consume(&tok, tok, "volatile") ||
-        consume(&tok, tok, "auto") || consume(&tok, tok, "register") ||
+        consume(&tok, tok, "auto") || consume(&tok, tok, "register") || consume(&tok, tok, "_Complex") ||
         consume(&tok, tok, "restrict") || consume(&tok, tok, "__restrict") ||
         consume(&tok, tok, "__restrict__") || consume(&tok, tok, "_Noreturn"))
       continue;
@@ -689,7 +690,6 @@ static Type *func_params(Token **rest, Token *tok, Type *ty)
   {
     if (cur != &head)
       tok = skip(tok, ",");
-
     if (equal(tok, "..."))
     {
       is_variadic = true;
@@ -767,14 +767,14 @@ static Type *type_suffix(Token **rest, Token *tok, Type *ty)
   return ty;
 }
 
-// pointers = ("*" ("const" | "volatile" | "restrict")*)*
+// pointers = ("*" ("const" | "volatile" | "restrict" | "_Complex")*)*
 static Type *pointers(Token **rest, Token *tok, Type *ty)
 {
   while (consume(&tok, tok, "*"))
   {
     ty = pointer_to(ty);
     while (equal(tok, "const") || equal(tok, "volatile") || equal(tok, "restrict") ||
-           equal(tok, "__restrict") || equal(tok, "__restrict__") || equal(tok, "_Atomic"))
+           equal(tok, "__restrict") || equal(tok, "__restrict__") || equal(tok, "_Atomic") || equal(tok, "_Complex"))
       tok = tok->next;
   }
   *rest = tok;
@@ -785,7 +785,6 @@ static Type *pointers(Token **rest, Token *tok, Type *ty)
 static Type *declarator(Token **rest, Token *tok, Type *ty)
 {
   ty = pointers(&tok, tok, ty);
-
   if (equal(tok, "(") && !is_typename(tok->next) && !equal(tok->next, ")"))
   {
     Token *start = tok;
@@ -1782,7 +1781,7 @@ static bool is_typename(Token *tok)
         "typedef", "enum", "static", "extern", "_Alignas", "signed", "unsigned",
         "const", "volatile", "auto", "register", "restrict", "__restrict",
         "__restrict__", "_Noreturn", "float", "double", "typeof", "inline",
-        "_Thread_local", "__thread", "_Atomic"};
+        "_Thread_local", "__thread", "_Atomic", "_Complex"};
 
     for (int i = 0; i < sizeof(kw) / sizeof(*kw); i++)
       hashmap_put(&map, kw[i], (void *)1);
