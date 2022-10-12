@@ -471,7 +471,6 @@ static Type *declspec(Token **rest, Token *tok, VarAttr *attr)
     SIGNED = 1 << 17,
     UNSIGNED = 1 << 18,
   };
-
   Type *ty = ty_int;
   int counter = 0;
   bool is_atomic = false;
@@ -507,7 +506,8 @@ static Type *declspec(Token **rest, Token *tok, VarAttr *attr)
     // These keywords are recognized but ignored.
     // fixing issue #119 _Complex
     if (consume(&tok, tok, "const") || consume(&tok, tok, "volatile") ||
-        consume(&tok, tok, "auto") || consume(&tok, tok, "register") || consume(&tok, tok, "_Complex") ||
+        consume(&tok, tok, "auto") || consume(&tok, tok, "register") ||
+        consume(&tok, tok, "_Complex") ||
         consume(&tok, tok, "restrict") || consume(&tok, tok, "__restrict") ||
         consume(&tok, tok, "__restrict__") || consume(&tok, tok, "_Noreturn"))
       continue;
@@ -685,11 +685,13 @@ static Type *func_params(Token **rest, Token *tok, Type *ty)
   Type head = {};
   Type *cur = &head;
   bool is_variadic = false;
-
   while (!equal(tok, ")"))
   {
+
     if (cur != &head)
+    {
       tok = skip(tok, ",");
+    }
     if (equal(tok, "..."))
     {
       is_variadic = true;
@@ -702,7 +704,6 @@ static Type *func_params(Token **rest, Token *tok, Type *ty)
     ty2 = declarator(&tok, tok, ty2);
 
     Token *name = ty2->name;
-
     if (ty2->kind == TY_ARRAY)
     {
       // "array of T" is converted to "pointer to T" only in the parameter
@@ -767,14 +768,15 @@ static Type *type_suffix(Token **rest, Token *tok, Type *ty)
   return ty;
 }
 
-// pointers = ("*" ("const" | "volatile" | "restrict" | "_Complex")*)*
+// pointers = ("*" ("const" | "volatile" | "restrict" | "_Complex" | "_Static")*)*
 static Type *pointers(Token **rest, Token *tok, Type *ty)
 {
   while (consume(&tok, tok, "*"))
   {
     ty = pointer_to(ty);
     while (equal(tok, "const") || equal(tok, "volatile") || equal(tok, "restrict") ||
-           equal(tok, "__restrict") || equal(tok, "__restrict__") || equal(tok, "_Atomic") || equal(tok, "_Complex"))
+           equal(tok, "__restrict") || equal(tok, "__restrict__") ||
+           equal(tok, "_Atomic") || equal(tok, "_Complex"))
       tok = tok->next;
   }
   *rest = tok;
@@ -790,6 +792,7 @@ static Type *declarator(Token **rest, Token *tok, Type *ty)
     Token *start = tok;
     Type dummy = {};
     declarator(&tok, start->next, &dummy);
+    // printf("====%10s\n", tok->loc);
     tok = skip(tok, ")");
     ty = type_suffix(rest, tok, ty);
     return declarator(&tok, start->next, ty);
@@ -3511,6 +3514,8 @@ static Node *generic_selection(Token **rest, Token *tok)
 static Node *primary(Token **rest, Token *tok)
 {
   Token *start = tok;
+  if (isDebug && f != NULL)
+    print_debug_tokens(PARSE_C, "primary", tok);
   if (equal(tok, "(") && equal(tok->next, "{"))
   {
     // This is a GNU statement expresssion.
@@ -3522,6 +3527,7 @@ static Node *primary(Token **rest, Token *tok)
 
   if (equal(tok, "("))
   {
+    // printf("=====passe ici %10s\n", tok->loc);
     Node *node = expr(&tok, tok->next);
     *rest = skip(tok, ")");
     return node;
@@ -3644,10 +3650,10 @@ static Node *primary(Token **rest, Token *tok)
     *rest = skip(tok->next, ")");
     return to_assign(node);
   }
-
   if (tok->kind == TK_IDENT)
   {
-    // Variable or enum constant
+    // printf("=====%s\n", tok->loc);
+    //  Variable or enum constant
     VarScope *sc = find_var(tok);
     *rest = tok->next;
 
@@ -3669,7 +3675,12 @@ static Node *primary(Token **rest, Token *tok)
     }
 
     if (equal(tok->next, "("))
-      error_tok(tok, "%s: in primary : implicit declaration of a function", PARSE_C);
+    {
+
+      Node *node = unary(rest, tok->next);
+      return node;
+      // error_tok(tok, "%s: in primary : implicit declaration of a function", PARSE_C);
+    }
     error_tok(tok, "%s: in primary : error: undefined variable", PARSE_C);
   }
 

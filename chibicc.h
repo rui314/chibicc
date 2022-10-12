@@ -30,7 +30,7 @@
 #endif
 
 #define PRODUCT "chibicc"
-#define VERSION "1.0.12"
+#define VERSION "1.0.13"
 #define MAXLEN 101
 #define DEFAULT_TARGET_MACHINE "x86_64-linux-gnu"
 
@@ -486,6 +486,13 @@ void add_type(Node *node);
 char *nodekind2str(NodeKind kind);
 
 //
+// debug.c
+//
+extern char *previousfile;
+char *tokenkind2str(TokenKind kind);
+void print_debug_tokens(char *currentfilename, char *function, Token *tok);
+
+//
 // codegen.c
 //
 
@@ -544,9 +551,12 @@ extern char *dot_file;
 extern char *opt_o;
 extern char *replace_extn(char *tmpl, char *extn);
 extern FILE *dotf;
+extern FILE *f;
 extern bool isDotfile;
+extern bool isDebug;
 extern char *extract_filename(char *tmpl);
 extern char *extract_path(char *tmpl, char *basename);
+
 //
 // sanitize.c
 //

@@ -1,4 +1,5 @@
 #include "chibicc.h"
+#define TOKENIZE_C "tokenize.c"
 
 // Input file
 static File *current_file;
@@ -93,7 +94,7 @@ bool equal(Token *tok, char *op)
 Token *skip(Token *tok, char *op)
 {
   if (!equal(tok, op))
-    error_tok(tok, "expected '%s'", op);
+    error_tok(tok, "%s: in skip : expected '%s'", TOKENIZE_C, op);
   return tok->next;
 }
 
@@ -113,7 +114,7 @@ static Token *new_token(TokenKind kind, char *start, char *end)
 {
   Token *tok = calloc(1, sizeof(Token));
   if (tok == NULL)
-    error("tokenize.c : in new_token tok is null!");
+    error("%s: in new_token tok is null!", TOKENIZE_C);
   tok->kind = kind;
   tok->loc = start;
   tok->len = end - start;
@@ -284,7 +285,7 @@ static int read_escaped_char(char **new_pos, char *p)
     // Read a hexadecimal number.
     p++;
     if (!isxdigit(*p))
-      error_at(p, "invalid hex escape sequence");
+      error_at(p, "%s: in read_escaped_char : invalid hex escape sequence", TOKENIZE_C);
 
     int c = 0;
     for (; isxdigit(*p); p++)
@@ -337,7 +338,7 @@ static char *string_literal_end(char *p)
   for (; *p != '"'; p++)
   {
     if (*p == '\n' || *p == '\0')
-      error_at(start, "unclosed string literal");
+      error_at(start, "%s: in string_literal_end : unclosed string literal", TOKENIZE_C);
     if (*p == '\\')
       p++;
   }
@@ -349,7 +350,7 @@ static Token *read_string_literal(char *start, char *quote)
   char *end = string_literal_end(quote + 1);
   char *buf = calloc(1, end - quote);
   if (buf == NULL)
-    error("tokenize.c : in read_string_literal buf is null!");
+    error("%s: in read_string_literal buf is null!", TOKENIZE_C);
   int len = 0;
 
   for (char *p = quote + 1; p < end;)
@@ -378,7 +379,7 @@ static Token *read_utf16_string_literal(char *start, char *quote)
   char *end = string_literal_end(quote + 1);
   uint16_t *buf = calloc(2, end - start);
   if (buf == NULL)
-    error("tokenize.c : in read_utf16_string_literal buf is null!");
+    error("%s: in read_utf16_string_literal buf is null!", TOKENIZE_C);
   int len = 0;
 
   for (char *p = quote + 1; p < end;)
@@ -419,7 +420,7 @@ static Token *read_utf32_string_literal(char *start, char *quote, Type *ty)
   char *end = string_literal_end(quote + 1);
   uint32_t *buf = calloc(4, end - quote);
   if (buf == NULL)
-    error("tokenize.c : in read_utf32_string_literal buf is null!");
+    error("%s: in read_utf32_string_literal buf is null!", TOKENIZE_C);
   int len = 0;
 
   for (char *p = quote + 1; p < end;)
@@ -440,7 +441,7 @@ static Token *read_char_literal(char *start, char *quote, Type *ty)
 {
   char *p = quote + 1;
   if (*p == '\0')
-    error_at(start, "unclosed char literal");
+    error_at(start, "%s: in read_char_literal : unclosed char literal", TOKENIZE_C);
 
   int c;
   if (*p == '\\')
@@ -450,7 +451,7 @@ static Token *read_char_literal(char *start, char *quote, Type *ty)
 
   char *end = strchr(p, '\'');
   if (!end)
-    error_at(p, "unclosed char literal");
+    error_at(p, "%s: in read_char_literal : unclosed char literal", TOKENIZE_C);
 
   Token *tok = new_token(TK_NUM, start, end + 1);
   tok->val = c;
@@ -588,7 +589,7 @@ static void convert_pp_number(Token *tok)
   }
 
   if (tok->loc + tok->len != end)
-    error_tok(tok, "invalid numeric constant");
+    error_tok(tok, "%s: in convert_pp_number : invalid numeric constant", TOKENIZE_C);
 
   tok->kind = TK_NUM;
   tok->fval = val;
@@ -666,7 +667,7 @@ Token *tokenize(File *file)
     {
       char *q = strstr(p + 2, "*/");
       if (!q)
-        error_at(p, "unclosed block comment");
+        error_at(p, "%s: in tokenize : unclosed block comment", TOKENIZE_C);
       p = q + 2;
       has_space = true;
       continue;
@@ -812,11 +813,15 @@ Token *tokenize(File *file)
       continue;
     }
 
-    error_at(p, "invalid token");
+    error_at(p, "%s: in tokenize : invalid token", TOKENIZE_C);
   }
 
   cur = cur->next = new_token(TK_EOF, p, p);
   add_line_numbers(head.next);
+
+  // for debug needs print all the tokens with values
+  if (isDebug && f != NULL)
+    print_debug_tokens(TOKENIZE_C, "tokenize", head.next);
   return head.next;
 }
 
@@ -872,7 +877,7 @@ File *new_file(char *name, int file_no, char *contents)
 {
   File *file = calloc(1, sizeof(File));
   if (file == NULL)
-    error("tokenize.c : in new_file file is null!");
+    error("%s: in new_file file is null!", TOKENIZE_C);
   file->name = name;
   file->display_name = name;
   file->file_no = file_no;
@@ -1023,7 +1028,7 @@ Token *tokenize_file(char *path)
   // Save the filename for assembler .file directive.
   input_files = realloc(input_files, sizeof(char *) * (file_no + 2));
   if (input_files == NULL)
-    error("tokenize.c : in tokenize_file input_files is null!");
+    error("%s: in tokenize_file input_files is null!", TOKENIZE_C);
   input_files[file_no] = file;
   input_files[file_no + 1] = NULL;
   file_no++;
