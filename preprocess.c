@@ -439,7 +439,6 @@ static void read_macro_definition(Token **rest, Token *tok)
     // Function-like macro
     char *va_args_name = NULL;
     MacroParam *params = read_macro_params(&tok, tok->next, &va_args_name);
-
     Macro *m = add_macro(name, false, copy_line(rest, tok));
     m->params = params;
     m->va_args_name = va_args_name;
@@ -776,7 +775,6 @@ static bool expand_macro(Token **rest, Token *tok)
   Token *macro_token = tok;
   MacroArg *args = read_macro_args(&tok, tok, m->params, m->va_args_name);
   Token *rparen = tok;
-
   // Tokens that consist a func-like macro invocation may have different
   // hidesets, and if that's the case, it's not clear what the hideset
   // for the new tokens should be. We take the interesection of the
@@ -971,6 +969,7 @@ static Token *preprocess2(Token *tok)
 
   while (tok->kind != TK_EOF)
   {
+
     // If it is a macro, expand it.
     if (expand_macro(&tok, tok))
       continue;
@@ -1403,7 +1402,8 @@ Token *preprocess(Token *tok)
     error_tok(cond_incl->tok, "%s: in preprocess : unterminated conditional directive", PREPROCESS_C);
   convert_pp_tokens(tok);
   join_adjacent_string_literals(tok);
-
+  if (isDebug && f != NULL)
+    print_debug_tokens(PREPROCESS_C, "preprocess", tok);
   for (Token *t = tok; t; t = t->next)
     t->line_no += t->line_delta;
   return tok;

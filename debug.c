@@ -29,15 +29,11 @@ char *tokenkind2str(TokenKind kind)
 void print_debug_tokens(char *currentfilename, char *function, Token *tok)
 {
 
-    if (strncmp(currentfilename, previousfile, strlen(currentfilename)) != 0)
-    {
-        fprintf(f, "=====================file : %s, function: %s\n", currentfilename, function);
-        previousfile = currentfilename;
-    }
+    fprintf(f, "=====================file : %s, function: %s\n", currentfilename, function);
 
     // for debug needs print all the tokens with values
     Token *t = tok;
-    while (t != NULL)
+    while (t->kind != TK_EOF)
     {
         if (t->len > 0)
         {

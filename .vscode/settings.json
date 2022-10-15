@@ -1,5 +1,7 @@
 {
   "files.associations": {
-    "chibicc.h": "c"
+    "*.macro": "macromaker",
+    "chibicc.h": "c",
+    "cassert": "c"
   }
 }

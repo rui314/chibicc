@@ -18,7 +18,8 @@ Type *ty_float = &(Type){TY_FLOAT, 4, 4};
 Type *ty_double = &(Type){TY_DOUBLE, 8, 8};
 Type *ty_ldouble = &(Type){TY_LDOUBLE, 16, 16};
 
-static Type *new_type(TypeKind kind, int size, int align) {
+static Type *new_type(TypeKind kind, int size, int align)
+{
   Type *ty = calloc(1, sizeof(Type));
   if (ty == NULL)
     error("%s: in new_type ty is null!", TYPE_C);
@@ -28,22 +29,26 @@ static Type *new_type(TypeKind kind, int size, int align) {
   return ty;
 }
 
-bool is_integer(Type *ty) {
+bool is_integer(Type *ty)
+{
   TypeKind k = ty->kind;
   return k == TY_BOOL || k == TY_CHAR || k == TY_SHORT ||
-         k == TY_INT  || k == TY_LONG || k == TY_ENUM;
+         k == TY_INT || k == TY_LONG || k == TY_ENUM;
 }
 
-bool is_flonum(Type *ty) {
+bool is_flonum(Type *ty)
+{
   return ty->kind == TY_FLOAT || ty->kind == TY_DOUBLE ||
          ty->kind == TY_LDOUBLE;
 }
 
-bool is_numeric(Type *ty) {
+bool is_numeric(Type *ty)
+{
   return is_integer(ty) || is_flonum(ty);
 }
 
-bool is_compatible(Type *t1, Type *t2) {
+bool is_compatible(Type *t1, Type *t2)
+{
   if (t1 == t2)
     return true;
 
@@ -56,7 +61,8 @@ bool is_compatible(Type *t1, Type *t2) {
   if (t1->kind != t2->kind)
     return false;
 
-  switch (t1->kind) {
+  switch (t1->kind)
+  {
   case TY_CHAR:
   case TY_SHORT:
   case TY_INT:
@@ -68,7 +74,8 @@ bool is_compatible(Type *t1, Type *t2) {
     return true;
   case TY_PTR:
     return is_compatible(t1->base, t2->base);
-  case TY_FUNC: {
+  case TY_FUNC:
+  {
     if (!is_compatible(t1->return_ty, t2->return_ty))
       return false;
     if (t1->is_variadic != t2->is_variadic)
@@ -90,23 +97,26 @@ bool is_compatible(Type *t1, Type *t2) {
   return false;
 }
 
-Type *copy_type(Type *ty) {
+Type *copy_type(Type *ty)
+{
   Type *ret = calloc(1, sizeof(Type));
   if (ret == NULL)
-    error("%s: in copy_type ret is null!", TYPE_C);  
+    error("%s: in copy_type ret is null!", TYPE_C);
   *ret = *ty;
   ret->origin = ty;
   return ret;
 }
 
-Type *pointer_to(Type *base) {
+Type *pointer_to(Type *base)
+{
   Type *ty = new_type(TY_PTR, 8, 8);
   ty->base = base;
   ty->is_unsigned = true;
   return ty;
 }
 
-Type *func_type(Type *return_ty) {
+Type *func_type(Type *return_ty)
+{
   // The C spec disallows sizeof(<function type>), but
   // GCC allows that and the expression is evaluated to 1.
   Type *ty = new_type(TY_FUNC, 1, 1);
@@ -114,29 +124,35 @@ Type *func_type(Type *return_ty) {
   return ty;
 }
 
-Type *array_of(Type *base, int len) {
+Type *array_of(Type *base, int len)
+{
   Type *ty = new_type(TY_ARRAY, base->size * len, base->align);
   ty->base = base;
   ty->array_len = len;
   return ty;
 }
 
-Type *vla_of(Type *base, Node *len) {
+Type *vla_of(Type *base, Node *len)
+{
   Type *ty = new_type(TY_VLA, 8, 8);
   ty->base = base;
   ty->vla_len = len;
   return ty;
 }
 
-Type *enum_type(void) {
+Type *enum_type(void)
+{
   return new_type(TY_ENUM, 4, 4);
 }
 
-Type *struct_type(void) {
+Type *struct_type(void)
+{
   return new_type(TY_STRUCT, 0, 1);
 }
 
-static Type *get_common_type(Type *ty1, Type *ty2) {
+static Type *get_common_type(Type *ty1, Type *ty2)
+{
+
   if (ty1->base)
     return pointer_to(ty1->base);
 
@@ -172,13 +188,15 @@ static Type *get_common_type(Type *ty1, Type *ty2) {
 // be promoted to match with the other.
 //
 // This operation is called the "usual arithmetic conversion".
-static void usual_arith_conv(Node **lhs, Node **rhs) {
+static void usual_arith_conv(Node **lhs, Node **rhs)
+{
   Type *ty = get_common_type((*lhs)->ty, (*rhs)->ty);
   *lhs = new_cast(*lhs, ty);
   *rhs = new_cast(*rhs, ty);
 }
 
-void add_type(Node *node) {
+void add_type(Node *node)
+{
   if (!node || node->ty)
     return;
 
@@ -195,7 +213,8 @@ void add_type(Node *node) {
   for (Node *n = node->args; n; n = n->next)
     add_type(n);
 
-  switch (node->kind) {
+  switch (node->kind)
+  {
   case ND_NUM:
     node->ty = ty_int;
     return;
@@ -210,7 +229,8 @@ void add_type(Node *node) {
     usual_arith_conv(&node->lhs, &node->rhs);
     node->ty = node->lhs->ty;
     return;
-  case ND_NEG: {
+  case ND_NEG:
+  {
     Type *ty = get_common_type(ty_int, node->lhs->ty);
     node->lhs = new_cast(node->lhs, ty);
     node->ty = ty;
@@ -248,9 +268,12 @@ void add_type(Node *node) {
     node->ty = node->var->ty;
     return;
   case ND_COND:
-    if (node->then->ty->kind == TY_VOID || node->els->ty->kind == TY_VOID) {
+    if (node->then->ty->kind == TY_VOID || node->els->ty->kind == TY_VOID)
+    {
       node->ty = ty_void;
-    } else {
+    }
+    else
+    {
       usual_arith_conv(&node->then, &node->els);
       node->ty = node->then->ty;
     }
@@ -261,7 +284,8 @@ void add_type(Node *node) {
   case ND_MEMBER:
     node->ty = node->member->ty;
     return;
-  case ND_ADDR: {
+  case ND_ADDR:
+  {
     Type *ty = node->lhs->ty;
     if (ty->kind == TY_ARRAY)
       node->ty = pointer_to(ty->base);
@@ -274,17 +298,18 @@ void add_type(Node *node) {
       error_tok(node->tok, "%s invalid pointer dereference", TYPE_C);
     if (node->lhs->ty->base->kind == TY_VOID)
       error_tok(node->tok, "%s dereferencing a void pointer", TYPE_C);
-
     node->ty = node->lhs->ty->base;
     return;
   case ND_STMT_EXPR:
-    if (node->body) {
+    if (node->body)
+    {
       Node *stmt = node->body;
       while (stmt->next)
         stmt = stmt->next;
       while (stmt->kind == ND_LABEL)
-        stmt = stmt->lhs;        
-      if (stmt->kind == ND_EXPR_STMT) {
+        stmt = stmt->lhs;
+      if (stmt->kind == ND_EXPR_STMT)
+      {
         node->ty = stmt->lhs->ty;
         return;
       }

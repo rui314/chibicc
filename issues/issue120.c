@@ -1,8 +1,7 @@
 
 //#include <libavutil/common.h>
 #include <assert.h>
-#define INPUT_CLOCK_LATE_COUNT (3)
-
+// test
 typedef enum
 {
     AOUT_CHANIDX_DISABLE = -1,
@@ -17,6 +16,7 @@ typedef enum
     AOUT_CHANIDX_LFE,
     AOUT_CHANIDX_MAX
 } vlc_chan_order_idx_t;
+#define INPUT_CLOCK_LATE_COUNT (3)
 
 #define AOUT_CHAN_MAX 9
 // static inline uint8_t clip_uint8_vlc(int32_t a)
@@ -27,11 +27,13 @@ typedef enum
 //         return a;
 // }
 
+static_assert(AOUT_CHANIDX_MAX == AOUT_CHAN_MAX, "channel count mismatch");
+
 int main(void)
 {
 
-    static_assert(AOUT_CHANIDX_MAX == AOUT_CHAN_MAX, "channel count mismatch");
     static_assert(INPUT_CLOCK_LATE_COUNT == 3,
                   "unsupported INPUT_CLOCK_LATE_COUNT");
+
     return 0;
 }

@@ -488,7 +488,7 @@ char *nodekind2str(NodeKind kind);
 //
 // debug.c
 //
-extern char *previousfile;
+
 char *tokenkind2str(TokenKind kind);
 void print_debug_tokens(char *currentfilename, char *function, Token *tok);
 
