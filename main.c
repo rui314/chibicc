@@ -365,7 +365,7 @@ static bool endswith(char *p, char *q) {
 
 // Replace file extension
 static char *replace_extn(char *tmpl, char *extn) {
-  char *filename = basename(strdup(tmpl));
+  char *filename = strdup(tmpl);
   char *dot = strrchr(filename, '.');
   if (dot)
     *dot = '\0';
@@ -459,11 +459,13 @@ static bool in_std_include_path(char *path) {
 // stdout in a format that "make" command can read. This feature is
 // used to automate file dependency management.
 static void print_dependencies(void) {
+  char *name = opt_o ? opt_o : base_file;
+
   char *path;
   if (opt_MF)
     path = opt_MF;
   else if (opt_MD)
-    path = replace_extn(opt_o ? opt_o : base_file, ".d");
+    path = replace_extn(name, ".d");
   else if (opt_o)
     path = opt_o;
   else
@@ -473,7 +475,7 @@ static void print_dependencies(void) {
   if (opt_MT)
     fprintf(out, "%s:", opt_MT);
   else
-    fprintf(out, "%s:", quote_makefile(replace_extn(base_file, ".o")));
+    fprintf(out, "%s:", quote_makefile(replace_extn(name, ".o")));
 
   File **files = get_input_files();
 
@@ -731,13 +733,15 @@ int main(int argc, char **argv) {
       continue;
     }
 
+    char *input_base = basename(strdup(input));
+
     char *output;
     if (opt_o)
       output = opt_o;
     else if (opt_S)
-      output = replace_extn(input, ".s");
+      output = replace_extn(input_base, ".s");
     else
-      output = replace_extn(input, ".o");
+      output = replace_extn(input_base, ".o");
 
     FileType type = get_file_type(input);
 

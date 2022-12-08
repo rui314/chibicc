@@ -225,12 +225,12 @@ check 'hashmap'
 echo '#include "out2.h"' > $tmp/out.c
 echo '#include "out3.h"' >> $tmp/out.c
 touch $tmp/out2.h $tmp/out3.h
-$chibicc -M -I$tmp $tmp/out.c | grep -q -z '^out.o: .*/out\.c .*/out2\.h .*/out3\.h'
+$chibicc -M -I$tmp $tmp/out.c | grep -q -z '^.*/out.o: .*/out\.c .*/out2\.h .*/out3\.h'
 check -M
 
 # -MF
 $chibicc -MF $tmp/mf -M -I$tmp $tmp/out.c
-grep -q -z '^out.o: .*/out\.c .*/out2\.h .*/out3\.h' $tmp/mf
+grep -q -z '^.*/out.o: .*/out\.c .*/out2\.h .*/out3\.h' $tmp/mf
 check -MF
 
 # -MP
@@ -256,7 +256,7 @@ grep -q -z '^md3.o:.* md3\.c .* ./out3\.h' $tmp/md3.d
 check -MD
 
 $chibicc -c -MD -MF $tmp/md-mf.d -I. $tmp/md2.c
-grep -q -z '^md2.o:.*md2\.c .*/out2\.h' $tmp/md-mf.d
+grep -q -z '^.*/md2.o:.*md2\.c .*/out2\.h' $tmp/md-mf.d
 check -MD
 
 echo 'extern int bar; int foo() { return bar; }' | $chibicc -fPIC -xc -c -o $tmp/foo.o -
