@@ -57,6 +57,7 @@ static void add_default_include_paths(char *argv0) {
 
   // Add standard include paths.
   strarray_push(&include_paths, "/usr/local/include");
+  strarray_push(&include_paths, "/usr/local/include/x86_64-linux-gnu/chibicc");
   strarray_push(&include_paths, "/usr/include/x86_64-linux-gnu");
   strarray_push(&include_paths, "/usr/include");
 
