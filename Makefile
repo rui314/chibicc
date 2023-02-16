@@ -43,6 +43,12 @@ test-stage2: $(TESTS:test/%=stage2/test/%)
 
 # Misc.
 
+install:
+	test -d /usr/local/include/x86_64-linux-gnu/chibicc || \
+		sudo mkdir -p /usr/local/include/x86_64-linux-gnu/chibicc
+	sudo cp include/* /usr/local/include/x86_64-linux-gnu/chibicc/
+	sudo cp chibicc /usr/local/bin/chibicc
+
 clean:
 	rm -rf chibicc tmp* $(TESTS) test/*.s test/*.exe stage2
 	find * -type f '(' -name '*~' -o -name '*.o' ')' -exec rm {} ';'
