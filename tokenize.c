@@ -25,7 +25,7 @@ void error(char *fmt, ...) {
 //
 // foo.c:10: x = y + 1;
 //               ^ <error message here>
-static void verror_at(char *filename, char *input, int line_no,
+static void verror_at(char *filename, char *input, unsigned line_no,
                       char *loc, char *fmt, va_list ap) {
   // Find a line containing `loc`.
   char *line = loc;
@@ -37,7 +37,7 @@ static void verror_at(char *filename, char *input, int line_no,
     end++;
 
   // Print out the line.
-  int indent = fprintf(stderr, "%s:%d: ", filename, line_no);
+  int indent = fprintf(stderr, "%s:%u: ", filename, line_no);
   fprintf(stderr, "%.*s\n", (int)(end - line), line);
 
   // Show the error message.
@@ -50,7 +50,7 @@ static void verror_at(char *filename, char *input, int line_no,
 }
 
 void error_at(char *loc, char *fmt, ...) {
-  int line_no = 1;
+  unsigned line_no = 1;
   for (char *p = current_file->contents; p < loc; p++)
     if (*p == '\n')
       line_no++;
@@ -678,7 +678,7 @@ File **get_input_files(void) {
   return input_files;
 }
 
-File *new_file(char *name, int file_no, char *contents) {
+File *new_file(char *name, unsigned file_no, char *contents) {
   File *file = calloc(1, sizeof(File));
   file->name = name;
   file->display_name = name;
@@ -792,7 +792,7 @@ Token *tokenize_file(char *path) {
   convert_universal_chars(p);
 
   // Save the filename for assembler .file directive.
-  static int file_no;
+  static unsigned file_no;
   File *file = new_file(path, file_no + 1, p);
 
   // Save the filename for assembler .file directive.
