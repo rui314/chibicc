@@ -18,7 +18,12 @@ check() {
 rm -f $tmp/out
 ./chibicc -c -o $tmp/out $tmp/empty.c
 [ -f $tmp/out ]
-check -o
+check -o out
+
+rm -f $tmp/out
+./chibicc -c -o$tmp/out $tmp/empty.c
+[ -f $tmp/out ]
+check -oout
 
 # --help
 $chibicc --help 2>&1 | grep -q chibicc
