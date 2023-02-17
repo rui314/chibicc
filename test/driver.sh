@@ -18,7 +18,12 @@ check() {
 rm -f $tmp/out
 ./chibicc -c -o $tmp/out $tmp/empty.c
 [ -f $tmp/out ]
-check -o
+check -o out
+
+rm -f $tmp/out
+./chibicc -c -o$tmp/out $tmp/empty.c
+[ -f $tmp/out ]
+check -oout
 
 # --help
 $chibicc --help 2>&1 | grep -q chibicc
@@ -308,5 +313,10 @@ echo 'int foo() {}' | $chibicc -c -o $tmp/bar.o -xc -
 echo 'int main() {}' | $chibicc -c -o $tmp/baz.o -xc -
 cc -Xlinker -z -Xlinker muldefs -Xlinker --gc-sections -o $tmp/foo $tmp/foo.o $tmp/bar.o $tmp/baz.o
 check -Xlinker
+
+# -soname
+echo 'int main() { return 0; }' | $chibicc -c -o $tmp/foo.o -xc -
+$chibicc -shared -soname libfoo.so.0 -o $tmp/libfoo.so $tmp/foo.o
+check -soname
 
 echo OK
