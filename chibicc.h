@@ -18,6 +18,10 @@
 #include <time.h>
 #include <unistd.h>
 
+#ifndef VERSION
+#define VERSION "0.1"
+#endif
+
 #define MAX(x, y) ((x) < (y) ? (y) : (x))
 #define MIN(x, y) ((x) < (y) ? (x) : (y))
 
@@ -61,7 +65,7 @@ typedef enum {
 
 typedef struct {
   char *name;
-  int file_no;
+  unsigned file_no;
   char *contents;
 
   // For #line directive
@@ -83,7 +87,7 @@ struct Token {
 
   File *file;       // Source location
   char *filename;   // Filename
-  int line_no;      // Line number
+  unsigned line_no; // Line number
   int line_delta;   // Line number
   bool at_bol;      // True if this token is at beginning of line
   bool has_space;   // True if this token follows a space character
@@ -100,13 +104,13 @@ Token *skip(Token *tok, char *op);
 bool consume(Token **rest, Token *tok, char *str);
 void convert_pp_tokens(Token *tok);
 File **get_input_files(void);
-File *new_file(char *name, int file_no, char *contents);
+File *new_file(char *name, unsigned file_no, char *contents);
 Token *tokenize_string_literal(Token *tok, Type *basety);
 Token *tokenize(File *file);
 Token *tokenize_file(char *filename);
 
 #define unreachable() \
-  error("internal error at %s:%d", __FILE__, __LINE__)
+  error("internal error at %s:%u", __FILE__, __LINE__)
 
 //
 // preprocess.c

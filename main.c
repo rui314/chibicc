@@ -39,9 +39,15 @@ static void usage(int status) {
   exit(status);
 }
 
+static void version() {
+  fprintf(stderr, "chibicc %s\n", VERSION);
+  exit(0);
+}
+
 static bool take_arg(char *arg) {
   char *x[] = {
     "-o", "-I", "-idirafter", "-include", "-x", "-MF", "-MT", "-Xlinker",
+    "-soname"
   };
 
   for (int i = 0; i < sizeof(x) / sizeof(*x); i++)
@@ -57,6 +63,7 @@ static void add_default_include_paths(char *argv0) {
 
   // Add standard include paths.
   strarray_push(&include_paths, "/usr/local/include");
+  strarray_push(&include_paths, "/usr/local/include/x86_64-linux-gnu/chibicc");
   strarray_push(&include_paths, "/usr/include/x86_64-linux-gnu");
   strarray_push(&include_paths, "/usr/include");
 
@@ -135,6 +142,9 @@ static void parse_args(int argc, char **argv) {
     if (!strcmp(argv[i], "--help"))
       usage(0);
 
+    if (!strcmp(argv[i], "--version"))
+      version();
+
     if (!strcmp(argv[i], "-o")) {
       opt_o = argv[++i];
       continue;
@@ -142,6 +152,12 @@ static void parse_args(int argc, char **argv) {
 
     if (!strncmp(argv[i], "-o", 2)) {
       opt_o = argv[i] + 2;
+      continue;
+    }
+
+    if (!strcmp(argv[i], "-soname")) {
+      strarray_push(&ld_extra_args, argv[i]);
+      strarray_push(&ld_extra_args, argv[++i]);
       continue;
     }
 
@@ -691,7 +707,8 @@ static FileType get_file_type(char *filename) {
     return FILE_OBJ;
   if (endswith(filename, ".c"))
     return FILE_C;
-  if (endswith(filename, ".s"))
+  if (endswith(filename, ".s") || endswith(filename, ".S") ||
+      endswith(filename, ".asm"))
     return FILE_ASM;
 
   error("<command line>: unknown file extension: %s", filename);
@@ -747,7 +764,7 @@ int main(int argc, char **argv) {
       continue;
     }
 
-    // Handle .s
+    // Handle .s, -S, .asm
     if (type == FILE_ASM) {
       if (!opt_S)
         assemble(input, output);
