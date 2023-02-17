@@ -309,4 +309,9 @@ echo 'int main() {}' | $chibicc -c -o $tmp/baz.o -xc -
 cc -Xlinker -z -Xlinker muldefs -Xlinker --gc-sections -o $tmp/foo $tmp/foo.o $tmp/bar.o $tmp/baz.o
 check -Xlinker
 
+# -soname
+echo 'int main() { return 0; }' | $chibicc -c -o $tmp/foo.o -xc -
+$chibicc -shared -soname libfoo.so.0 -o $tmp/libfoo.so $tmp/foo.o
+check -soname
+
 echo OK
