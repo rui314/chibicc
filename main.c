@@ -39,6 +39,11 @@ static void usage(int status) {
   exit(status);
 }
 
+static void version() {
+  fprintf(stderr, "chibicc %s\n", VERSION);
+  exit(0);
+}
+
 static bool take_arg(char *arg) {
   char *x[] = {
     "-o", "-I", "-idirafter", "-include", "-x", "-MF", "-MT", "-Xlinker",
@@ -136,6 +141,9 @@ static void parse_args(int argc, char **argv) {
 
     if (!strcmp(argv[i], "--help"))
       usage(0);
+
+    if (!strcmp(argv[i], "--version"))
+      version();
 
     if (!strcmp(argv[i], "-o")) {
       opt_o = argv[++i];

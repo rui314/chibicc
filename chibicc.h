@@ -18,6 +18,10 @@
 #include <time.h>
 #include <unistd.h>
 
+#ifndef VERSION
+#define VERSION "0.1"
+#endif
+
 #define MAX(x, y) ((x) < (y) ? (y) : (x))
 #define MIN(x, y) ((x) < (y) ? (x) : (y))
 
