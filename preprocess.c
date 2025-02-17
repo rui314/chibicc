@@ -625,6 +625,33 @@ static Token *subst(Token *tok, MacroArg *args) {
   return head.next;
 }
 
+// Concatenate the ## operator in the replacement list of an Object-like macro
+static Token *preprocessing_tokens(Token *tok)
+{
+  Token head = {};
+  Token *cur = &head;
+
+  while (tok->kind != TK_EOF)
+  {
+    if (equal(tok, "##"))
+    {
+      if (cur == &head)
+        error_tok(tok, "'##' cannot appear at start of macro expansion");
+      if (tok->next->kind == TK_EOF)
+        error_tok(tok, "'##' cannot appear at end of macro expansion");
+
+      // concatenated
+      *cur = *paste(cur, tok->next);
+      tok = tok->next->next;
+      continue;
+    }
+    cur = cur->next = copy_token(tok);
+    tok = tok->next;
+  }
+  cur->next = tok;
+  return head.next;
+}
+
 // If tok is a macro, expand it and return true.
 // Otherwise, do nothing and return false.
 static bool expand_macro(Token **rest, Token *tok) {
@@ -646,9 +673,10 @@ static bool expand_macro(Token **rest, Token *tok) {
   if (m->is_objlike) {
     Hideset *hs = hideset_union(tok->hideset, new_hideset(m->name));
     Token *body = add_hideset(m->body, hs);
-    for (Token *t = body; t->kind != TK_EOF; t = t->next)
+    Token *replaced = preprocessing_tokens(body);
+    for (Token *t = replaced; t->kind != TK_EOF; t = t->next)
       t->origin = tok;
-    *rest = append(body, tok->next);
+    *rest = append(replaced, tok->next);
     (*rest)->at_bol = tok->at_bol;
     (*rest)->has_space = tok->has_space;
     return true;
