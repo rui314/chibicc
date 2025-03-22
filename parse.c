@@ -2207,6 +2207,8 @@ static Node *conditional(Token **rest, Token *tok) {
   node->cond = cond;
   node->then = expr(&tok, tok->next);
   tok = skip(tok, ":");
+  if (tok->at_bol)
+    error_tok(tok, "expected an expression");
   node->els = conditional(rest, tok);
   return node;
 }
