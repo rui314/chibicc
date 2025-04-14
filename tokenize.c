@@ -77,7 +77,7 @@ void warn_tok(Token *tok, char *fmt, ...) {
 
 // Consumes the current token if it matches `op`.
 bool equal(Token *tok, char *op) {
-  return memcmp(tok->loc, op, tok->len) == 0 && op[tok->len] == '\0';
+  return strlen(op) == tok->len && strncmp(tok->loc, op, tok->len) == 0;
 }
 
 // Ensure that the current token is `op`.
@@ -120,13 +120,14 @@ static bool startswith(char *p, char *q) {
 static int read_ident(char *start) {
   char *p = start;
   uint32_t c = decode_utf8(&p, p);
-  if (!is_ident1(c))
+  // Check if the first character is valid
+  if (!is_valid_identifier_char(c, true))
     return 0;
 
   for (;;) {
     char *q;
     c = decode_utf8(&q, p);
-    if (!is_ident2(c))
+    if (!is_valid_identifier_char(c, false))
       return p - start;
     p = q;
   }

@@ -266,6 +266,10 @@ int main() {
 #define paste4(x, y, z) x##y##z
   ASSERT(123, paste4(1,2,3));
 
+  int abc = 123;
+#define obj a##b##c
+      ASSERT(123, obj);
+
 #define M12
 #if defined(M12)
   m = 3;

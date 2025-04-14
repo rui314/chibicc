@@ -84,8 +84,8 @@ static bool in_range(uint32_t *range, uint32_t c) {
 // For example, ¾ (U+00BE) is a valid identifier because characters in
 // 0x00BE-0x00C0 are allowed, while neither ⟘ (U+27D8) nor '　'
 // (U+3000, full-width space) are allowed because they are out of range.
-bool is_ident1(uint32_t c) {
-  static uint32_t range[] = {
+bool is_valid_identifier_char(uint32_t c, bool is_first_char) {
+  static uint32_t first_char_range[] = {
     '_', '_', 'a', 'z', 'A', 'Z', '$', '$',
     0x00A8, 0x00A8, 0x00AA, 0x00AA, 0x00AD, 0x00AD, 0x00AF, 0x00AF,
     0x00B2, 0x00B5, 0x00B7, 0x00BA, 0x00BC, 0x00BE, 0x00C0, 0x00D6,
@@ -102,18 +102,19 @@ bool is_ident1(uint32_t c) {
     0xD0000, 0xDFFFD, 0xE0000, 0xEFFFD, -1,
   };
 
-  return in_range(range, c);
-}
-
-// Returns true if a given character is acceptable as a non-first
-// character of an identifier.
-bool is_ident2(uint32_t c) {
-  static uint32_t range[] = {
+  static uint32_t subsequent_char_range[] = {
     '0', '9', '$', '$', 0x0300, 0x036F, 0x1DC0, 0x1DFF, 0x20D0, 0x20FF,
     0xFE20, 0xFE2F, -1,
   };
 
-  return is_ident1(c) || in_range(range, c);
+  // Check based on the context (first or subsequent character)
+  if (is_first_char) {
+    return in_range(first_char_range, c);
+  } else {
+    // Returns true if a given character is acceptable as a non-first
+    // character of an identifier.
+    return in_range(first_char_range, c) || in_range(subsequent_char_range, c);
+  }
 }
 
 // Returns the number of columns needed to display a given

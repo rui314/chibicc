@@ -84,6 +84,8 @@ static FileType parse_opt_x(char *s) {
 }
 
 static char *quote_makefile(char *s) {
+  if (!s) return NULL;
+
   char *buf = calloc(1, strlen(s) * 2 + 1);
 
   for (int i = 0, j = 0; s[i]; i++) {
@@ -473,8 +475,7 @@ static void print_dependencies(void) {
   if (opt_MT)
     fprintf(out, "%s:", opt_MT);
   else
-    fprintf(out, "%s:", quote_makefile(replace_extn(base_file, ".o")));
-
+    fprintf(out, "%s:", quote_makefile(replace_extn(base_file, ".o")) ? quote_makefile(replace_extn(base_file, ".o")) : "(null)");
   File **files = get_input_files();
 
   for (int i = 0; files[i]; i++) {
@@ -489,7 +490,7 @@ static void print_dependencies(void) {
     for (int i = 1; files[i]; i++) {
       if (opt_MMD && in_std_include_path(files[i]->name))
         continue;
-      fprintf(out, "%s:\n\n", quote_makefile(files[i]->name));
+      fprintf(out, "%s:\n\n", quote_makefile(files[i]->name) ? quote_makefile(files[i]->name) : "(null)");
     }
   }
 }
