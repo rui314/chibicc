@@ -153,6 +153,7 @@ static Node *unary(Token **rest, Token *tok);
 static Node *primary(Token **rest, Token *tok);
 static Token *parse_typedef(Token *tok, Type *basety);
 static bool is_function(Token *tok);
+static Obj *declare_function(Token *tok, Type *ty, VarAttr *attr);
 static Token *function(Token *tok, Type *basety, VarAttr *attr);
 static Token *global_variable(Token *tok, Type *basety, VarAttr *attr);
 
@@ -3196,8 +3197,9 @@ static void mark_live(Obj *var) {
   }
 }
 
-static Token *function(Token *tok, Type *basety, VarAttr *attr) {
-  Type *ty = declarator(&tok, tok, basety);
+// Declare (not define) a function symbol. `tok` is the token just
+// past the declarator, so `{` tells a definition from a declaration.
+static Obj *declare_function(Token *tok, Type *ty, VarAttr *attr) {
   if (!ty->name)
     error_tok(ty->name_pos, "function name omitted");
   char *name_str = get_ident(ty->name);
@@ -3221,9 +3223,21 @@ static Token *function(Token *tok, Type *basety, VarAttr *attr) {
   }
 
   fn->is_root = !(fn->is_static && fn->is_inline);
+  return fn;
+}
+
+static Token *function(Token *tok, Type *basety, VarAttr *attr) {
+  Type *ty = declarator(&tok, tok, basety);
+  Obj *fn = declare_function(tok, ty, attr);
 
   if (consume(&tok, tok, ";"))
     return tok;
+
+  // Not a definition, and the declaration goes on. The remaining
+  // declarators share basety, and each may be a function or an
+  // object, so hand them to the declarator loop.
+  if (equal(tok, ","))
+    return global_variable(tok->next, basety, attr);
 
   current_fn = fn;
   locals = NULL;
@@ -3272,6 +3286,12 @@ static Token *global_variable(Token *tok, Type *basety, VarAttr *attr) {
     Type *ty = declarator(&tok, tok, basety);
     if (!ty->name)
       error_tok(ty->name_pos, "variable name omitted");
+
+    // A function declarator here declares a function, not an object.
+    if (ty->kind == TY_FUNC) {
+      declare_function(tok, ty, attr);
+      continue;
+    }
 
     Obj *var = new_gvar(get_ident(ty->name), ty);
     var->is_definition = !attr->is_extern;
