@@ -31,7 +31,7 @@ int main() {
   ASSERT(1, 1>=1);
   ASSERT(0, 1>=2);
 
-  ASSERT(0, 1073741824 * 100 / 100);
+  ASSERT(0, 1073741824u * 100 / 100);
 
   ASSERT(7, ({ int i=2; i+=5; i; }));
   ASSERT(7, ({ int i=2; i+=5; }));
@@ -121,10 +121,10 @@ int main() {
 
   1 ? -2 : (void)-1;
 
-  ASSERT(20, ({ int x; int *p=&x; p+20-p; }));
-  ASSERT(1, ({ int x; int *p=&x; p+20-p>0; }));
-  ASSERT(-20, ({ int x; int *p=&x; p-20-p; }));
-  ASSERT(1, ({ int x; int *p=&x; p-20-p<0; }));
+  ASSERT(20, ({ int x[41]; int *p=x+20; p+20-p; }));
+  ASSERT(1, ({ int x[41]; int *p=x+20; p+20-p>0; }));
+  ASSERT(-20, ({ int x[41]; int *p=x+20; p-20-p; }));
+  ASSERT(1, ({ int x[41]; int *p=x+20; p-20-p<0; }));
 
   ASSERT(15, (char *)0xffffffffffffffff - (char *)0xfffffffffffffff0);
   ASSERT(-15, (char *)0xfffffffffffffff0 - (char *)0xffffffffffffffff);
